@@ -45,32 +45,45 @@
   --shadow-color: 0 4px 14px rgba(27, 31, 39, 0.06), 0 1px 3px rgba(27, 31, 39, 0.04);
 
   /* Glassmorphism tokens — two layers, not one flat alpha:
-       --glass-surface  the panel's actual, genuinely-low-alpha background.
-                         This is what you see at a panel's edges/padding —
-                         the orb behind it should read clearly through here.
+       --glass-surface  the panel's actual background — genuinely low alpha
+                         (0.12–0.25 target range) across the WHOLE panel,
+                         edges included. This is the number that has to
+                         read as "see-through" at a glance.
        --glass-scrim     a second same-color layer, painted only behind the
                          *content* box (via ::before, inset from the edge —
-                         see .glass-panel below), so text always sits on a
-                         safely-opaque island while the panel as a whole
-                         stays visibly translucent. This is what replaces
-                         "just raise the panel's opacity" from the first
-                         pass: that made the whole panel read as solid to
-                         hit contrast; this keeps the transparency and only
-                         backs the text.
-     Both alphas are chosen by compositing over the *worst case* backdrop —
-     paper blended with an ambient orb at its full stated peak opacity — and
-     checking WCAG contrast for every text token that appears on glass
-     (ink/ink-2/ink-3, and indigo/jade/amber/coral, which were each already
-     tuned to tight opaque-surface margins historically and needed
-     re-checking here too) against the *combined* border+scrim composite,
-     since that's what real text actually sits on. All seven tokens clear
-     4.5:1 at these values with real margin (light: 4.61–15.96:1; dark:
-     5.16–14.19:1) — see the compositing script from the glass pass. */
-  --glass-surface: rgba(255, 255, 255, 0.5);
-  --glass-scrim: rgba(255, 255, 255, 0.72);
+                         see .glass-panel below), so text sits on a safely
+                         opaque island while the panel *as a whole* stays
+                         visibly translucent. This — not raising
+                         --glass-surface — is what carries legibility: the
+                         edges/gaps around text stay at the low base alpha,
+                         only the text's own footprint gets backed further.
+     Both alphas (plus the text-shadow below) are chosen by compositing over
+     the *worst case* backdrop — paper blended with an ambient orb at its
+     full stated peak opacity, now much more saturated (0.2–0.55, up from
+     0.06–0.26) since the orbs were resized/repositioned to actually sit
+     behind content — and checking WCAG contrast for every text token that
+     appears on glass (ink/ink-2/ink-3, and indigo/jade/amber/coral, each
+     already tuned to tight opaque-surface margins historically) against the
+     combined border+scrim composite, since that's what real text sits on.
+     All seven clear 4.5:1 with margin (light worst 4.56:1, dark worst
+     4.92:1) — see the compositing script from the glass pass. The
+     text-shadow is a bonus legibility layer on top of this, not a
+     substitute for it — automated contrast checkers can't see a shadow, so
+     the alpha math has to pass on its own first. */
+  --glass-surface: rgba(255, 255, 255, 0.18);
+  --glass-scrim: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(216, 215, 208, 0.9);
-  --glass-blur: 26px;
-  --glass-blur-sm: 16px;
+  --glass-edge-highlight: rgba(255, 255, 255, 0.85);
+  --glass-text-shadow: 0 1px 3px rgba(255, 255, 255, 0.7);
+  --glass-blur: 36px;
+  /* Deliberately lighter than --glass-blur: this radius repeats on every
+     ResultCards stat card (a dozen+ simultaneous backdrop-filter layers on
+     one page), so it's tuned down from the same 36-40px as the handful of
+     large panels — heavy blur on that many elements at once measurably
+     cost real frame time (Lighthouse perf dropped 81->79, and Chromium
+     specifically started flaking on rapid-interaction e2e tests under
+     parallel load). Still much heavier than the pre-this-pass 10-12px. */
+  --glass-blur-sm: 18px;
   /* Text color used for `text-ink-3` specifically *inside* a glass panel.
      Equal to --ink-3 in light theme (already clears contrast there); see
      the dark override below for why this differs there. */
@@ -103,19 +116,22 @@
      two-layer scheme as light (see the :root comment) — border alpha is
      the genuinely-translucent panel background, scrim is the content-only
      backing that keeps text legible. */
-  --glass-surface: rgba(23, 27, 35, 0.45);
-  --glass-scrim: rgba(23, 27, 35, 0.75);
+  --glass-surface: rgba(23, 27, 35, 0.22);
+  --glass-scrim: rgba(23, 27, 35, 0.85);
   --glass-border: rgba(132, 144, 196, 0.28);
-  --glass-blur: 30px;
-  --glass-blur-sm: 18px;
+  --glass-edge-highlight: rgba(255, 255, 255, 0.16);
+  --glass-text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+  --glass-blur: 40px;
+  --glass-blur-sm: 20px; /* see the light-theme comment on this token — same reasoning, dozen+ simultaneous cards */
   /* Even with the scrim, ink-3 composited over glass sitting on an orb at
-     its full stated peak opacity (0.26–0.3, the worst realistic case) needs
-     a bit more room than the base token gives on opaque surfaces. Per the
-     "opacity before color" rule this is the color-side fix for the one
-     token that still needed it after the border+scrim opacity: lightened
-     just enough (verified via the same compositing check, now against the
-     combined border+scrim background) to clear 4.5:1 against that worst
-     case. Scoped to glass panels only — the base --ink-3 already clears
+     its full stated peak opacity (now 0.32–0.55, up from 0.16–0.3 — the
+     orbs got much more saturated so they'd actually be visible through the
+     panel) needs a bit more room than the base token gives on opaque
+     surfaces. Per the "opacity before color" rule this is the color-side
+     fix for the one token that still needed it after the border+scrim
+     opacity: lightened just enough (verified via the same compositing
+     check, re-run against the new, more saturated worst case) to clear
+     4.5:1. Scoped to glass panels only — the base --ink-3 already clears
      contrast against opaque surfaces and doesn't need this. */
   --ink-3-glass: #8a90a0;
 }
@@ -219,15 +235,22 @@ body {
 /* cost). Both set --ink-3 to the glass-safe variant so any text-ink-3     */
 /* inside inherits legible color automatically — see --ink-3-glass above.  */
 /*                                                                          */
-/* Legibility comes from a second layer (::before), not from raising the   */
-/* panel's own opacity: --glass-surface stays genuinely low-alpha across   */
-/* the whole panel (visible at the edges, between cards, wherever there's  */
-/* no text), and a same-color --glass-scrim layer sits inset behind just   */
-/* the content area, bringing *that* region up to a safely opaque total.   */
-/* z-index: -1 relies on .glass-panel's own `isolation: isolate` to stay   */
-/* contained to this panel's stacking context — plain in-flow content       */
-/* (every child here) paints above a negative-z-index pseudo-element in    */
-/* the same stacking context automatically, no z-index needed on children. */
+/* Legibility comes from three things layered on top of a genuinely-low    */
+/* panel alpha, NOT from raising that alpha:                               */
+/*  1. --glass-scrim: a same-color layer painted only behind the content   */
+/*     box (::before, inset from the edge), so text sits on a safely       */
+/*     opaque island while the panel edges/gaps stay visibly translucent.  */
+/*     z-index: -1 relies on `isolation: isolate` below to stay contained  */
+/*     to this panel — plain in-flow content (every real child) paints     */
+/*     above a negative-z-index pseudo-element in the same stacking        */
+/*     context automatically, no z-index needed on children.               */
+/*  2. --glass-text-shadow: a soft shadow (glow, not umbra) directly on    */
+/*     every glass-panel text node. Contrast checkers can't see this, so   */
+/*     it's a bonus layer on top of a scrim that already passes on its     */
+/*     own — not a substitute.                                             */
+/*  3. font-weight: 500 default — a mild uplift for any text that doesn't  */
+/*     already carry its own explicit weight utility (labels, notes);      */
+/*     elements with font-semibold/font-bold keep their authored weight.   */
 /* ---------------------------------------------------------------------- */
 .glass-panel,
 .glass-panel-sm {
@@ -235,7 +258,14 @@ body {
   position: relative;
   isolation: isolate;
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow);
+  font-weight: 500;
+  text-shadow: var(--glass-text-shadow);
+  /* Classic glass-card edge: a soft highlight hugging the top+left inner
+     edge (inset shadow offset down-right paints along the top/left side),
+     alongside the normal drop shadow. */
+  box-shadow:
+    inset 1px 1px 0 0 var(--glass-edge-highlight),
+    var(--shadow);
 }
 
 .glass-panel::before,
@@ -270,6 +300,16 @@ body {
   background: var(--surface-2);
   border: 1px dashed var(--line-2);
   border-radius: var(--radius);
+}
+
+/* Ambient orb opacity per theme — set as a plain descendant selector
+   (rather than Tailwind's dark: utility) because the two values arrive as
+   inline custom properties from AmbientBackground.tsx, one per theme. */
+.ambient-orb {
+  opacity: var(--orb-alpha-light);
+}
+[data-theme="dark"] .ambient-orb {
+  opacity: var(--orb-alpha-dark);
 }
 
 /* ---------------------------------------------------------------------- */
