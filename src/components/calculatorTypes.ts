@@ -28,7 +28,7 @@ export const DEFAULT_INPUTS: CalculatorInputs = {
   mode: "swp",
   swr: 7.5,
   bankr: 6.5,
-  lr: 8.5,
+  lr: 7.5,
   tenure: 20,
   extra: 0,
   stepup: 0,

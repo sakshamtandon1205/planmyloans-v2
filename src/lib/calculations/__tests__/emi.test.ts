@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { calculateBaselineInterest, calculateEmi, calculatePayoffMonths, generateAmortizationSchedule } from "../emi";
 
 describe("calculateEmi", () => {
-  it("matches the documented worked example: ₹1,00,00,000 @ 8.5% over 20 years", () => {
-    const emi = calculateEmi({ principal: 10000000, annualRatePercent: 8.5, tenureMonths: 240 });
-    expect(emi).toBeCloseTo(86782, 0);
+  it("matches the documented worked example: ₹1,00,00,000 @ 7.5% over 20 years", () => {
+    const emi = calculateEmi({ principal: 10000000, annualRatePercent: 7.5, tenureMonths: 240 });
+    expect(emi).toBeCloseTo(80559, 0);
   });
 
   it("falls back to a simple division when the rate is zero", () => {

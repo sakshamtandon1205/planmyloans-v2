@@ -32,25 +32,25 @@ This formula isn't arbitrary: it's the unique monthly payment that guarantees th
 
 ### A worked example
 
-Take a ₹1,00,00,000 loan at 8.5% annual interest over 20 years:
+Take a ₹1,00,00,000 loan at 7.5% annual interest over 20 years:
 
-- Monthly rate (r) = 8.5% ÷ 12 = 0.7083% = 0.007083
+- Monthly rate (r) = 7.5% ÷ 12 = 0.625% = 0.00625
 - Number of months (n) = 20 × 12 = 240
-- Plugging into the formula gives an EMI of approximately **₹86,782 per month**
+- Plugging into the formula gives an EMI of approximately **₹80,559 per month**
 
-Multiply that by 240 months and you get roughly ₹2.08 crore paid over the life of the loan, against a principal of ₹1 crore. That difference, just over ₹1.08 crore, is the total interest. It's a genuinely large number, and it's worth sitting with for a second before moving on, because it's the entire reason prepayment strategy exists as a topic at all.
+Multiply that by 240 months and you get roughly ₹1.93 crore paid over the life of the loan, against a principal of ₹1 crore. That difference, just over ₹93 lakh, is the total interest. It's a genuinely large number, and it's worth sitting with for a second before moving on, because it's the entire reason prepayment strategy exists as a topic at all.
 
 ## Why the EMI is flat but the loan isn't
 
 This is the part almost nobody explains well: your EMI amount never changes (assuming a fixed rate), but what it's made of changes completely over the life of the loan. Every EMI payment splits into two pieces: interest on the outstanding balance, and principal repayment. The ratio between those two pieces shifts dramatically over time.
 
-In month one, your entire ₹1 crore is still outstanding, so the interest portion of that month's EMI is large: roughly ₹70,833 (1 crore × 0.7083%). The remaining ₹15,949 of your ₹86,782 EMI goes toward reducing the principal. In the loan's final year, the outstanding balance is tiny, so almost the entire EMI goes toward principal, with only a sliver being interest.
+In month one, your entire ₹1 crore is still outstanding, so the interest portion of that month's EMI is large: roughly ₹62,500 (1 crore × 0.625%). The remaining ₹18,059 of your ₹80,559 EMI goes toward reducing the principal. In the loan's final year, the outstanding balance is tiny, so almost the entire EMI goes toward principal, with only a sliver being interest.
 
 <FigureTable
   headers={["Loan year", "Approx. interest portion of EMI", "Approx. principal portion of EMI"]}
   rows={[
-    ["Year 1", "~82%", "~18%"],
-    ["Year 10", "~55%", "~45%"],
+    ["Year 1", "~77%", "~23%"],
+    ["Year 10", "~55%", "~46%"],
     ["Year 20", "~4%", "~96%"],
   ]}
 />
