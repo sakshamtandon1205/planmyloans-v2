@@ -32,10 +32,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-sans overflow-x-hidden">
         <ThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <SiteNav />
-          <main className="flex flex-1 flex-col">{children}</main>
+          <main className="flex min-w-0 flex-1 flex-col">{children}</main>
           <SiteFooter />
         </ThemeProvider>
       </body>

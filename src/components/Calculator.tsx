@@ -62,13 +62,13 @@ export function Calculator() {
       initial="hidden"
       animate="show"
       variants={stagger}
-      className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10"
+      className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6 px-6 py-10"
     >
-      <motion.div variants={fadeUp}>
+      <motion.div variants={fadeUp} className="min-w-0">
         <ResultCards inputs={inputs} results={results} />
       </motion.div>
 
-      <motion.div variants={fadeUp}>
+      <motion.div variants={fadeUp} className="min-w-0">
         <CapitalStack
           price={inputs.price}
           downPayment={inputs.dp}
@@ -79,8 +79,8 @@ export function Calculator() {
         />
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr] lg:items-start">
-        <motion.div variants={fadeUp} className="lg:sticky lg:top-4">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[340px_1fr] lg:items-start">
+        <motion.div variants={fadeUp} className="min-w-0 lg:sticky lg:top-4">
           <ControlPanel
             inputs={inputs}
             onInputChange={updateInput}
@@ -92,8 +92,8 @@ export function Calculator() {
           />
         </motion.div>
 
-        <div className="flex flex-col gap-6">
-          <motion.div variants={fadeUp}>
+        <div className="flex min-w-0 flex-col gap-6">
+          <motion.div variants={fadeUp} className="min-w-0">
             <SustainabilityGauge
               isRisky={results.isRisky}
               corpusLabel={results.corpusLabel}
@@ -107,11 +107,11 @@ export function Calculator() {
             />
           </motion.div>
 
-          <motion.div variants={fadeUp}>
+          <motion.div variants={fadeUp} className="min-w-0">
             <BalanceChart series={results.chartSeries} corpusLabel={results.corpusLabel} />
           </motion.div>
 
-          <motion.div variants={fadeUp}>
+          <motion.div variants={fadeUp} className="min-w-0">
             <AmortizationChart series={results.chartSeries} />
           </motion.div>
         </div>

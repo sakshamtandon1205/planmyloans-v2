@@ -62,12 +62,19 @@ export function ResultCards({ inputs, results }: ResultCardsProps) {
         variants={gridVariants}
         className="grid grid-cols-2 gap-3 sm:grid-cols-4"
       >
-        <HeroCell label="Monthly EMI" value={formatINR(amortization.emi)} tone="text-indigo" sub={`for ${tenure} yr tenure`} />
+        <HeroCell
+          label="Monthly EMI"
+          value={formatINR(amortization.emi)}
+          tone="text-indigo"
+          sub={`for ${tenure} yr tenure`}
+          testId="result-emi"
+        />
         <HeroCell
           label="Loan clears in"
           value={`${results.payoffYears.toFixed(1)} yrs`}
           tone="text-jade"
           sub={`${amortization.payoffMonths} months`}
+          testId="result-payoff"
         />
         <HeroCell
           label="Total interest"
@@ -132,11 +139,30 @@ export function ResultCards({ inputs, results }: ResultCardsProps) {
   );
 }
 
-function HeroCell({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: string }) {
+function HeroCell({
+  label,
+  value,
+  sub,
+  tone,
+  testId,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  tone: string;
+  testId?: string;
+}) {
   return (
-    <motion.div variants={cardVariants} className="rounded-lg border border-line bg-surface p-4 shadow-sm">
+    <motion.div variants={cardVariants} className="min-w-0 rounded-lg border border-line bg-surface p-4 shadow-sm">
       <div className="mb-1.5 text-label uppercase text-ink-3">{label}</div>
-      <motion.div key={value} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className={`font-mono text-mono-lg font-bold ${tone}`}>
+      <motion.div
+        key={value}
+        data-testid={testId}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className={`break-words font-mono text-mono-lg font-bold ${tone}`}
+      >
         {value}
       </motion.div>
       <div className="mt-1.5 font-mono text-caption text-ink-3">{sub}</div>
@@ -159,10 +185,16 @@ function Card({
     <motion.div
       variants={cardVariants}
       whileHover={{ y: -2, transition: hoverSpring }}
-      className="rounded border border-line bg-surface p-4 shadow-sm"
+      className="min-w-0 rounded border border-line bg-surface p-4 shadow-sm"
     >
       <div className="mb-2.5 text-label uppercase leading-snug text-ink-3">{label}</div>
-      <motion.div key={value} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className={`font-mono text-mono font-bold ${tone}`}>
+      <motion.div
+        key={value}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className={`break-words font-mono text-mono font-bold ${tone}`}
+      >
         {value}
       </motion.div>
       {note && <p className="mt-2 text-caption leading-snug text-ink-3">{note}</p>}

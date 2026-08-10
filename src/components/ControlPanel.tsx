@@ -285,6 +285,7 @@ function NumericSliderField({
       <div className="flex flex-wrap items-center gap-2.5">
         <input
           type="range"
+          aria-label={label}
           min={min}
           max={max}
           step={step}
@@ -295,6 +296,7 @@ function NumericSliderField({
         />
         <input
           type="number"
+          aria-label={`${label} (exact value)`}
           value={value}
           step={step}
           onChange={(e) => {
