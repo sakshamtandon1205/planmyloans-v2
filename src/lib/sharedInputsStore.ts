@@ -9,22 +9,43 @@ import { DEFAULT_INPUTS } from "@/components/calculatorTypes";
  * and Down payment) mirrors it via equality-gated effects in Calculator.tsx.
  * Gating every mirror write on "is this actually a change" is what keeps
  * the two-way sync from looping.
+ *
+ * extraPrepayment/prepayStepUpPercent/emiStepUpPercent are one-way: the
+ * Planner is their only editor (QuickEstimate has no prepayment inputs of
+ * its own), so Calculator.tsx just pushes its current values in on change.
+ * QuickEstimate reads them purely to compute the *actual* total interest
+ * (via generateAmortizationSchedule, the same function the Planner itself
+ * uses) instead of the naive no-prepayment baseline — so its "Total
+ * interest"/"Total amount payable" always match the Planner's real numbers
+ * once a prepayment plan is configured, rather than silently diverging.
  */
 interface SharedInputsState {
   rate: number;
   tenure: number;
   /** Derived elsewhere as Property price − Down payment; stored directly so QuickEstimate has a single field to bind to. */
   loanAmount: number;
+  extraPrepayment: number;
+  prepayStepUpPercent: number;
+  emiStepUpPercent: number;
   setRate: (rate: number) => void;
   setTenure: (tenure: number) => void;
   setLoanAmount: (loanAmount: number) => void;
+  setExtraPrepayment: (extraPrepayment: number) => void;
+  setPrepayStepUpPercent: (prepayStepUpPercent: number) => void;
+  setEmiStepUpPercent: (emiStepUpPercent: number) => void;
 }
 
 export const useSharedInputsStore = create<SharedInputsState>((set) => ({
   rate: DEFAULT_INPUTS.lr,
   tenure: DEFAULT_INPUTS.tenure,
   loanAmount: DEFAULT_INPUTS.price - DEFAULT_INPUTS.dp,
+  extraPrepayment: DEFAULT_INPUTS.extra,
+  prepayStepUpPercent: DEFAULT_INPUTS.stepup,
+  emiStepUpPercent: DEFAULT_INPUTS.stepupemi,
   setRate: (rate) => set({ rate }),
   setTenure: (tenure) => set({ tenure }),
   setLoanAmount: (loanAmount) => set({ loanAmount }),
+  setExtraPrepayment: (extraPrepayment) => set({ extraPrepayment }),
+  setPrepayStepUpPercent: (prepayStepUpPercent) => set({ prepayStepUpPercent }),
+  setEmiStepUpPercent: (emiStepUpPercent) => set({ emiStepUpPercent }),
 }));

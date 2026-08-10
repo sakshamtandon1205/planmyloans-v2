@@ -84,7 +84,13 @@ export function BalanceChart({ series, corpusLabel, horizonMonths, payoffMonth, 
             tickFormatter={(v: number) => formatLakh(v)}
             axisLine={{ stroke: "var(--line)" }}
             tickLine={false}
-            width={56}
+            // Recharts wraps a tick label onto multiple lines once its
+            // measured width exceeds this allocation — 56px wasn't enough
+            // for "50.00 L"/"2.00 Cr" and wrapped at every container width
+            // tested (not just narrow ones), since the allocation itself,
+            // not the container, was the constraint. 70px clears the widest
+            // realistic label ("19.99 Cr") with room to spare.
+            width={70}
           />
           <Tooltip content={<ChartTooltip />} />
           <Legend content={<ChartLegend />} />
@@ -171,7 +177,13 @@ export function AmortizationChart({ series }: { series: ChartPoint[] }) {
             tickFormatter={(v: number) => formatLakh(v)}
             axisLine={{ stroke: "var(--line)" }}
             tickLine={false}
-            width={56}
+            // Recharts wraps a tick label onto multiple lines once its
+            // measured width exceeds this allocation — 56px wasn't enough
+            // for "50.00 L"/"2.00 Cr" and wrapped at every container width
+            // tested (not just narrow ones), since the allocation itself,
+            // not the container, was the constraint. 70px clears the widest
+            // realistic label ("19.99 Cr") with room to spare.
+            width={70}
           />
           <Tooltip content={<ChartTooltip />} />
           <Legend content={<ChartLegend />} />

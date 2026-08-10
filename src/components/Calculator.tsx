@@ -78,6 +78,22 @@ export function Calculator() {
     if (derivedLoan !== loanAmount) setLoanAmount(derivedLoan);
   }, [inputs.price, inputs.dp]);
 
+  // One-way: QuickEstimate has no prepayment inputs of its own, it only
+  // reads these to compute its actual (not baseline) totals — see the
+  // store's doc comment.
+  useEffect(() => {
+    const { extraPrepayment, setExtraPrepayment } = useSharedInputsStore.getState();
+    if (inputs.extra !== extraPrepayment) setExtraPrepayment(inputs.extra);
+  }, [inputs.extra]);
+  useEffect(() => {
+    const { prepayStepUpPercent, setPrepayStepUpPercent } = useSharedInputsStore.getState();
+    if (inputs.stepup !== prepayStepUpPercent) setPrepayStepUpPercent(inputs.stepup);
+  }, [inputs.stepup]);
+  useEffect(() => {
+    const { emiStepUpPercent, setEmiStepUpPercent } = useSharedInputsStore.getState();
+    if (inputs.stepupemi !== emiStepUpPercent) setEmiStepUpPercent(inputs.stepupemi);
+  }, [inputs.stepupemi]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- pulls the shared store (an external system) into local state; bails via `return prev` when already equal, so it settles rather than looping (see the pairing effects above).
     setInputs((prev) => {
@@ -137,8 +153,13 @@ export function Calculator() {
         />
       </motion.div>
 
-      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[340px_1fr] lg:items-start">
-        <motion.div variants={fadeUp} className="min-w-0 lg:sticky lg:top-4">
+      {/* Collapses at 900px, not the default lg (1024px): between those two the
+          two-column split left both the sidebar and the results column too
+          narrow to be comfortable (chart Y-axis labels wrapping, cards
+          cramped) — full-width single column reads better than a cramped
+          split in that range. */}
+      <div className="grid min-w-0 grid-cols-1 gap-6 min-[900px]:grid-cols-[340px_1fr] min-[900px]:items-start">
+        <motion.div variants={fadeUp} className="min-w-0 min-[900px]:sticky min-[900px]:top-4">
           <ControlPanel
             inputs={inputs}
             onInputChange={updateInput}

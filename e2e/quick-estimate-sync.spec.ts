@@ -122,6 +122,47 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     await expect(quickLoan).toHaveValue(String(20000000 - dp));
   });
 
+  test("prepayment: Quick Estimate's Total interest matches the Planner's actual total once prepayment is configured, and reverts to the baseline match at zero", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const quickTotalInterest = page.getByTestId("quick-total-interest");
+    const plannerTotalInterest = page.getByTestId("result-total-interest");
+
+    // Baseline (no prepayment): the two must already agree.
+    const baselineQuick = await quickTotalInterest.textContent();
+    await expect(plannerTotalInterest).toHaveText(baselineQuick ?? "");
+
+    // Configure real prepayment in the full Planner only — Quick Estimate has no
+    // prepayment input of its own, it should pick this up via the shared store.
+    const extraPrepay = page.getByRole("spinbutton", { name: "Extra monthly prepay (exact value)" });
+    await extraPrepay.click();
+    await extraPrepay.selectText();
+    await extraPrepay.pressSequentially("10000");
+    await extraPrepay.blur();
+
+    const withPrepayQuick = await quickTotalInterest.textContent();
+    expect(withPrepayQuick).not.toBe(baselineQuick); // sanity: the number actually moved
+    await expect(plannerTotalInterest).toHaveText(withPrepayQuick ?? "");
+
+    // The Monthly EMI figure is unaffected by prepayment (it's the starting EMI).
+    await expect(page.getByTestId("quick-emi")).toHaveText("₹80,559");
+
+    // Caption should now explain the discrepancy with a naive calculation.
+    await expect(page.getByText("Includes your prepayment plan set below")).toBeVisible();
+
+    // Reset back to zero prepayment: both totals should converge again.
+    await extraPrepay.click();
+    await extraPrepay.selectText();
+    await extraPrepay.pressSequentially("0");
+    await extraPrepay.blur();
+
+    const resetQuick = await quickTotalInterest.textContent();
+    await expect(plannerTotalInterest).toHaveText(resetQuick ?? "");
+    await expect(page.getByText("Simple estimate — see the full planner")).toBeVisible();
+  });
+
   test("no console/page errors during rapid back-and-forth edits (regression guard for update-loop bugs)", async ({
     page,
   }) => {

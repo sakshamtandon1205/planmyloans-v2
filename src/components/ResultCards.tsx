@@ -90,6 +90,7 @@ export function ResultCards({ inputs, results }: ResultCardsProps) {
         <Card
           label="Total interest paid"
           value={formatINR(amortization.totalInterestPaid)}
+          testId="result-total-interest"
           tone="text-amber"
           accent="amber"
           note={interestNote}

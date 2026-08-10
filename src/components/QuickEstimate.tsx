@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { calculateBaselineInterest, calculateEmi } from "@/lib/calculations/emi";
+import { generateAmortizationSchedule } from "@/lib/calculations/emi";
 import { formatINR } from "@/lib/format";
 import { useSharedInputsStore } from "@/lib/sharedInputsStore";
 import { GlassCard } from "./GlassCard";
@@ -31,16 +31,37 @@ export function QuickEstimate() {
   const loanAmount = useSharedInputsStore((s) => s.loanAmount);
   const rate = useSharedInputsStore((s) => s.rate);
   const tenure = useSharedInputsStore((s) => s.tenure);
+  const extraPrepayment = useSharedInputsStore((s) => s.extraPrepayment);
+  const prepayStepUpPercent = useSharedInputsStore((s) => s.prepayStepUpPercent);
+  const emiStepUpPercent = useSharedInputsStore((s) => s.emiStepUpPercent);
   const setLoanAmount = useSharedInputsStore((s) => s.setLoanAmount);
   const setRate = useSharedInputsStore((s) => s.setRate);
   const setTenure = useSharedInputsStore((s) => s.setTenure);
 
+  const hasPrepayPlan = extraPrepayment > 0 || prepayStepUpPercent > 0 || emiStepUpPercent > 0;
+
+  // Same function the full Planner uses for its "Total interest paid" card,
+  // fed the same prepayment/step-up state (shared via the store) — so these
+  // numbers are always the Planner's real, current numbers, not a
+  // simplified baseline that silently drifts once prepayment is configured.
   const { emi, totalInterest, totalPayable } = useMemo(() => {
     const tenureMonths = tenure * 12;
-    const emi = calculateEmi({ principal: loanAmount, annualRatePercent: rate, tenureMonths });
-    const totalInterest = calculateBaselineInterest(loanAmount, emi, tenureMonths);
-    return { emi, totalInterest, totalPayable: loanAmount + totalInterest };
-  }, [loanAmount, rate, tenure]);
+    const amortization = generateAmortizationSchedule({
+      principal: loanAmount,
+      annualRatePercent: rate,
+      tenureMonths,
+      extraMonthlyPrepayment: extraPrepayment,
+      annualPrepayStepUpPercent: prepayStepUpPercent,
+      annualEmiStepUpPercent: emiStepUpPercent,
+    });
+    // amortization.emi is the original/starting EMI (pre-step-up) — the
+    // Planner's own "Monthly EMI" card shows this same starting figure.
+    return {
+      emi: amortization.emi,
+      totalInterest: amortization.totalInterestPaid,
+      totalPayable: loanAmount + amortization.totalInterestPaid,
+    };
+  }, [loanAmount, rate, tenure, extraPrepayment, prepayStepUpPercent, emiStepUpPercent]);
 
   const displayEmi = useCountUp(emi);
 
@@ -98,7 +119,12 @@ export function QuickEstimate() {
           <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
             <div className="min-w-0">
               <div className="mb-1 text-label uppercase text-ink-3">Total interest</div>
-              <div className="whitespace-nowrap font-mono text-mono-lg font-bold text-amber">{formatINR(totalInterest)}</div>
+              <div
+                data-testid="quick-total-interest"
+                className="whitespace-nowrap font-mono text-mono-lg font-bold text-amber"
+              >
+                {formatINR(totalInterest)}
+              </div>
             </div>
             <div className="min-w-0">
               <div className="mb-1 text-label uppercase text-ink-3">Total amount payable</div>
@@ -112,7 +138,9 @@ export function QuickEstimate() {
         </div>
 
         <p className="mt-5 text-caption text-ink-3">
-          Simple estimate — see the full planner below for prepayment savings and tax impact.
+          {hasPrepayPlan
+            ? "Includes your prepayment plan set below — see the full planner for the tax and payoff-time impact."
+            : "Simple estimate — see the full planner below for prepayment savings and tax impact."}
         </p>
       </GlassCard>
 
