@@ -96,13 +96,6 @@ export default function PrivacyPage() {
             the cookie-less, aggregated analytics described in section 3 above.
           </li>
           <li>
-            <strong className="font-semibold text-ink">Chart.js</strong> (via a public CDN): used to render the
-            charts on the calculator. No personal data is sent to this service.
-          </li>
-          <li>
-            <strong className="font-semibold text-ink">Google Fonts</strong>: used for the site&apos;s typography.
-          </li>
-          <li>
             <strong className="font-semibold text-ink">Google AdSense</strong> (once approved): used to display
             advertising and may set cookies as described above.
           </li>
