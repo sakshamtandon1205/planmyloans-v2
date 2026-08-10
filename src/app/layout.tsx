@@ -26,6 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "PlanMyLoans",
   description: "Plan your home loan against your own capital.",
+  other: { "google-adsense-account": "ca-pub-6785721439785755" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
