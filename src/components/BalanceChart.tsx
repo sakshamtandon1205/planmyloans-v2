@@ -1,6 +1,17 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { formatINR, formatLakh } from "@/lib/format";
 import type { ChartPoint } from "./calculatorTypes";
 
@@ -28,6 +39,7 @@ export function BalanceChart({ series, corpusLabel }: BalanceChartProps) {
             width={56}
           />
           <Tooltip content={<ChartTooltip />} />
+          <Legend content={<ChartLegend />} />
           <Line type="monotone" dataKey="mf" name="MF corpus" stroke="var(--jade)" strokeWidth={2.5} dot={false} />
           <Line type="monotone" dataKey="corpus" name={corpusLabel} stroke="var(--indigo)" strokeWidth={2.5} dot={false} />
           <Line
@@ -65,6 +77,7 @@ export function AmortizationChart({ series }: { series: ChartPoint[] }) {
             width={56}
           />
           <Tooltip content={<ChartTooltip />} />
+          <Legend content={<ChartLegend />} />
           <Area
             type="monotone"
             dataKey="interest"
@@ -104,6 +117,26 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
         <div key={p.dataKey} className="font-mono text-paper/85">
           {p.name}: {formatINR(p.value)}
         </div>
+      ))}
+    </div>
+  );
+}
+
+interface ChartLegendEntry {
+  value?: string;
+  color?: string;
+  dataKey?: string;
+}
+
+function ChartLegend({ payload }: { payload?: ChartLegendEntry[] }) {
+  if (!payload?.length) return null;
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5">
+      {payload.map((entry) => (
+        <span key={entry.dataKey ?? entry.value} className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-[3px] w-4 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="font-mono text-mono-sm text-ink-2">{entry.value}</span>
+        </span>
       ))}
     </div>
   );
