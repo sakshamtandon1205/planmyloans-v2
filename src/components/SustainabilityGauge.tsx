@@ -81,7 +81,7 @@ export function SustainabilityGauge({
               className={`h-full rounded-sm ${tone.fill}`}
             />
           </div>
-          <div className="mt-1.5 flex flex-wrap justify-between gap-x-2.5 gap-y-0.5 font-mono text-mono-sm text-ink-2 opacity-85">
+          <div className="mt-1.5 flex flex-wrap justify-between gap-x-2.5 gap-y-0.5 font-mono text-mono-sm text-ink-2">
             <span>sustainable</span>
             <span className="order-3 flex-1 basis-full text-center sm:order-none sm:basis-auto">{gaugeLabel}</span>
             <span>draining fast</span>

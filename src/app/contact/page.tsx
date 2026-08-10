@@ -38,7 +38,7 @@ export default function ContactPage() {
             </svg>
           </div>
           <div className="min-w-0">
-            <h3 className="mb-1 font-heading text-h3 text-ink">Email</h3>
+            <h2 className="mb-1 font-heading text-h3 text-ink">Email</h2>
             <p className="mb-1.5 text-body-sm text-ink-2">
               For anything: bugs, feature ideas, corrections, or general feedback.
             </p>
@@ -77,7 +77,7 @@ export default function ContactPage() {
           <p className="mb-4 text-body text-ink-2">The calculator&apos;s always open, no email required to use it.</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-sm bg-indigo px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 rounded-sm bg-indigo-solid px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
           >
             Open the calculator →
           </Link>

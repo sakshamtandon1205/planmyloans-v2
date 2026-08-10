@@ -23,7 +23,7 @@ export function Hero() {
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <span className="mb-3 inline-flex items-center gap-2 text-label uppercase text-indigo">
-          <span className="inline-flex size-4 items-center justify-center rounded-sm bg-indigo text-caption leading-none text-white">
+          <span className="inline-flex size-4 items-center justify-center rounded-sm bg-indigo-solid text-caption leading-none text-white">
             ◆
           </span>
           Property Financing Model

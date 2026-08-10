@@ -43,7 +43,7 @@ export default async function GuidesPage() {
               <span className="mb-2.5 block font-mono text-mono-sm uppercase tracking-wide text-indigo">
                 {guide.tag}
               </span>
-              <h3 className="mb-2 font-heading text-h3 text-ink">{guide.title}</h3>
+              <h2 className="mb-2 font-heading text-h3 text-ink">{guide.title}</h2>
               <p className="text-body-sm leading-relaxed text-ink-2">{guide.teaser}</p>
             </Link>
           ))}

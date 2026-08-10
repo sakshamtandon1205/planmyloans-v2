@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { MotionConfig } from "framer-motion";
 import { ThemeProvider } from "next-themes";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
@@ -34,9 +35,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col font-sans overflow-x-hidden">
         <ThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          <SiteNav />
-          <main className="flex min-w-0 flex-1 flex-col">{children}</main>
-          <SiteFooter />
+          <MotionConfig reducedMotion="user">
+            <SiteNav />
+            <main className="flex min-w-0 flex-1 flex-col">{children}</main>
+            <SiteFooter />
+          </MotionConfig>
         </ThemeProvider>
       </body>
     </html>

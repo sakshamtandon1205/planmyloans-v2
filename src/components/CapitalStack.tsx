@@ -20,8 +20,8 @@ const MIN_LABEL_PERCENT = 9;
 
 export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corpusLabel }: CapitalStackProps) {
   const segments: Segment[] = [
-    { key: "dp", label: "Down payment", value: downPayment, className: "bg-indigo text-white" },
-    { key: "mf", label: "MF lumpsum", value: mfLumpsum, className: "bg-jade text-white" },
+    { key: "dp", label: "Down payment", value: downPayment, className: "bg-indigo-solid text-white" },
+    { key: "mf", label: "MF lumpsum", value: mfLumpsum, className: "bg-jade-solid text-white" },
     { key: "corpus", label: corpusLabel, value: corpus, className: "bg-jade-soft text-jade" },
     {
       key: "loan",
@@ -49,7 +49,7 @@ export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corp
             >
               {pct > MIN_LABEL_PERCENT && (
                 <>
-                  <span className="truncate text-label font-semibold normal-case opacity-85">{s.label}</span>
+                  <span className="truncate text-label font-semibold normal-case">{s.label}</span>
                   <span className="truncate font-mono text-mono-sm font-bold">{formatLakh(s.value)}</span>
                 </>
               )}
@@ -59,8 +59,8 @@ export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corp
       </div>
 
       <div className="mt-3.5 flex flex-wrap gap-5 text-body-sm text-ink-2">
-        <LegendDot className="bg-indigo" label="Down payment" />
-        <LegendDot className="bg-jade" label="Mutual fund lumpsum" />
+        <LegendDot className="bg-indigo-solid" label="Down payment" />
+        <LegendDot className="bg-jade-solid" label="Mutual fund lumpsum" />
         <LegendDot className="bg-jade-soft" label={corpusLabel} />
         <LegendDot className="bg-line-2" label="Home loan" />
       </div>

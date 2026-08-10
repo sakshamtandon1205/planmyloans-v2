@@ -11,6 +11,7 @@ export function FundingModeToggle({ mode, onChange }: FundingModeToggleProps) {
       <button
         type="button"
         onClick={() => onChange("swp")}
+        aria-pressed={mode === "swp"}
         className={`flex-1 rounded-sm px-2 py-2 text-body-sm font-medium transition-colors ${
           mode === "swp" ? "bg-surface text-indigo shadow-sm" : "text-ink-2 hover:text-ink"
         }`}
@@ -20,6 +21,7 @@ export function FundingModeToggle({ mode, onChange }: FundingModeToggleProps) {
       <button
         type="button"
         onClick={() => onChange("bank")}
+        aria-pressed={mode === "bank"}
         className={`flex-1 rounded-sm px-2 py-2 text-body-sm font-medium transition-colors ${
           mode === "bank" ? "bg-surface text-indigo shadow-sm" : "text-ink-2 hover:text-ink"
         }`}

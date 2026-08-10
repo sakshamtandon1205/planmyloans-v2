@@ -18,7 +18,7 @@ export function SiteNav() {
     <nav className="sticky top-0 z-30 border-b border-line bg-surface">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-7 px-6 py-4">
         <Link href="/" className="flex items-center gap-2 font-heading text-h3 font-bold text-ink">
-          <span className="inline-flex size-6 items-center justify-center rounded-sm bg-indigo text-body-sm text-white">
+          <span className="inline-flex size-6 items-center justify-center rounded-sm bg-indigo-solid text-body-sm text-white">
             ◆
           </span>
           PlanMyLoans

@@ -5,7 +5,7 @@ export function SiteFooter() {
     <footer className="mt-16 border-t border-line py-10">
       <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-8 px-6">
         <div>
-          <h4 className="mb-3 font-heading text-body-sm font-semibold text-ink">PlanMyLoans</h4>
+          <p className="mb-3 font-heading text-body-sm font-semibold text-ink">PlanMyLoans</p>
           <Link href="/" className="mb-2 block text-body-sm text-ink-2 hover:text-indigo">
             Calculator
           </Link>
@@ -14,7 +14,7 @@ export function SiteFooter() {
           </Link>
         </div>
         <div>
-          <h4 className="mb-3 font-heading text-body-sm font-semibold text-ink">Site</h4>
+          <p className="mb-3 font-heading text-body-sm font-semibold text-ink">Site</p>
           <Link href="/about" className="mb-2 block text-body-sm text-ink-2 hover:text-indigo">
             About
           </Link>
@@ -26,7 +26,7 @@ export function SiteFooter() {
           </Link>
         </div>
         <div>
-          <h4 className="mb-3 font-heading text-body-sm font-semibold text-ink">Get in touch</h4>
+          <p className="mb-3 font-heading text-body-sm font-semibold text-ink">Get in touch</p>
           <a href="mailto:sakshamtandon1205@gmail.com" className="block text-body-sm text-ink-2 hover:text-indigo">
             sakshamtandon1205@gmail.com
           </a>

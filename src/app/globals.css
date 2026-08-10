@@ -15,16 +15,30 @@
   --surface-2: #f4f4f0;
   --ink: #1b1f27;
   --ink-2: #5a616e;
-  --ink-3: #8a909c;
+  /* Darkened from #8a909c — the original only hit 3.2:1 on white, below the
+     4.5:1 WCAG AA minimum for normal text. Verified via axe + manual
+     contrast computation (see accessibility pass). */
+  --ink-3: #6c7380;
   --line: #e7e6e0;
   --line-2: #d8d7d0;
   --indigo: #4054d6;
   --indigo-soft: #ebedfb;
-  --jade: #0f9d74;
+  /* Darkened from #0f9d74 — only 3.0–3.5:1 as text on white/jade-soft. */
+  --jade: #0c7b5b;
   --jade-soft: #e4f4ee;
-  --amber: #e8890c;
+  /* Darkened from #e8890c — only ~2.6:1 as text, the worst offender found. */
+  --amber: #9e5d08;
   --amber-soft: #fcf0dd;
-  --coral: #d64545;
+  /* Darkened from #d64545 — was 4.38:1, just under the 4.5:1 threshold. */
+  --coral: #d33838;
+
+  /* Fixed (non-theme-flipping) shades for solid color chips/badges/buttons
+     that always carry white text — e.g. CapitalStack's segments, the brand
+     mark, CTA buttons. --indigo/--jade brighten in dark mode for use as
+     *text*, which fails contrast when used as a *background* with white
+     text on top, so those specific cases use these instead. */
+  --indigo-solid: #5a6bdb;
+  --jade-solid: #0d8563;
 
   --shadow-color-sm: 0 1px 2px rgba(27, 31, 39, 0.04), 0 1px 3px rgba(27, 31, 39, 0.05);
   --shadow-color: 0 4px 14px rgba(27, 31, 39, 0.06), 0 1px 3px rgba(27, 31, 39, 0.04);
@@ -36,7 +50,8 @@
   --surface-2: #1f242e;
   --ink: #eceef2;
   --ink-2: #a7aebc;
-  --ink-3: #6e7686;
+  /* Lightened from #6e7686 — only 3.4–3.8:1 on surface/surface-2. */
+  --ink-3: #7d8594;
   --line: #262c37;
   --line-2: #333b48;
   --indigo: #7c8cf0;
@@ -72,6 +87,8 @@
   --color-amber: var(--amber);
   --color-amber-soft: var(--amber-soft);
   --color-coral: var(--coral);
+  --color-indigo-solid: var(--indigo-solid);
+  --color-jade-solid: var(--jade-solid);
 
   /* Fonts -> font-sans (Inter, body), font-heading (Space Grotesk),
      font-mono (JetBrains Mono, every rupee/percentage/slider figure). */
@@ -150,8 +167,15 @@ input[type="range"] {
   height: 6px;
   border-radius: var(--radius-sm);
   background: var(--surface-2);
-  outline: none;
   cursor: pointer;
+}
+/* The default outline sat flush against the track and looked clipped, but
+   removing it outright (as before) left keyboard users with no visible
+   focus indicator at all — a real a11y bug caught during the audit. */
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }
 input[type="range"]::-webkit-slider-thumb {
   appearance: none;

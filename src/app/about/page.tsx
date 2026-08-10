@@ -101,7 +101,7 @@ export default function AboutPage() {
           <p className="mb-4 text-body text-ink-2">Go play with the real thing: sliders, live numbers, dark mode and all.</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-sm bg-indigo px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 rounded-sm bg-indigo-solid px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
           >
             Open the calculator →
           </Link>
