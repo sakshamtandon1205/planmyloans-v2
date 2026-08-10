@@ -98,6 +98,9 @@
   --text-h3--line-height: 1.35;
   --text-h3--font-weight: 600;
 
+  --text-body-lg: 1.125rem; /* 18px, article lead paragraphs */
+  --text-body-lg--line-height: 1.7;
+
   --text-body: 0.9375rem; /* 15px, base copy */
   --text-body--line-height: 1.6;
 

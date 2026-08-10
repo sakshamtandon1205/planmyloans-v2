@@ -1,0 +1,76 @@
+import { Callout } from "@/components/Callout";
+import { FigureTable } from "@/components/FigureTable";
+
+export const frontmatter = {
+  slug: "emi-calculation-explained",
+  tag: "EMI basics",
+  title: "How Your EMI Is Calculated (And Why It Isn't Just \"Loan ÷ Months\")",
+  description:
+    "The real formula behind every home loan EMI, why your interest payment shrinks over time even though the EMI stays flat, and how to sanity-check any number your bank gives you.",
+  lede:
+    "Every home loan advertisement mentions the EMI. Almost none explain where the number comes from, or why it stays perfectly flat for twenty years while what it's paying for changes completely underneath it.",
+  readTime: "8 min read",
+  teaser:
+    "The amortisation formula behind every EMI, why your interest payment is huge in year one and tiny in year twenty, and how to sanity-check any number a bank gives you.",
+};
+
+<p className="mb-4 text-body-lg leading-relaxed text-ink-2">
+Here's a question that trips up more people than it should: if you take a ₹1 crore loan for 20 years, why isn't your EMI simply ₹1,00,00,000 ÷ 240 months = ₹41,667? That would be the case if the bank were lending you money for free. It isn't. The gap between that naive number and your actual EMI is entirely interest. Understanding how that interest is calculated changes how you think about every decision that follows, from how much to borrow to whether prepaying makes sense.
+</p>
+
+## The actual formula
+
+Every standard EMI, whether it's for a home, car, or personal loan, is calculated using one formula:
+
+<Callout>
+**EMI = P × r × (1+r)ⁿ ÷ [(1+r)ⁿ − 1]**
+
+Where P is the loan principal, r is the monthly interest rate (your annual rate divided by 12), and n is the total number of monthly instalments (years × 12).
+</Callout>
+
+This formula isn't arbitrary: it's the unique monthly payment that guarantees the loan balance hits exactly zero after the last instalment, while charging interest on whatever principal remains outstanding each month. It's the same math behind every amortizing loan on the planet, from mortgages in Mumbai to mortgages in Manchester.
+
+### A worked example
+
+Take a ₹1,00,00,000 loan at 8.5% annual interest over 20 years:
+
+- Monthly rate (r) = 8.5% ÷ 12 = 0.7083% = 0.007083
+- Number of months (n) = 20 × 12 = 240
+- Plugging into the formula gives an EMI of approximately **₹86,782 per month**
+
+Multiply that by 240 months and you get roughly ₹2.08 crore paid over the life of the loan, against a principal of ₹1 crore. That difference, just over ₹1.08 crore, is the total interest. It's a genuinely large number, and it's worth sitting with for a second before moving on, because it's the entire reason prepayment strategy exists as a topic at all.
+
+## Why the EMI is flat but the loan isn't
+
+This is the part almost nobody explains well: your EMI amount never changes (assuming a fixed rate), but what it's made of changes completely over the life of the loan. Every EMI payment splits into two pieces: interest on the outstanding balance, and principal repayment. The ratio between those two pieces shifts dramatically over time.
+
+In month one, your entire ₹1 crore is still outstanding, so the interest portion of that month's EMI is large: roughly ₹70,833 (1 crore × 0.7083%). The remaining ₹15,949 of your ₹86,782 EMI goes toward reducing the principal. In the loan's final year, the outstanding balance is tiny, so almost the entire EMI goes toward principal, with only a sliver being interest.
+
+<FigureTable
+  headers={["Loan year", "Approx. interest portion of EMI", "Approx. principal portion of EMI"]}
+  rows={[
+    ["Year 1", "~82%", "~18%"],
+    ["Year 10", "~55%", "~45%"],
+    ["Year 20", "~4%", "~96%"],
+  ]}
+/>
+
+This is why prepaying early in a loan's life is so much more powerful than prepaying late: every rupee you prepay in year one eliminates interest that would have compounded for nineteen more years. The same rupee prepaid in year nineteen barely saves anything, because there's almost no interest left to save.
+
+## Why this matters for how you think about "loan ÷ months"
+
+The naive ₹41,667 figure from the start of this article isn't just wrong by a fixed amount: it fundamentally misunderstands what a loan is. A loan isn't principal spread evenly across time; it's principal that shrinks unevenly, with interest charged fresh each month on whatever's left. That's also why two loans with the same principal and tenure but different interest rates can have wildly different total costs, even though the monthly EMI difference might look small on paper.
+
+<Callout tone="good">
+**A useful sanity check:** if you ever want to verify a number a bank or a salesperson gives you, the rule of thumb is: total interest paid roughly scales with rate × tenure, not rate alone. A 20-year loan at 8.5% pays dramatically more total interest than a 10-year loan at 9%, even though the second loan has the "worse" rate, because it's outstanding for half as long.
+</Callout>
+
+## What changes your EMI
+
+Three levers, and only three, determine your EMI: the loan amount, the interest rate, and the tenure. Everything else (down payment, prepayment, salary, market returns) affects your loan indirectly, either by changing how much you borrow in the first place, or by adding extra payments on top of the EMI. Understanding this is what makes the rest of loan strategy click into place: down payment reduces the "P" in the formula from day one; prepayment adds extra principal reduction on top of the scheduled EMI; and refinancing to a lower rate reduces "r." There's no fourth lever hiding somewhere.
+
+<div className="my-10 rounded-lg border border-line bg-surface p-7 text-center shadow-sm">
+  <h3 className="mb-2 font-heading text-h3 text-ink">See this play out with your own numbers</h3>
+  <p className="mb-4 text-body text-ink-2">The PlanMyLoans calculator runs this exact formula live, plus shows you the actual month-by-month split between interest and principal as prepayments and step-ups are added.</p>
+  <a href="/" className="inline-flex items-center gap-2 rounded-sm bg-indigo px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5">Open the calculator →</a>
+</div>

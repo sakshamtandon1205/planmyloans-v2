@@ -1,0 +1,66 @@
+import { Callout } from "@/components/Callout";
+
+export const frontmatter = {
+  slug: "prepay-vs-invest",
+  tag: "Strategy",
+  title: "Should You Prepay Your Home Loan or Invest the Money Instead?",
+  description:
+    "The real comparison behind prepaying a home loan vs investing the same money: your loan rate vs your expected return, with the risk difference most people ignore.",
+  lede:
+    "This question gets asked constantly and answered vaguely almost every time. It has a real, calculable answer. It just depends on a comparison most people never run.",
+  readTime: "8 min read",
+  teaser:
+    "The one comparison that matters most (your loan rate vs. your expected investment return) and why \"it depends\" is a calculable answer, not a shrug.",
+};
+
+<p className="mb-4 text-body-lg leading-relaxed text-ink-2">
+You have some spare money. You could throw it at your home loan principal, shrinking your interest bill and shortening your loan. Or you could invest it (in equity, mutual funds, whatever) and let it compound instead. Every finance forum has an opinion. Very few walk through the actual comparison that determines the answer.
+</p>
+
+## The comparison that matters most
+
+Strip away the noise, and this decision comes down to one number: **your home loan interest rate versus your realistic, risk-adjusted expected return on the alternative investment.** That's it. Everything else (psychology, "debt-free feels good," liquidity preferences) is real and worth factoring in, but the core financial math is a rate comparison.
+
+Prepaying a loan is mathematically equivalent to "investing" at a guaranteed, risk-free rate equal to your loan's interest rate. If your home loan is at 8.5%, every rupee you prepay effectively earns you a guaranteed 8.5% return, because that's exactly how much interest you avoid paying by removing that rupee from the principal. There's no market risk, no volatility, no "some years it drops." It's contractual.
+
+<Callout>
+**The one-line version:** if your realistic expected investment return is comfortably above your loan rate, investing tends to win over the long run. If it's close to or below your loan rate, prepaying is the safer and often better choice, because prepaying's "return" is guaranteed, and the investment's isn't.
+</Callout>
+
+## Why this isn't as simple as "equity beats 8.5% easily"
+
+The instinctive response is: equity markets have historically returned 12-14% over long periods, comfortably above most home loan rates, so investing wins. But this reasoning skips two things that matter a lot in practice.
+
+### 1. Tax eats into the investment side, not the prepayment side
+
+An 8.5% loan rate is a fixed, after-tax comparison point: you don't pay tax on "not paying interest." But investment returns are taxed when realised: long-term capital gains on equity are taxed at roughly 12.5% above an annual exemption threshold. A headline 12% return, after accounting for tax on eventual gains, might behave closer to 10-10.5% in practical, spendable terms. The gap between 8.5% (guaranteed, tax-free by nature) and a taxed 10-10.5% is real, but noticeably smaller than the naive 8.5% vs 12% comparison suggests.
+
+### 2. "Historically averages 12%" doesn't mean "will return 12% this year"
+
+Average long-term equity returns are exactly that: averages across long periods that include both excellent and terrible years. If you invest a lump sum today and your home loan tenure is, say, 10 years, there's a real chance you land in a below-average decade. Prepayment doesn't have this variance; the 8.5% guaranteed saving happens regardless of what the market does next year. This is the same "sequence of returns" risk that matters for SWPs, just viewed from the other direction, instead of withdrawing into a downturn, you'd simply be sitting on a lower-than-hoped investment balance while still owing the full loan.
+
+## Where the tax benefits complicate things further
+
+Remember that home loan interest and principal come with their own tax deductions under Section 24(b) and 80C. If you're actively using those deductions, your loan's *effective* interest rate, after accounting for tax saved, is lower than the sticker rate. That shifts the comparison further in favour of investing, since the "guaranteed return" from prepaying is smaller than the headline rate suggests once you've already been getting a partial tax subsidy on that interest.
+
+<Callout tone="warn">
+**Don't double-count, though:** if you prepay aggressively and pay off your loan faster, you also lose the interest that would have qualified for the 24(b) deduction in later years. This is usually a minor effect compared to the interest saved, but it's a real offset worth being aware of rather than ignoring entirely.
+</Callout>
+
+## A middle path most people undervalue: step-up prepayment
+
+Rather than treating this as strictly either-or, a step-up prepayment strategy, increasing your extra monthly prepayment each year in line with salary hikes, captures a lot of the benefit of prepaying (guaranteed savings, shorter tenure, less total interest) without requiring you to divert every spare rupee away from investing today, when your prepayment capacity is naturally smaller anyway. It's a way of letting the guaranteed-return argument grow in proportion to your ability to act on it.
+
+## A framework, not a verdict
+
+There's no universal right answer here, because "realistic expected return" genuinely varies by person, risk appetite, and time horizon. But the framework is consistent:
+
+- If your loan rate is high (think double digits) relative to conservative return expectations, prepaying is usually the stronger, lower-risk choice.
+- If your loan rate is moderate (7-9%) and you have a long horizon and genuine risk tolerance for equity, investing has a reasonable case, but the margin is smaller than it first appears once tax and risk are priced in.
+- A blended approach (some prepayment, some investing) is a legitimate answer, not a cop-out, since it hedges against being wrong about future returns in either direction.
+
+<div className="my-10 rounded-lg border border-line bg-surface p-7 text-center shadow-sm">
+  <h3 className="mb-2 font-heading text-h3 text-ink">Run your own numbers on both sides</h3>
+  <p className="mb-4 text-body text-ink-2">The PlanMyLoans calculator shows exactly how much interest a given prepayment amount saves, alongside how your invested MF lumpsum grows over the same period, so you can compare the two directly instead of guessing.</p>
+  <a href="/" className="inline-flex items-center gap-2 rounded-sm bg-indigo px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5">Open the calculator →</a>
+</div>

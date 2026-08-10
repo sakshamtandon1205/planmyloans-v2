@@ -1,0 +1,67 @@
+import { Callout } from "@/components/Callout";
+import { FigureTable } from "@/components/FigureTable";
+
+export const frontmatter = {
+  slug: "home-loan-tax-benefits",
+  tag: "Tax benefits",
+  title: "Section 24(b) and 80C: The Home Loan Deductions Nobody Explains Clearly",
+  description:
+    "What you can deduct on a home loan under Section 24(b) and 80C, the annual caps that limit most people's benefit, and why your effective interest rate is usually lower than advertised.",
+  lede:
+    "Two tax sections quietly reduce the real cost of a home loan for most Indian borrowers, but both have caps that catch people off guard once they run the numbers.",
+  readTime: "7 min read",
+  teaser:
+    "What you can claim, the caps that quietly limit most people's benefit, and why your \"effective interest rate\" is usually lower than your bank tells you.",
+};
+
+<p className="mb-4 text-body-lg leading-relaxed text-ink-2">
+Ask most home loan borrowers what interest rate they're paying, and they'll quote the number on their loan statement, say, 8.5%. Ask what they end up paying after tax benefits, and most people don't know, because nobody walks them through it clearly. It's usually meaningfully lower, and the gap matters when you're deciding between prepaying a loan and investing elsewhere.
+</p>
+
+## Section 24(b): the interest deduction
+
+Section 24(b) of the Income Tax Act lets you deduct the interest you pay on a home loan from your taxable income, for a self-occupied property, **up to ₹2,00,000 per financial year**. This is the big one, and it's worth understanding exactly how the benefit works.
+
+Say you're in the 30% tax slab and you paid ₹2,00,000 or more in home loan interest this year. You can deduct the full ₹2,00,000 from your taxable income, which at a 30% slab saves you roughly ₹60,000 in actual tax owed (plus applicable cess). That's real money back in your pocket every year, not a theoretical concept.
+
+<Callout tone="warn">
+**The catch most people miss:** in the early years of a large loan, your interest payment often *exceeds* ₹2,00,000: recall from how EMI amortisation works, interest is front-loaded. On a ₹1 crore loan at 8.5%, you might pay over ₹8 lakh in interest in year one alone. But the deduction caps at ₹2 lakh regardless. That means for a large loan, you're only getting tax relief on a fraction of what you paid in interest during the early years. The benefit becomes proportionally more useful later in the loan, once your annual interest naturally falls closer to the ₹2 lakh mark.
+</Callout>
+
+## Section 80C: the principal deduction
+
+Section 80C lets you deduct the principal portion of your EMI (not the interest; that's 24(b)'s job) from your taxable income, up to **₹1,50,000 per financial year**. On the surface this sounds like another straightforward saving, but there's a bigger catch here than with 24(b).
+
+<Callout tone="warn">
+**The important part:** the ₹1,50,000 cap under 80C isn't exclusive to your home loan principal. It's a *shared* limit across your EPF contributions, ELSS mutual funds, life insurance premiums, PPF, children's tuition fees, and several other common instruments. If you're already contributing to EPF through your salary (most salaried employees are) and perhaps an ELSS fund or two, there's a real chance your 80C limit is already used up before your home loan principal even enters the picture, meaning the "deduction" you were counting on might add zero additional benefit.
+</Callout>
+
+This is genuinely one of the most common misunderstandings in home loan planning: people mentally bank the ₹1.5 lakh 80C benefit as if it's automatically theirs, without checking whether their EPF and other existing 80C investments have already consumed the limit.
+
+## What this looks like in practice
+
+Let's put real numbers on it. Say in a given year you pay ₹4,50,000 in interest and ₹3,00,000 in principal on your home loan, and you're in the 30% slab:
+
+<FigureTable
+  headers={["Section", "You paid", "Deduction allowed (capped)", "Tax saved at 30%"]}
+  rows={[
+    ["24(b): interest", "₹4,50,000", "₹2,00,000", "₹60,000"],
+    ["80C: principal", "₹3,00,000", "₹1,50,000 (if unused elsewhere)", "₹45,000"],
+  ]}
+/>
+
+In this example, if your 80C limit is genuinely free (no EPF, ELSS, or insurance eating into it), you'd save roughly ₹1,05,000 in tax for the year, against ₹7,50,000 paid toward the loan. That's meaningful, but it's also clearly capped, not proportional to the size of your loan.
+
+## Turning this into an "effective interest rate"
+
+A useful way to think about the tax benefit is to net it against your total interest paid over the loan's life, giving you a rough **effective interest cost**: what the loan costs you after the government's contribution via these deductions. On a large loan, because the ₹2 lakh 24(b) cap only covers a fraction of early-year interest, the effective rate is closer to the advertised rate in the early years and only meaningfully lower once the loan matures and annual interest naturally drops under the cap.
+
+<Callout tone="good">
+**Practical takeaway:** don't assume you'll get the full ₹1,05,000-style benefit every year without checking two things: whether your annual interest is at or below ₹2 lakh (it usually isn't early on for a large loan), and whether your 80C limit has room left after EPF, ELSS, and insurance. Both caps are real constraints, not just formalities.
+</Callout>
+
+<div className="my-10 rounded-lg border border-line bg-surface p-7 text-center shadow-sm">
+  <h3 className="mb-2 font-heading text-h3 text-ink">See your real effective interest cost</h3>
+  <p className="mb-4 text-body text-ink-2">The PlanMyLoans calculator tracks your actual interest and principal paid year by year, applies both caps correctly, and nets the tax saved against your total interest, live, as you adjust your loan.</p>
+  <a href="/" className="inline-flex items-center gap-2 rounded-sm bg-indigo px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5">Open the calculator →</a>
+</div>

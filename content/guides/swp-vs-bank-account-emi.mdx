@@ -1,0 +1,75 @@
+import { Callout } from "@/components/Callout";
+import { FigureTable } from "@/components/FigureTable";
+
+export const frontmatter = {
+  slug: "swp-vs-bank-account-emi",
+  tag: "SWP vs. bank",
+  title: "SWP vs. Bank Account: Which One Should Fund Your EMI?",
+  description:
+    "The real tax and risk trade-off between funding a home loan EMI from a mutual fund SWP versus a high-interest bank account, with worked examples.",
+  lede:
+    "Two ways to park money that pays your monthly EMI: a systematic withdrawal plan from a mutual fund, or a plain high-interest savings account. The tax treatment is genuinely different, but that's not the whole story.",
+  readTime: "9 min read",
+  teaser:
+    "The real tax and risk trade-off between a mutual fund SWP and a plain savings account when you're using one to cover a fixed monthly obligation.",
+};
+
+<p className="mb-4 text-body-lg leading-relaxed text-ink-2">
+Say you're buying a property and setting aside a lump sum specifically to cover your EMI for the first several years, rather than paying it entirely out of salary. Where should that money sit? The two obvious choices (a mutual fund SWP or a bank account) get taxed completely differently, carry different risk, and behave differently under exactly the kind of pressure this money is designed for: reliably producing a fixed monthly amount, on schedule, for years.
+</p>
+
+## How each one is taxed
+
+This is where most comparisons stop too early, so let's be specific.
+
+### Bank account interest
+
+Every rupee of interest a bank credits you is treated as "Income from Other Sources" and taxed at your full marginal income tax slab: for many salaried professionals, that's 30% plus cess. This happens every year the interest is earned, in full, regardless of whether you withdraw it. There's essentially no favourable treatment: a ₹10,000 interest credit at a 30% slab leaves you with about ₹6,900 after tax.
+
+### SWP (mutual fund) withdrawals
+
+An SWP withdrawal is really a partial sale of your fund units. Only the **profit embedded in that sale** is taxable: the portion representing your original invested capital isn't taxed at all, since it's simply your own money coming back to you. And the tax rate on that profit portion is lower too: for equity funds held over a year, long-term capital gains are taxed at roughly 12.5%, with an annual exemption on the first ₹1.25 lakh of gains, versus a ~30%+ slab rate on bank interest.
+
+<Callout tone="good">
+**A concrete comparison:** say your monthly withdrawal is ₹86,800. From a bank account, the interest portion generating that cash flow is taxed in full at your slab rate as it accrues. From an SWP, only the gain portion of the withdrawal is taxed (often 30–50% of the withdrawal amount, depending on how long the corpus has been growing), and at roughly 12.5% instead of 30%+. The SWP route can mean meaningfully less tax drag on the same withdrawal.
+</Callout>
+
+## So SWP always wins? Not quite.
+
+The tax edge is real, but it only tells half the story. The other half is what the money is *for*. This corpus has one job: reliably cover a fixed monthly obligation for a defined number of years. That's a job about certainty, not about maximising return, and that changes the calculus.
+
+### The risk a bank account doesn't have
+
+A bank account's return is contractual and guaranteed (within the deposit insurance limit, more on that below). An SWP's return depends entirely on the market. If the corpus is invested in equity and a downturn hits in year one or two of your withdrawal schedule (a 2020-style crash, or a prolonged flat stretch), the corpus can deplete significantly faster than a model built on average historical returns would suggest, because you're withdrawing a fixed amount every month regardless of what the market is doing. This is called **sequence-of-returns risk**, and it disproportionately hurts a shrinking, actively-drawn-down corpus rather than a growing, untouched one.
+
+In other words: the same volatility that's a non-issue for a 20-year SIP you never touch becomes a real threat for a 4-year SWP you're actively bleeding every month.
+
+### The nuance that changes everything: what's inside the SWP
+
+If the SWP corpus sits in an **equity fund**, you get the full tax advantage described above, but you're carrying real market risk on money with a fixed, near-term job. If it sits in a **debt fund**, the picture changes again: post-2023 tax rules removed the long-term capital gains benefit on debt mutual funds in India, so debt fund gains are now taxed at your full slab rate, the same as a bank account. That means a debt-fund SWP has lost its tax edge over a savings account entirely, while still carrying some interest-rate and credit risk that a savings account doesn't.
+
+## A quick side-by-side
+
+<FigureTable
+  headers={["Factor", "Bank account", "Equity SWP", "Debt SWP"]}
+  rows={[
+    ["Tax rate", "Full slab (~30%+)", "~12.5% on gains only", "Full slab, gains only"],
+    ["Return certainty", "Guaranteed", "Volatile", "Mostly stable"],
+    ["Deposit insurance", "₹5L per bank (DICGC)", "None", "None"],
+    ["Redemption speed", "Instant", "1–3 business days", "1–3 business days"],
+  ]}
+/>
+
+## What this means for the decision
+
+Because this corpus exists to fund a fixed near-term obligation rather than to grow, the honest framing is: certainty is doing more work here than tax efficiency. A high-interest savings account trades away the SWP's tax edge in exchange for zero market risk, instant liquidity, and no redemption lag before an EMI due date. An equity SWP offers better after-tax efficiency and probably a higher expected return, but asks you to accept that a bad few years early on could shorten the runway this money was supposed to provide.
+
+<Callout tone="warn">
+**One often-missed risk with bank accounts:** India's deposit insurance (DICGC) covers only ₹5 lakh per depositor, per bank. If you're parking a large sum in a single account, the amount above ₹5 lakh is technically uninsured. Splitting a large corpus across two or three well-rated banks is a simple way to stay within insured limits without giving up the guaranteed-return approach.
+</Callout>
+
+<div className="my-10 rounded-lg border border-line bg-surface p-7 text-center shadow-sm">
+  <h3 className="mb-2 font-heading text-h3 text-ink">Model both scenarios with your real numbers</h3>
+  <p className="mb-4 text-body text-ink-2">The PlanMyLoans calculator has a live toggle between SWP and bank-account modes, with the correct tax treatment for each, so you can see exactly how your own corpus behaves under both.</p>
+  <a href="/" className="inline-flex items-center gap-2 rounded-sm bg-indigo px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5">Open the calculator →</a>
+</div>
