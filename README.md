@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+PlanMyLoans v2 — deployed on Vercel with GitHub auto-deploy enabled.
+
 ## Getting Started
 
 First, run the development server:
