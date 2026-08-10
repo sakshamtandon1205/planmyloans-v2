@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { MotionConfig } from "framer-motion";
 import { ThemeProvider } from "next-themes";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -41,6 +43,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <SiteFooter />
           </MotionConfig>
         </ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

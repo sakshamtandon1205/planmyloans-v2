@@ -48,16 +48,20 @@ export default function PrivacyPage() {
 
         <h2 className="mb-4 mt-11 font-heading text-h2 font-semibold text-ink">3. Cookies and similar technologies</h2>
         <p className="mb-4 text-body leading-relaxed text-ink">
-          This site may use cookies and similar tracking technologies for two purposes:
+          This site uses two categories of tracking, with different privacy characteristics:
         </p>
         <ul className="mb-4 list-disc space-y-2 pl-5 text-body leading-relaxed text-ink">
           <li>
-            <strong className="font-semibold text-ink">Analytics</strong>: to understand how many people visit,
-            which pages are useful, and how to improve the site. This is aggregated and does not identify you
-            personally.
+            <strong className="font-semibold text-ink">Analytics</strong>: we use Vercel Web Analytics and Vercel
+            Speed Insights to understand how many people visit, which pages are useful, and how the site performs.
+            Both are cookie-less by design: visitors are identified by a temporary hash derived from the request
+            that is discarded after 24 hours, not a persistent cookie or any personal identifier. The data
+            collected (page views, coarse geolocation such as country or region, device and browser type, and page
+            performance timings) is aggregated and cannot identify you personally.
           </li>
           <li>
-            <strong className="font-semibold text-ink">Advertising</strong>: this site may display ads served
+            <strong className="font-semibold text-ink">Advertising</strong>: unlike the analytics above, this site
+            may display ads served
             through Google AdSense. Google and its partners may use cookies to serve ads based on your prior
             visits to this or other websites. You can learn more about how Google uses data in this context, and
             opt out of personalised advertising, at{" "}
@@ -87,6 +91,10 @@ export default function PrivacyPage() {
           This site loads a small number of third-party resources to function:
         </p>
         <ul className="mb-4 list-disc space-y-2 pl-5 text-body leading-relaxed text-ink">
+          <li>
+            <strong className="font-semibold text-ink">Vercel Web Analytics &amp; Speed Insights</strong>: used for
+            the cookie-less, aggregated analytics described in section 3 above.
+          </li>
           <li>
             <strong className="font-semibold text-ink">Chart.js</strong> (via a public CDN): used to render the
             charts on the calculator. No personal data is sent to this service.
