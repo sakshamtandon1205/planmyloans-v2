@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
+/* Dark mode is toggled via next-themes writing data-theme="dark" on <html>,
+   not OS preference — override Tailwind v4's default media-query variant. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------------------------------------------------------------------- */
+/* Raw palette — light is the default (:root), dark overrides via         */
+/* [data-theme="dark"]. These are the values that actually change between */
+/* themes; the @theme block below just points Tailwind tokens at them.    */
+/* ---------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #fbfbf9;
+  --surface: #ffffff;
+  --surface-2: #f4f4f0;
+  --ink: #1b1f27;
+  --ink-2: #5a616e;
+  --ink-3: #8a909c;
+  --line: #e7e6e0;
+  --line-2: #d8d7d0;
+  --indigo: #4054d6;
+  --indigo-soft: #ebedfb;
+  --jade: #0f9d74;
+  --jade-soft: #e4f4ee;
+  --amber: #e8890c;
+  --amber-soft: #fcf0dd;
+  --coral: #d64545;
+
+  --shadow-color-sm: 0 1px 2px rgba(27, 31, 39, 0.04), 0 1px 3px rgba(27, 31, 39, 0.05);
+  --shadow-color: 0 4px 14px rgba(27, 31, 39, 0.06), 0 1px 3px rgba(27, 31, 39, 0.04);
 }
 
+[data-theme="dark"] {
+  --paper: #0e1117;
+  --surface: #171b23;
+  --surface-2: #1f242e;
+  --ink: #eceef2;
+  --ink-2: #a7aebc;
+  --ink-3: #6e7686;
+  --line: #262c37;
+  --line-2: #333b48;
+  --indigo: #7c8cf0;
+  --indigo-soft: #20263c;
+  --jade: #33c89b;
+  --jade-soft: #16302a;
+  --amber: #f0a63d;
+  --amber-soft: #33280f;
+  --coral: #ec6a6a;
+
+  --shadow-color-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-color: 0 6px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tailwind theme config (v4 CSS-first). Everything below is the design   */
+/* system: semantic color tokens, fonts, type scale, radius, and shadows. */
+/* ---------------------------------------------------------------------- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Semantic color tokens -> bg-surface, text-ink, border-line, etc. */
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-indigo: var(--indigo);
+  --color-indigo-soft: var(--indigo-soft);
+  --color-jade: var(--jade);
+  --color-jade-soft: var(--jade-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-coral: var(--coral);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Fonts -> font-sans (Inter, body), font-heading (Space Grotesk),
+     font-mono (JetBrains Mono, every rupee/percentage/slider figure). */
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-space-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
+
+  /* Type scale — an intentional, restrained set, not Tailwind's defaults.
+     Each size carries its own line-height (and tracking where it matters)
+     so components don't need to reach for extra utilities. */
+  --text-display: clamp(1.875rem, 4.4vw, 2.875rem); /* 30px -> 46px, hero headings */
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-h1: 1.875rem; /* 30px */
+  --text-h1--line-height: 1.15;
+  --text-h1--letter-spacing: -0.01em;
+
+  --text-h2: 1.375rem; /* 22px */
+  --text-h2--line-height: 1.25;
+  --text-h2--letter-spacing: -0.01em;
+
+  --text-h3: 1.0625rem; /* 17px */
+  --text-h3--line-height: 1.35;
+  --text-h3--font-weight: 600;
+
+  --text-body: 0.9375rem; /* 15px, base copy */
+  --text-body--line-height: 1.6;
+
+  --text-body-sm: 0.8125rem; /* 13px, secondary copy, notes */
+  --text-body-sm--line-height: 1.5;
+
+  --text-label: 0.6875rem; /* 11px, uppercase field/card labels */
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.05em;
+
+  --text-caption: 0.6875rem; /* 11px, hint/meta text, not uppercase */
+  --text-caption--line-height: 1.5;
+
+  --text-mono-lg: 1.4375rem; /* 23px, hero-strip figures (EMI, wealth) */
+  --text-mono-lg--line-height: 1;
+  --text-mono-lg--letter-spacing: -0.01em;
+
+  --text-mono: 0.9375rem; /* 15px, card values, table cells */
+  --text-mono--line-height: 1.3;
+
+  --text-mono-sm: 0.75rem; /* 12px, slider values, chart ticks */
+  --text-mono-sm--line-height: 1.3;
+
+  /* Radius scale — three tiers, used consistently instead of ad-hoc values. */
+  --radius-sm: 8px; /* buttons, inputs, small controls */
+  --radius: 12px; /* cards */
+  --radius-lg: 14px; /* panels, major surfaces */
+
+  /* Shadow scale — two soft, low-opacity levels, no heavy drop-shadows. */
+  --shadow-sm: var(--shadow-color-sm);
+  --shadow: var(--shadow-color);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
 }
