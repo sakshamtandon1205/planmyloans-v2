@@ -9,6 +9,7 @@ import type { AmortizationResult, CorpusSimulationResult } from "@/lib/calculati
 import { AmortizationChart, BalanceChart } from "./BalanceChart";
 import { CapitalStack } from "./CapitalStack";
 import { ControlPanel } from "./ControlPanel";
+import { HeroStats } from "./HeroStats";
 import { ResultCards } from "./ResultCards";
 import { SustainabilityGauge } from "./SustainabilityGauge";
 import { DEFAULT_INPUTS, type CalculatorInputs, type CalculatorResults, type ChartPoint } from "./calculatorTypes";
@@ -65,7 +66,7 @@ export function Calculator() {
       className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6 px-6 py-10"
     >
       <motion.div variants={fadeUp} className="min-w-0">
-        <ResultCards inputs={inputs} results={results} />
+        <HeroStats inputs={inputs} results={results} />
       </motion.div>
 
       <motion.div variants={fadeUp} className="min-w-0">
@@ -93,6 +94,10 @@ export function Calculator() {
         </motion.div>
 
         <div className="flex min-w-0 flex-col gap-6">
+          <motion.div variants={fadeUp} className="min-w-0">
+            <ResultCards inputs={inputs} results={results} />
+          </motion.div>
+
           <motion.div variants={fadeUp} className="min-w-0">
             <SustainabilityGauge
               isRisky={results.isRisky}
