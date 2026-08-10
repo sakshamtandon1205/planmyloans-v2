@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { formatINR, formatLakh } from "@/lib/format";
 import { FundingModeToggle } from "./FundingModeToggle";
+import { GlassCard } from "./GlassCard";
+import { SliderField } from "./SliderField";
 import type { CalculatorInputs } from "./calculatorTypes";
 
 interface ControlPanelProps {
@@ -23,7 +25,7 @@ export function ControlPanel({
   onReset,
 }: ControlPanelProps) {
   return (
-    <div className="rounded-lg border border-line bg-surface shadow-sm">
+    <GlassCard>
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <h2 className="font-heading text-h3 text-ink">Your inputs</h2>
         <button
@@ -35,17 +37,17 @@ export function ControlPanel({
         </button>
       </div>
 
-      <Group number={1} title="Property & funding" defaultOpen>
-        <NumericSliderField
+      <Group icon={<HomeIcon />} title="Property & funding" defaultOpen>
+        <SliderField
           label="Property price"
           value={inputs.price}
           min={5000000}
-          max={50000000}
+          max={200000000}
           step={100000}
           onChange={(v) => onInputChange("price", v)}
           formatValue={formatLakh}
         />
-        <NumericSliderField
+        <SliderField
           label="Own funds available"
           value={inputs.own}
           min={2000000}
@@ -54,7 +56,7 @@ export function ControlPanel({
           onChange={(v) => onInputChange("own", v)}
           formatValue={formatLakh}
         />
-        <NumericSliderField
+        <SliderField
           label="Down payment"
           value={inputs.dp}
           min={500000}
@@ -63,7 +65,7 @@ export function ControlPanel({
           onChange={(v) => onInputChange("dp", v)}
           formatValue={formatLakh}
         />
-        <NumericSliderField
+        <SliderField
           label="MF lumpsum"
           value={inputs.mf}
           min={0}
@@ -81,8 +83,8 @@ export function ControlPanel({
         </div>
       </Group>
 
-      <Group number={2} title="Growth & EMI funding" defaultOpen>
-        <NumericSliderField
+      <Group icon={<TrendIcon />} title="Growth & EMI funding" defaultOpen>
+        <SliderField
           label="MF expected return"
           value={inputs.mfr}
           min={4}
@@ -96,7 +98,7 @@ export function ControlPanel({
           <FundingModeToggle mode={inputs.mode} onChange={(m) => onInputChange("mode", m)} />
         </div>
         {inputs.mode === "swp" ? (
-          <NumericSliderField
+          <SliderField
             label="SWP expected return"
             value={inputs.swr}
             min={4}
@@ -106,7 +108,7 @@ export function ControlPanel({
             formatValue={(v) => `${v}%`}
           />
         ) : (
-          <NumericSliderField
+          <SliderField
             label="Bank interest rate"
             value={inputs.bankr}
             min={2}
@@ -119,8 +121,8 @@ export function ControlPanel({
         )}
       </Group>
 
-      <Group number={3} title="Loan & prepayment" defaultOpen>
-        <NumericSliderField
+      <Group icon={<BankIcon />} title="Loan & prepayment" defaultOpen>
+        <SliderField
           label="Home loan interest"
           value={inputs.lr}
           min={6}
@@ -129,7 +131,7 @@ export function ControlPanel({
           onChange={(v) => onInputChange("lr", v)}
           formatValue={(v) => `${v}%`}
         />
-        <NumericSliderField
+        <SliderField
           label="Loan tenure"
           value={inputs.tenure}
           min={5}
@@ -138,7 +140,7 @@ export function ControlPanel({
           onChange={(v) => onInputChange("tenure", v)}
           formatValue={(v) => `${v} yrs`}
         />
-        <NumericSliderField
+        <SliderField
           label="Extra monthly prepay"
           value={inputs.extra}
           min={0}
@@ -148,7 +150,7 @@ export function ControlPanel({
           formatValue={(v) => (v > 0 ? `${formatINR(v)}/mo` : "none")}
           hint="Paid from salary straight onto principal, on top of the EMI. Separate from your corpus."
         />
-        <NumericSliderField
+        <SliderField
           label="Step up prepay yearly"
           value={inputs.stepup}
           min={0}
@@ -158,7 +160,7 @@ export function ControlPanel({
           formatValue={(v) => (v > 0 ? `${v}%/yr` : "none")}
           hint="Prepay rises by this % each year on the loan anniversary. Mirrors an annual salary hike."
         />
-        <NumericSliderField
+        <SliderField
           label="Step up EMI yearly"
           value={inputs.stepupemi}
           min={0}
@@ -170,9 +172,9 @@ export function ControlPanel({
         />
       </Group>
 
-      <Group number={4} title="Tax assumptions">
+      <Group icon={<ReceiptIcon />} title="Tax assumptions">
         {inputs.mode === "swp" && (
-          <NumericSliderField
+          <SliderField
             label="SWP capital gains tax"
             value={inputs.swptax}
             min={0}
@@ -183,7 +185,7 @@ export function ControlPanel({
             tip="Approx. equity LTCG rate, applied only to the gains portion of each withdrawal. The annual ₹1.25L exemption is ignored here for simplicity."
           />
         )}
-        <NumericSliderField
+        <SliderField
           label="Marginal income tax rate"
           value={inputs.taxrate}
           min={0}
@@ -195,8 +197,8 @@ export function ControlPanel({
         />
       </Group>
 
-      <Group number={5} title="Time horizon" defaultOpen last>
-        <NumericSliderField
+      <Group icon={<ClockIcon />} title="Time horizon" defaultOpen last>
+        <SliderField
           label="View results after"
           value={displayHorizon}
           min={1}
@@ -207,18 +209,18 @@ export function ControlPanel({
           hint="Follows the loan's payoff automatically. Drag it yourself to look further out."
         />
       </Group>
-    </div>
+    </GlassCard>
   );
 }
 
 function Group({
-  number,
+  icon,
   title,
   defaultOpen,
   last,
   children,
 }: {
-  number: number;
+  icon: ReactNode;
   title: string;
   defaultOpen?: boolean;
   last?: boolean;
@@ -227,8 +229,8 @@ function Group({
   return (
     <details open={defaultOpen} className={`group ${last ? "" : "border-b border-line"}`}>
       <summary className="flex cursor-pointer list-none items-center gap-2.5 px-5 py-3.5 text-body-sm font-semibold text-ink transition-colors hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
-        <span className="flex size-[22px] flex-none items-center justify-center rounded-sm bg-indigo-soft font-mono text-mono-sm font-bold text-indigo">
-          {number}
+        <span className="flex size-[26px] flex-none items-center justify-center rounded-sm bg-indigo-soft text-indigo">
+          {icon}
         </span>
         {title}
         <svg
@@ -246,79 +248,56 @@ function Group({
   );
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
+const iconProps = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  className: "size-3.5",
+} as const;
 
-function NumericSliderField({
-  label,
-  value,
-  min,
-  max,
-  step,
-  onChange,
-  formatValue,
-  hint,
-  tip,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  onChange: (value: number) => void;
-  formatValue: (value: number) => string;
-  hint?: string;
-  tip?: string;
-}) {
-  const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
-
+function HomeIcon() {
   return (
-    <div>
-      <label className="mb-2 flex items-center justify-between gap-2 text-body-sm text-ink-2">
-        <span className="inline-flex items-center gap-1.5">
-          {label}
-          {tip && <InfoTip text={tip} />}
-        </span>
-        <b className="font-mono text-mono-sm font-bold text-ink">{formatValue(value)}</b>
-      </label>
-      <div className="flex flex-wrap items-center gap-2.5">
-        <input
-          type="range"
-          aria-label={label}
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(+e.target.value)}
-          style={{ background: `linear-gradient(90deg, var(--indigo) ${pct}%, var(--surface-2) ${pct}%)` }}
-          className="h-1.5 min-w-[80px] flex-1 basis-[140px]"
-        />
-        <input
-          type="number"
-          aria-label={`${label} (exact value)`}
-          value={value}
-          step={step}
-          onChange={(e) => {
-            const raw = e.target.value;
-            if (raw === "") return;
-            onChange(clamp(+raw, min, max));
-          }}
-          className="w-[92px] flex-none rounded-sm border border-line-2 bg-surface px-2 py-1.5 font-mono text-mono-sm font-semibold text-ink focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo-soft"
-        />
-      </div>
-      {hint && <p className="mt-2 text-caption text-ink-3">{hint}</p>}
-    </div>
+    <svg {...iconProps}>
+      <path d="M3 11l9-8 9 8" />
+      <path d="M5 10v10h14V10" />
+    </svg>
   );
 }
 
-function InfoTip({ text }: { text: string }) {
+function TrendIcon() {
   return (
-    <span className="group/tip relative inline-flex size-4 cursor-help items-center justify-center rounded-full border border-line-2 bg-indigo-soft text-caption leading-none font-bold text-indigo">
-      ?
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 rounded border border-line-2 bg-ink px-3 py-2 text-caption leading-normal font-normal text-paper opacity-0 shadow transition-opacity group-hover/tip:opacity-100">
-        {text}
-      </span>
-    </span>
+    <svg {...iconProps}>
+      <path d="M3 17l6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </svg>
+  );
+}
+
+function BankIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M3 10l9-6 9 6" />
+      <path d="M5 10v9M10 10v9M14 10v9M19 10v9" />
+      <path d="M3 21h18" />
+    </svg>
+  );
+}
+
+function ReceiptIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
+      <path d="M9 8h6M9 12h6" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
   );
 }

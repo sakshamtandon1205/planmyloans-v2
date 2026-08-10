@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Calculator } from "@/components/Calculator";
 import { Hero } from "@/components/Hero";
+import { QuickEstimate } from "@/components/QuickEstimate";
 
 export const metadata: Metadata = {
   title: "PlanMyLoans · Home Loan, EMI & SWP Planner",
@@ -12,6 +13,7 @@ export default function Home() {
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-paper">
       <Hero />
+      <QuickEstimate />
       <Calculator />
     </div>
   );

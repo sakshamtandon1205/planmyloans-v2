@@ -55,6 +55,9 @@ export interface CalculatorResults {
   corpusReturnPercent: number;
   /** The horizon actually used in every calculation below (auto-follows payoff unless the user overrides it). */
   horizonYears: number;
+  horizonMonths: number;
+  /** False if the loan is still outstanding at the end of the viewing horizon. */
+  loanClearedWithinHorizon: boolean;
   amortization: AmortizationResult;
   corpusSim: CorpusSimulationResult;
   taxBenefit: LoanTaxBenefitResult;

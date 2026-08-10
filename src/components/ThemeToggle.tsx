@@ -1,19 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
-
-const noopSubscribe = () => () => {};
-
-// Avoids a hydration mismatch: the server always renders the "unmounted"
-// snapshot, and the client swaps to the real theme right after hydrating.
-function useMounted() {
-  return useSyncExternalStore(
-    noopSubscribe,
-    () => true,
-    () => false,
-  );
-}
+import { useMounted } from "@/lib/useMounted";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();

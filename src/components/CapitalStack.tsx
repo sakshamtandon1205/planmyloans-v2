@@ -1,4 +1,6 @@
+import { motion } from "framer-motion";
 import { formatLakh } from "@/lib/format";
+import { GlassCard } from "./GlassCard";
 
 interface CapitalStackProps {
   price: number;
@@ -32,19 +34,21 @@ export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corp
   ];
 
   return (
-    <div className="rounded-lg border border-line bg-surface p-5 shadow-sm">
+    <GlassCard className="p-5">
       <div className="mb-4 flex items-baseline justify-between">
         <span className="font-heading text-h3 text-ink">Capital stack</span>
         <span className="text-body-sm font-semibold text-ink-2">Total {formatLakh(price)}</span>
       </div>
 
       <div className="flex h-[52px] overflow-hidden rounded">
-        {segments.map((s) => {
+        {segments.map((s, i) => {
           const pct = price > 0 ? (s.value / price) * 100 : 0;
           return (
-            <div
+            <motion.div
               key={s.key}
-              style={{ width: `${pct}%` }}
+              initial={{ width: "0%" }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.1 }}
               className={`flex flex-col justify-center overflow-hidden whitespace-nowrap px-3 ${s.className}`}
             >
               {pct > MIN_LABEL_PERCENT && (
@@ -53,7 +57,7 @@ export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corp
                   <span className="truncate font-mono text-mono-sm font-bold">{formatLakh(s.value)}</span>
                 </>
               )}
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -64,7 +68,7 @@ export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corp
         <LegendDot className="bg-jade-soft" label={corpusLabel} />
         <LegendDot className="bg-line-2" label="Home loan" />
       </div>
-    </div>
+    </GlassCard>
   );
 }
 

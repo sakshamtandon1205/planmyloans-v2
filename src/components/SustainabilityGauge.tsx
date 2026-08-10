@@ -44,17 +44,19 @@ export function SustainabilityGauge({
   ) : null;
 
   const tone = isRisky
-    ? { border: "border-amber/40", bg: "bg-amber-soft", text: "text-ink", fill: "bg-amber" }
-    : { border: "border-jade/40", bg: "bg-jade-soft", text: "text-ink", fill: "bg-jade" };
+    ? { border: "border-amber/40", bg: "bg-amber-soft/75 dark:bg-amber-soft/65", text: "text-ink", fill: "bg-amber" }
+    : { border: "border-jade/40", bg: "bg-jade-soft/75 dark:bg-jade-soft/65", text: "text-ink", fill: "bg-jade" };
 
   return (
-    <div className={`flex gap-4 rounded-lg border ${tone.border} ${tone.bg} p-5`}>
+    <div
+      className={`flex gap-4 rounded-lg border ${tone.border} ${tone.bg} p-5 shadow-sm backdrop-blur-[14px] [-webkit-backdrop-filter:blur(14px)]`}
+    >
       <svg
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth={2}
-        className={`mt-0.5 size-[22px] flex-none ${isRisky ? "text-amber" : "text-jade"}`}
+        className={`mt-0.5 size-8 flex-none ${isRisky ? "text-amber" : "text-jade"}`}
       >
         {isRisky ? (
           <>
@@ -72,16 +74,16 @@ export function SustainabilityGauge({
       <div className="flex-1">
         <p className={`text-body leading-relaxed ${tone.text}`}>{isRisky ? warnText : okText}</p>
 
-        <div className="mt-3.5">
-          <div className="h-2 overflow-hidden rounded-sm bg-ink/[0.07]">
+        <div className="mt-4">
+          <div className="h-3 overflow-hidden rounded-full bg-ink/[0.07] shadow-inner">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(100, Math.max(0, gaugePct))}%` }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`h-full rounded-sm ${tone.fill}`}
+              className={`h-full rounded-full ${tone.fill}`}
             />
           </div>
-          <div className="mt-1.5 flex flex-wrap justify-between gap-x-2.5 gap-y-0.5 font-mono text-mono-sm text-ink-2">
+          <div className="mt-2 flex flex-wrap justify-between gap-x-2.5 gap-y-0.5 font-mono text-mono-sm text-ink-2">
             <span>sustainable</span>
             <span className="order-3 flex-1 basis-full text-center sm:order-none sm:basis-auto">{gaugeLabel}</span>
             <span>draining fast</span>

@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { calculatePayoffMonths, generateAmortizationSchedule } from "@/lib/calculations/emi";
 import { simulateBankCorpus, simulateSwpCorpus } from "@/lib/calculations/swp";
+import { useSharedInputsStore } from "@/lib/sharedInputsStore";
 import { calculateLoanTaxBenefitFromSchedule } from "@/lib/calculations/tax";
 import type { AmortizationResult, CorpusSimulationResult } from "@/lib/calculations/types";
 import { AmortizationChart, BalanceChart } from "./BalanceChart";
+import { AmortizationTable } from "./AmortizationTable";
 import { CapitalStack } from "./CapitalStack";
 import { ControlPanel } from "./ControlPanel";
-import { HeroStats } from "./HeroStats";
 import { ResultCards } from "./ResultCards";
 import { SustainabilityGauge } from "./SustainabilityGauge";
 import { DEFAULT_INPUTS, type CalculatorInputs, type CalculatorResults, type ChartPoint } from "./calculatorTypes";
@@ -38,13 +39,72 @@ export function Calculator() {
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
   const [horizonAuto, setHorizonAuto] = useState(true);
 
-  const updateInput = <K extends keyof CalculatorInputs>(key: K, value: CalculatorInputs[K]) => {
+  const updateInput = useCallback(<K extends keyof CalculatorInputs>(key: K, value: CalculatorInputs[K]) => {
     setInputs((prev) => {
       const next = { ...prev, [key]: value };
       const { dp, mf } = resolveOwnFundsSplit(next);
       return { ...next, dp, mf };
     });
-  };
+  }, []);
+
+  // Home loan interest rate, tenure, and loan amount (= price − down
+  // payment) are shared live with QuickEstimate via a Zustand store.
+  //
+  // Each direction is its OWN effect, triggered ONLY by its own source of
+  // truth changing — never by the value it's writing to. The "push to
+  // store" effects below read the store with getState() (a snapshot, not a
+  // subscription) so they don't re-fire when the store changes; the "pull
+  // from store" effects use setInputs' functional form to read the latest
+  // local state without needing it in the dependency array. An earlier
+  // version subscribed to *both* values in *both* effects and compared
+  // them — that makes each effect fire on the other's write too, and since
+  // they disagree about which side is authoritative, they fight forever
+  // ("Maximum update depth exceeded", caught by hand-testing the sync).
+  const storeRate = useSharedInputsStore((s) => s.rate);
+  const storeTenure = useSharedInputsStore((s) => s.tenure);
+  const storeLoanAmount = useSharedInputsStore((s) => s.loanAmount);
+
+  useEffect(() => {
+    const { rate, setRate } = useSharedInputsStore.getState();
+    if (inputs.lr !== rate) setRate(inputs.lr);
+  }, [inputs.lr]);
+  useEffect(() => {
+    const { tenure, setTenure } = useSharedInputsStore.getState();
+    if (inputs.tenure !== tenure) setTenure(inputs.tenure);
+  }, [inputs.tenure]);
+  useEffect(() => {
+    const { loanAmount, setLoanAmount } = useSharedInputsStore.getState();
+    const derivedLoan = inputs.price - inputs.dp;
+    if (derivedLoan !== loanAmount) setLoanAmount(derivedLoan);
+  }, [inputs.price, inputs.dp]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pulls the shared store (an external system) into local state; bails via `return prev` when already equal, so it settles rather than looping (see the pairing effects above).
+    setInputs((prev) => {
+      if (prev.lr === storeRate) return prev;
+      const next = { ...prev, lr: storeRate };
+      const { dp, mf } = resolveOwnFundsSplit(next);
+      return { ...next, dp, mf };
+    });
+  }, [storeRate]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- same external-store pull as above.
+    setInputs((prev) => {
+      if (prev.tenure === storeTenure) return prev;
+      const next = { ...prev, tenure: storeTenure };
+      const { dp, mf } = resolveOwnFundsSplit(next);
+      return { ...next, dp, mf };
+    });
+  }, [storeTenure]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- same external-store pull as above.
+    setInputs((prev) => {
+      if (prev.price - prev.dp === storeLoanAmount) return prev;
+      const next = { ...prev, price: storeLoanAmount + prev.dp };
+      const { dp, mf } = resolveOwnFundsSplit(next);
+      return { ...next, dp, mf };
+    });
+  }, [storeLoanAmount]);
 
   const handleHorizonChange = (value: number) => {
     setHorizonAuto(false);
@@ -60,15 +120,12 @@ export function Calculator() {
 
   return (
     <motion.div
+      id="planner"
       initial="hidden"
       animate="show"
       variants={stagger}
-      className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6 px-6 py-10"
+      className="mx-auto flex w-full min-w-0 max-w-6xl scroll-mt-6 flex-col gap-6 px-6 py-10"
     >
-      <motion.div variants={fadeUp} className="min-w-0">
-        <HeroStats inputs={inputs} results={results} />
-      </motion.div>
-
       <motion.div variants={fadeUp} className="min-w-0">
         <CapitalStack
           price={inputs.price}
@@ -113,11 +170,21 @@ export function Calculator() {
           </motion.div>
 
           <motion.div variants={fadeUp} className="min-w-0">
-            <BalanceChart series={results.chartSeries} corpusLabel={results.corpusLabel} />
+            <BalanceChart
+              series={results.chartSeries}
+              corpusLabel={results.corpusLabel}
+              horizonMonths={results.horizonMonths}
+              payoffMonth={results.loanClearedWithinHorizon ? results.amortization.payoffMonths : null}
+              depletionMonth={results.corpusSim.depletedAtMonth}
+            />
           </motion.div>
 
           <motion.div variants={fadeUp} className="min-w-0">
             <AmortizationChart series={results.chartSeries} />
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="min-w-0">
+            <AmortizationTable schedule={results.amortization.schedule} />
           </motion.div>
         </div>
       </div>
@@ -200,12 +267,19 @@ function computeResults(inputs: CalculatorInputs, horizonAuto: boolean): Calcula
 
   const chartSeries = buildChartSeries(mf, corpus, loan, mfMonthlyRate, amortization, corpusSim, horizonMonths);
 
+  // generateAmortizationSchedule falls back to simulationMonths when the balance
+  // never actually hits zero within the window (a horizon shorter than payoff) —
+  // check the real balance so the chart doesn't claim a payoff that hasn't happened.
+  const loanClearedWithinHorizon = amortization.schedule[amortization.payoffMonths - 1]?.balance === 0;
+
   return {
     loan,
     corpus,
     corpusLabel,
     corpusReturnPercent,
     horizonYears,
+    horizonMonths,
+    loanClearedWithinHorizon,
     amortization,
     corpusSim,
     taxBenefit,
