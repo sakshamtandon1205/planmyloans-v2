@@ -22,9 +22,9 @@ interface StrategyCardProps {
   onUsePlan: (result: StrategyResult, options: UsePlanOptions) => void;
 }
 
-function formatPayoff(months: number): string {
+function formatMonths(months: number): string {
   const years = Math.floor(months / 12);
-  const rem = months % 12;
+  const rem = Math.round(months % 12);
   if (years === 0) return `${rem} mo`;
   if (rem === 0) return `${years} yr`;
   return `${years} yr ${rem} mo`;
@@ -38,20 +38,31 @@ function riskProfile(result: StrategyResult) {
   return { gaugePct, isRisky };
 }
 
+// What each strategy is actually doing with the money — shown as a single
+// line under the mini capital stack, distinct from the header tagline above.
+const ALLOCATION_INTENT: Record<StrategyResult["id"], string> = {
+  safety: "Minimal market exposure — funds held in bank, larger buffer for certainty.",
+  balanced: "Down payment held at the 20% floor, the rest split between equity growth and a resilient SWP cushion.",
+  aggressive: "Maximum capital working in equity — fastest payoff, more volatility.",
+  bonus: "One bonus EMI a year, funded by tax savings rather than extra monthly cash flow.",
+};
+
 const STACK_SEGMENTS = [
-  { key: "dp", className: "bg-indigo-solid" },
-  { key: "mf", className: "bg-jade-solid" },
-  { key: "corpus", className: "bg-jade-soft" },
+  { key: "dp", label: "DP", className: "bg-indigo-solid text-white" },
+  { key: "mf", label: "MF", className: "bg-jade-solid text-white" },
+  { key: "corpus", className: "bg-jade-soft text-jade" },
   {
     key: "loan",
+    label: "Loan",
     className:
-      "bg-[repeating-linear-gradient(135deg,var(--surface-2)_0,var(--surface-2)_6px,var(--line)_6px,var(--line)_12px)]",
+      "bg-[repeating-linear-gradient(135deg,var(--surface-2)_0,var(--surface-2)_6px,var(--line)_6px,var(--line)_12px)] text-ink-2",
   },
 ] as const;
 
 function MiniCapitalStack({ result }: { result: StrategyResult }) {
   const { downPayment, mfLumpsum, corpus, loanAmount } = result.capitalStack;
   const total = downPayment + mfLumpsum + corpus + loanAmount;
+  const corpusLabel = result.fundingMode === "bank" ? "Bank" : "SWP";
   const values: Record<(typeof STACK_SEGMENTS)[number]["key"], number> = {
     dp: downPayment,
     mf: mfLumpsum,
@@ -60,10 +71,24 @@ function MiniCapitalStack({ result }: { result: StrategyResult }) {
   };
 
   return (
-    <div className="flex h-[18px] overflow-hidden rounded-sm" aria-hidden>
+    <div className="flex h-[22px] overflow-hidden rounded-sm" aria-hidden>
       {STACK_SEGMENTS.map((s) => {
         const pct = total > 0 ? (values[s.key] / total) * 100 : 0;
-        return <div key={s.key} style={{ width: `${pct}%` }} className={s.className} />;
+        const label = s.key === "corpus" ? corpusLabel : s.label;
+        return (
+          <div
+            key={s.key}
+            style={{ width: `${pct}%` }}
+            className={`@container/miniseg flex items-center justify-center overflow-hidden ${s.className}`}
+          >
+            {/* Same width-aware hide (not truncate) as the main Capital
+                Stack bar — at this scale even a 2-3 letter abbreviation
+                needs ~26px to read cleanly. */}
+            <span className="hidden truncate text-[9px] font-bold uppercase tracking-wide @min-[26px]/miniseg:block">
+              {label}
+            </span>
+          </div>
+        );
       })}
     </div>
   );
@@ -86,10 +111,10 @@ const ICONS: Record<StrategyResult["id"], ReactNode> = {
       <path d="M9 15l-3 3 1 3 3-1M15 15l3 3-1 3-3-1" />
     </svg>
   ),
-  offset: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="size-5">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9 15l6-6M9.5 10a.5.5 0 100-1 .5.5 0 000 1zM14.5 15a.5.5 0 100-1 .5.5 0 000 1z" />
+  bonus: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="size-5">
+      <path d="M20.59 13.41L13.42 20.58a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+      <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none" />
     </svg>
   ),
 };
@@ -97,11 +122,10 @@ const ICONS: Record<StrategyResult["id"], ReactNode> = {
 export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardProps) {
   const [lumpSumCount, setLumpSumCount] = useState(1);
   const [lumpSumOn, setLumpSumOn] = useState(false);
-  const [offsetExpanded, setOffsetExpanded] = useState(false);
   const setHoveredStrategyId = useAmbientMoodStore((s) => s.setHoveredStrategyId);
   const clearHoveredStrategyId = useAmbientMoodStore((s) => s.clearHoveredStrategyId);
 
-  const isOffset = result.id === "offset";
+  const isBonus = result.id === "bonus";
   const isSafety = result.id === "safety";
   const isBalanced = result.id === "balanced";
 
@@ -126,7 +150,7 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
   const { gaugePct, isRisky } = riskProfile(result);
 
   const interestSavedVsSafety =
-    safetyResult && !isSafety && !isOffset ? safetyResult.totalInterestPaid - result.totalInterestPaid : null;
+    safetyResult && !isSafety && !isBonus ? safetyResult.totalInterestPaid - result.totalInterestPaid : null;
 
   const offsetLabel =
     result.interestOffsetPercent >= 100 ? "100%+" : `${result.interestOffsetPercent.toFixed(0)}%`;
@@ -134,55 +158,82 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
   return (
     <motion.div
       data-testid={`strategy-card-${result.id}`}
-      className={`glass-panel-sm flex h-full min-w-0 flex-col gap-3 p-4 ${isOffset ? "border-2 border-dashed border-amber/50" : isBalanced ? "border-2 border-jade/40" : ""}`}
+      className={`@container/card glass-panel-sm flex h-full min-w-0 flex-col gap-3 p-3 @min-[220px]/card:p-4 ${isBonus ? "border border-amber/35" : isBalanced ? "border-2 border-jade/40" : ""}`}
       whileHover={{ y: -4, scale: 1.015, transition: hoverSpring }}
       onHoverStart={() => setHoveredStrategyId(result.id)}
       onHoverEnd={() => clearHoveredStrategyId(result.id)}
       onFocus={() => setHoveredStrategyId(result.id)}
       onBlur={() => clearHoveredStrategyId(result.id)}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <span className="mt-0.5 flex size-8 flex-none items-center justify-center rounded-sm bg-indigo-soft text-indigo">
-            {ICONS[result.id]}
-          </span>
-          <div className="min-w-0">
-            <div className="font-heading text-body font-bold text-ink">{result.name}</div>
-            <p className="min-h-[2.75em] text-caption leading-snug text-ink-2 line-clamp-2">{result.subtitle}</p>
-          </div>
+      {/* The badge gets its own row, always above icon+title in normal
+          document flow — never side-by-side with them. Side-by-side (even
+          with flex-wrap) let "RECOMMENDED"'s pill width compete with the
+          title for space on narrow cards, which is exactly what read as
+          "overlapping" at the 2x2 mobile grid width. */}
+      {isBalanced && (
+        <div>
+          <Badge tone="jade">Recommended</Badge>
         </div>
-        {isBalanced && (
-          <div className="flex-none">
-            <Badge tone="jade">Recommended</Badge>
-          </div>
-        )}
+      )}
+      <div className="flex min-w-0 items-start gap-2.5">
+        <span className="mt-0.5 flex size-8 flex-none items-center justify-center rounded-sm bg-indigo-soft text-indigo">
+          {ICONS[result.id]}
+        </span>
+        <div className="min-w-0">
+          <div className="font-heading text-body font-bold text-ink">{result.name}</div>
+          <p className="min-h-[2.75em] text-caption leading-snug text-ink-2 line-clamp-2">{result.subtitle}</p>
+        </div>
       </div>
 
       <MiniCapitalStack result={result} />
 
-      <div className="grid grid-cols-2 gap-2">
-        <Stat label="EMI" value={`${formatINR(result.emi)}/mo`} testId={`strategy-emi-${result.id}`} />
-        <Stat label="Payoff" value={formatPayoff(displayPayoffMonths)} testId={`strategy-payoff-${result.id}`} />
+      <p className="text-caption leading-snug text-ink-2">{ALLOCATION_INTENT[result.id]}</p>
+
+      {/* Stacked to a single column on narrow cards — the 2x2 mobile grid's
+          card width halves this again for each stat, which was forcing
+          numbers like "₹84,587/mo" to wrap mid-word inside a ~60px column.
+          Giving each stat the card's full width lets it sit on one line;
+          side-by-side only kicks in once the card is wide enough to afford
+          it (container query on the card itself, not the viewport, so this
+          holds for any card width, not just the 2x2 mobile breakpoint). */}
+      <div className="grid grid-cols-1 gap-2 @min-[200px]/card:grid-cols-2">
+        <Stat
+          label="Down payment"
+          value={`${(result.downPaymentPercent * 100).toFixed(0)}% · ${formatLakh(result.capitalStack.downPayment)}`}
+          testId={`strategy-downpayment-${result.id}`}
+        />
+        <Stat label="EMI runway" value={formatMonths(result.emiRunwayMonths)} testId={`strategy-runway-${result.id}`} />
       </div>
-      {isOffset ? (
-        <Stat
-          label="Required MF return"
-          value={`${result.requiredMfReturnPercent?.toFixed(1) ?? "–"}%`}
-          tone="text-amber"
-          testId={`strategy-required-return-${result.id}`}
-        />
+
+      <div className="grid grid-cols-1 gap-2 @min-[200px]/card:grid-cols-2">
+        <Stat label="EMI" value={`${formatINR(result.emi)}/mo`} testId={`strategy-emi-${result.id}`} />
+        <Stat label="Payoff" value={formatMonths(displayPayoffMonths)} testId={`strategy-payoff-${result.id}`} />
+      </div>
+
+      {isBonus ? (
+        <div className="grid grid-cols-1 gap-2 @min-[200px]/card:grid-cols-2">
+          <Stat
+            label="Tax saved"
+            value={formatINR(result.taxSavingsAmount ?? 0)}
+            tone="text-jade"
+            testId={`strategy-taxsaved-${result.id}`}
+          />
+          <Stat
+            label="Net effective cost"
+            value={formatINR(result.netEffectiveInterestCost ?? result.totalInterestPaid)}
+            tone="text-amber"
+            testId={`strategy-neteffective-${result.id}`}
+          />
+        </div>
       ) : (
-        <Stat
-          label="Total interest"
-          value={formatINR(displayTotalInterest)}
-          testId={`strategy-interest-${result.id}`}
-        />
+        <Stat label="Total interest" value={formatINR(displayTotalInterest)} testId={`strategy-interest-${result.id}`} />
       )}
 
-      {isOffset && (
-        <p className="text-caption text-ink-3">
-          Total interest (at {result.mfReturnPercent}% MF return): {formatINR(result.totalInterestPaid)}. If actual
-          return is 3 points lower, MF growth offsets ~{result.offsetPercentAt3PtsLower?.toFixed(0) ?? "–"}% of it.
+      <Stat label="Net wealth at horizon" value={formatINR(result.netWealthAtHorizon)} testId={`strategy-wealth-${result.id}`} />
+
+      {isBonus && (
+        <p className="text-caption text-amber">
+          Assumes Old Tax Regime — Sec 24(b) and 80C deductions aren&apos;t available to New Regime taxpayers.
         </p>
       )}
 
@@ -250,47 +301,21 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
         </div>
       )}
 
-      {isOffset && offsetExpanded && (
-        <div className="rounded-sm bg-amber-soft/60 p-3 text-caption leading-relaxed text-ink">
-          To fully cover this loan&apos;s interest via MF growth alone, the mutual fund lumpsum of{" "}
-          {formatLakh(result.capitalStack.mfLumpsum)} needs to compound at{" "}
-          <b>{result.requiredMfReturnPercent?.toFixed(1) ?? "–"}%</b> annually over the {formatPayoff(result.payoffMonths)}{" "}
-          payoff window. At 3 points lower ({((result.requiredMfReturnPercent ?? 0) - 3).toFixed(1)}%), it would only
-          offset ~{result.offsetPercentAt3PtsLower?.toFixed(0) ?? "–"}% of the interest instead.
-        </div>
-      )}
-
       <div className="mt-auto pt-1">
-        {isOffset ? (
-          offsetExpanded ? (
-            <button
-              type="button"
-              onClick={() => onUsePlan(result, { annualLumpSumCount: 0 })}
-              data-testid={`strategy-use-plan-${result.id}`}
-              className="w-full rounded-sm border border-amber bg-amber-soft px-3 py-2 text-body-sm font-semibold text-amber transition-colors hover:bg-amber/20"
-            >
-              Use this plan
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setOffsetExpanded(true)}
-              data-testid="strategy-see-sensitivity"
-              className="w-full rounded-sm border border-line-2 bg-surface-2 px-3 py-2 text-body-sm font-semibold text-ink-2 transition-colors hover:border-amber hover:text-amber"
-            >
-              See sensitivity
-            </button>
-          )
-        ) : (
-          <button
-            type="button"
-            onClick={() => onUsePlan(result, { annualLumpSumCount: isSafety && lumpSumOn ? lumpSumCount : 0 })}
-            data-testid={`strategy-use-plan-${result.id}`}
-            className="w-full rounded-sm bg-indigo-solid px-3 py-2 text-body-sm font-semibold text-white transition-colors hover:brightness-110"
-          >
-            Use this plan
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() =>
+            onUsePlan(result, { annualLumpSumCount: isSafety && lumpSumOn ? lumpSumCount : result.annualLumpSumCount })
+          }
+          data-testid={`strategy-use-plan-${result.id}`}
+          className={`w-full rounded-sm px-3 py-2 text-body-sm font-semibold transition-colors ${
+            isBonus
+              ? "border border-amber/60 bg-amber-soft text-amber hover:bg-amber/20"
+              : "bg-indigo-solid text-white hover:brightness-110"
+          }`}
+        >
+          Use this plan
+        </button>
       </div>
     </motion.div>
   );
@@ -310,7 +335,17 @@ function Stat({
   return (
     <div className="min-w-0">
       <div className="text-caption uppercase leading-tight text-ink-3">{label}</div>
-      <div data-testid={testId} className={`break-words font-mono text-mono-sm font-bold ${tone}`}>
+      {/* break-all (not just break-words) guarantees a wrap even for a
+          single unbroken run like "₹1,54,587/mo" — on the narrow 2x2 mobile
+          grid a stat column can be under 65px, too tight for that string to
+          find a natural break point otherwise, which is what was clipping
+          numbers mid-digit. The smaller base size (bumped back up via
+          container query once the card itself has room) keeps the wrapped
+          result to 2 lines instead of 3-4 at that width. */}
+      <div
+        data-testid={testId}
+        className={`break-all font-mono text-[11px] leading-snug font-bold @min-[220px]/card:text-mono-sm ${tone}`}
+      >
         {value}
       </div>
     </div>

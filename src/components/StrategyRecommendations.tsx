@@ -11,12 +11,17 @@ export function StrategyRecommendations() {
   const [results, setResults] = useState<StrategyResult[] | null>(null);
 
   const handleSubmit = (values: StrategyFormValues) => {
+    // Interest rate and tenure aren't asked here — they already live in the
+    // shared store (Quick Estimate / Planner's own source of truth), so we
+    // just read the current values at submit time rather than duplicating
+    // the inputs.
+    const { rate, tenure } = useSharedInputsStore.getState();
     setResults(
       computeStrategies({
         propertyPrice: values.propertyPrice,
         ownFunds: values.ownFunds,
-        loanRatePercent: values.loanRatePercent,
-        tenureYears: values.tenureYears,
+        loanRatePercent: rate,
+        tenureYears: tenure,
       }),
     );
   };

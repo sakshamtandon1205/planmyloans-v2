@@ -18,8 +18,6 @@ interface Segment {
   className: string;
 }
 
-const MIN_LABEL_PERCENT = 9;
-
 export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corpusLabel }: CapitalStackProps) {
   const segments: Segment[] = [
     { key: "dp", label: "Down payment", value: downPayment, className: "bg-indigo-solid text-white" },
@@ -49,14 +47,23 @@ export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corp
               initial={{ width: "0%" }}
               animate={{ width: `${pct}%` }}
               transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.1 }}
-              className={`flex flex-col justify-center overflow-hidden whitespace-nowrap px-3 ${s.className}`}
+              className={`@container/segment flex flex-col justify-center overflow-hidden whitespace-nowrap px-3 ${s.className}`}
             >
-              {pct > MIN_LABEL_PERCENT && (
-                <>
-                  <span className="truncate text-label font-semibold normal-case">{s.label}</span>
-                  <span className="truncate font-mono text-mono-sm font-bold">{formatLakh(s.value)}</span>
-                </>
-              )}
+              {/* Below ~76px of actual rendered width, "Down payment" / "MF
+                  lumpsum" etc. can't fit legibly even truncated to 1
+                  character — so instead of clipping to an unreadable sliver,
+                  the label is hidden outright and the color-coded legend
+                  below the bar carries identification instead. Driven by a
+                  container query keyed to the segment's OWN rendered box
+                  (not the viewport), so this responds correctly to any
+                  combination of viewport width and segment proportion,
+                  unlike a percentage-of-parent guess. */}
+              <span className="hidden truncate text-label font-semibold normal-case @min-[76px]/segment:block">
+                {s.label}
+              </span>
+              <span className="hidden truncate font-mono text-mono-sm font-bold @min-[76px]/segment:block">
+                {formatLakh(s.value)}
+              </span>
             </motion.div>
           );
         })}

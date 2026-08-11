@@ -67,7 +67,7 @@ const orbs: Orb[] = [
 const MOOD_BOOSTS: Partial<Record<StrategyId, Partial<Record<Orb["token"], number>>>> = {
   safety: { "--jade": 1.45, "--amber": 0.45, "--indigo": 0.85 },
   aggressive: { "--amber": 1.7, "--jade": 0.55, "--indigo": 0.85 },
-  offset: { "--amber": 1.85, "--jade": 0.5, "--indigo": 0.7 },
+  bonus: { "--amber": 1.85, "--jade": 0.5, "--indigo": 0.7 },
 };
 
 function moodBoostFor(token: Orb["token"], hoveredStrategyId: StrategyId | null): number {

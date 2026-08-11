@@ -20,10 +20,10 @@ export function StrategyGrid({ results, onUsePlan }: StrategyGridProps) {
 
       <p className="mt-5 text-caption leading-relaxed text-ink-3">
         Assumes a {balanced?.loanRatePercent ?? "–"}% loan rate, a {balanced?.mfReturnPercent ?? 12}% mutual fund
-        return, and a {balanced?.corpusReturnPercent ?? "–"}% SWP/bank corpus return. Buffer targets: Safety First
-        holds back ~6 months of EMI, Balanced and Interest Offset ~4 months, Aggressive Payoff a flat ₹1.5L floor.
-        Illustrative model only, not financial advice — see the full planner below to adjust every assumption
-        yourself.
+        return, and a {balanced?.corpusReturnPercent ?? "–"}% SWP/bank corpus return, all from Quick Estimate above.
+        Down payment is searched or fixed per strategy but never below the 20% floor; each corpus is sized to a
+        target months-of-EMI runway. Tax-Optimized Payoff assumes the Old Tax Regime. Illustrative model only, not
+        financial advice — see the full planner below to adjust every assumption yourself.
       </p>
     </section>
   );

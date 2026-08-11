@@ -13,6 +13,7 @@ test.beforeEach(({ browserName }) => {
 
 async function showStrategies(page: import("@playwright/test").Page) {
   await page.goto("/");
+  await page.getByRole("button", { name: /See 4 tailored strategies/ }).click();
   await page.getByRole("button", { name: "Show me strategies" }).click();
 }
 
@@ -20,14 +21,17 @@ test.describe("Strategy recommendations", () => {
   test("all 4 cards render with plausible, distinct EMI/payoff/interest data", async ({ page }) => {
     await showStrategies(page);
 
-    for (const id of ["safety", "balanced", "aggressive", "offset"]) {
+    for (const id of ["safety", "balanced", "aggressive", "bonus"]) {
       await expect(page.getByTestId(`strategy-card-${id}`)).toBeVisible();
       await expect(page.getByTestId(`strategy-emi-${id}`)).not.toHaveText("");
       await expect(page.getByTestId(`strategy-payoff-${id}`)).not.toHaveText("");
+      await expect(page.getByTestId(`strategy-downpayment-${id}`)).not.toHaveText("");
+      await expect(page.getByTestId(`strategy-runway-${id}`)).not.toHaveText("");
+      await expect(page.getByTestId(`strategy-wealth-${id}`)).not.toHaveText("");
     }
 
-    // Total interest is shown for the first 3; Interest Offset shows a
-    // required-return headline instead — both must be real, non-empty figures.
+    // Total interest is shown for the first 3; Tax-Optimized Payoff shows
+    // tax-saved/net-effective-cost headline figures instead.
     const safetyInterest = await page.getByTestId("strategy-interest-safety").textContent();
     const balancedInterest = await page.getByTestId("strategy-interest-balanced").textContent();
     const aggressiveInterest = await page.getByTestId("strategy-interest-aggressive").textContent();
@@ -35,10 +39,12 @@ test.describe("Strategy recommendations", () => {
     expect(balancedInterest).toBeTruthy();
     expect(aggressiveInterest).toBeTruthy();
     // Sanity: the 3 cards don't all show the identical figure (genuinely
-    // distinct strategies, not 4 copies of the same computation).
+    // distinct strategies, not 3 copies of the same computation).
     expect(new Set([safetyInterest, balancedInterest, aggressiveInterest]).size).toBe(3);
 
-    await expect(page.getByTestId("strategy-required-return-offset")).not.toHaveText("");
+    await expect(page.getByTestId("strategy-taxsaved-bonus")).not.toHaveText("");
+    await expect(page.getByTestId("strategy-neteffective-bonus")).not.toHaveText("");
+    await expect(page.getByText("Assumes Old Tax Regime")).toBeVisible();
 
     await expect(page.getByText("Recommended")).toBeVisible();
   });
@@ -61,13 +67,11 @@ test.describe("Strategy recommendations", () => {
     await expect(interest).toHaveText(before.interest ?? "");
   });
 
-  test("Interest Offset's 'See sensitivity' expands detail before offering 'Use this plan'", async ({ page }) => {
+  test("Tax-Optimized Payoff's 'Use this plan' works directly, no expand-gate", async ({ page }) => {
     await showStrategies(page);
 
-    await expect(page.getByTestId("strategy-use-plan-offset")).toHaveCount(0);
-    await page.getByTestId("strategy-see-sensitivity").click();
-    await expect(page.getByText(/needs to compound at/)).toBeVisible();
-    await expect(page.getByTestId("strategy-use-plan-offset")).toBeVisible();
+    await expect(page.getByTestId("strategy-use-plan-bonus")).toBeVisible();
+    await expect(page.getByTestId("strategy-use-plan-bonus")).toBeEnabled();
   });
 
   test("'Use this plan' on the Balanced card populates the real Planner fields, not just a scroll", async ({
@@ -84,19 +88,17 @@ test.describe("Strategy recommendations", () => {
     const price = planner.getByRole("spinbutton", { name: "Property price (exact value)" });
     const dp = planner.getByRole("spinbutton", { name: "Down payment (exact value)" });
     const mf = planner.getByRole("spinbutton", { name: "MF lumpsum (exact value)" });
-    const extra = planner.getByRole("spinbutton", { name: "Extra monthly prepay (exact value)" });
     const stepup = planner.getByRole("spinbutton", { name: "Step up prepay yearly (exact value)" });
     const swpToggle = planner.getByRole("button", { name: "SWP (mutual fund)" });
 
     await expect(price).toHaveValue("14000000");
-    await expect(extra).toHaveValue("30000");
-    await expect(stepup).toHaveValue("8");
+    // Balanced's down payment is fixed at exactly the 20% floor.
+    await expect(dp).toHaveValue("2800000");
+    await expect(stepup).toHaveValue("5");
     await expect(swpToggle).toHaveAttribute("aria-pressed", "true");
 
-    const dpValue = Number(await dp.inputValue());
     const mfValue = Number(await mf.inputValue());
-    expect(dpValue).toBeCloseTo(5349354.07, 0);
-    expect(mfValue).toBeCloseTo(2431524.58, 0);
+    expect(mfValue).toBeGreaterThan(0);
 
     // Landed on a fully populated, immediately-editable planner view.
     await expect(page.locator("#planner")).toBeInViewport();
@@ -106,7 +108,7 @@ test.describe("Strategy recommendations", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await showStrategies(page);
 
-    for (const id of ["safety", "balanced", "aggressive", "offset"]) {
+    for (const id of ["safety", "balanced", "aggressive", "bonus"]) {
       await expect(page.getByTestId(`strategy-card-${id}`)).toBeVisible();
     }
 
@@ -115,7 +117,7 @@ test.describe("Strategy recommendations", () => {
     );
     expect(hasOverflow).toBe(false);
 
-    // 2x2: Safety First and Balanced share a row, distinct from Aggressive/Offset's row.
+    // 2x2: Safety First and Balanced share a row, distinct from Aggressive/Bonus's row.
     const safetyBox = await page.getByTestId("strategy-card-safety").boundingBox();
     const balancedBox = await page.getByTestId("strategy-card-balanced").boundingBox();
     const aggressiveBox = await page.getByTestId("strategy-card-aggressive").boundingBox();

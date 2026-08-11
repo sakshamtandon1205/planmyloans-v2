@@ -8,15 +8,11 @@ import { SliderField } from "./SliderField";
 export interface StrategyFormValues {
   propertyPrice: number;
   ownFunds: number;
-  loanRatePercent: number;
-  tenureYears: number;
 }
 
 const DEFAULT_VALUES: StrategyFormValues = {
   propertyPrice: 14000000,
   ownFunds: 10000000,
-  loanRatePercent: 7.5,
-  tenureYears: 20,
 };
 
 interface StrategyInputsProps {
@@ -24,10 +20,9 @@ interface StrategyInputsProps {
 }
 
 export function StrategyInputs({ onSubmit }: StrategyInputsProps) {
-  // Collapsed by default so Quick Estimate (below) still lands above the
-  // fold on a typical desktop viewport, matching how the page behaved
-  // before this feature existed — this section is opt-in, not a mandatory
-  // step in the way down the page.
+  // Collapsed by default so Quick Estimate (above) still lands above the
+  // fold on a typical desktop viewport — this section is opt-in, not a
+  // mandatory step in the way down the page.
   const [expanded, setExpanded] = useState(false);
   const [values, setValues] = useState<StrategyFormValues>(DEFAULT_VALUES);
 
@@ -66,8 +61,8 @@ export function StrategyInputs({ onSubmit }: StrategyInputsProps) {
       <GlassCard className="p-5 sm:p-7">
         <h2 className="mb-1.5 font-heading text-h3 text-ink">4 strategies for your situation</h2>
         <p className="mb-5 text-body-sm text-ink-2">
-          A few numbers, and we&apos;ll compute 4 distinct ways to split your funds across down payment, mutual
-          funds, and prepayment.
+          We&apos;ll reuse the interest rate and tenure from Quick Estimate above — just tell us the property price
+          and what you have available, and we&apos;ll compute 4 distinct ways to split it.
         </p>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -88,24 +83,6 @@ export function StrategyInputs({ onSubmit }: StrategyInputsProps) {
             step={100000}
             onChange={(v) => update("ownFunds", v)}
             formatValue={formatLakh}
-          />
-          <SliderField
-            label="Loan interest rate"
-            value={values.loanRatePercent}
-            min={6}
-            max={13}
-            step={0.05}
-            onChange={(v) => update("loanRatePercent", v)}
-            formatValue={(v) => `${v}%`}
-          />
-          <SliderField
-            label="Loan tenure"
-            value={values.tenureYears}
-            min={5}
-            max={30}
-            step={1}
-            onChange={(v) => update("tenureYears", v)}
-            formatValue={(v) => `${v} yrs`}
           />
         </div>
 

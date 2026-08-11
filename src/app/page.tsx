@@ -14,8 +14,8 @@ export default function Home() {
   return (
     <div className="flex min-w-0 flex-1 flex-col">
       <Hero />
-      <StrategyRecommendations />
       <QuickEstimate />
+      <StrategyRecommendations />
       <Calculator />
     </div>
   );
