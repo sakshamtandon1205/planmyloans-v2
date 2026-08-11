@@ -14,6 +14,8 @@ export interface CalculatorInputs {
   extra: number;
   stepup: number;
   stepupemi: number;
+  /** Number of extra full-EMI lump sums applied to principal every 12 months, on top of extra/stepup. */
+  annualLumpSumCount: number;
   swptax: number;
   taxrate: number;
   horizon: number;
@@ -33,6 +35,7 @@ export const DEFAULT_INPUTS: CalculatorInputs = {
   extra: 0,
   stepup: 0,
   stepupemi: 0,
+  annualLumpSumCount: 0,
   swptax: 12.5,
   taxrate: 30,
   horizon: 20,

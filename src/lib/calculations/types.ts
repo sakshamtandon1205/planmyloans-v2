@@ -12,6 +12,13 @@ export interface AmortizationInput extends EmiInput {
   /** % the EMI itself rises by on each loan anniversary. */
   annualEmiStepUpPercent?: number;
   /**
+   * Number of extra lump-sum payments (each equal to the EMI in effect that
+   * year) applied once every 12 months — distinct from
+   * extraMonthlyPrepayment, which spreads an extra amount across every
+   * monthly payment instead. 0 (default) disables this mode.
+   */
+  annualLumpSumCount?: number;
+  /**
    * Number of months to simulate. Defaults to tenureMonths (full natural
    * amortization window). Pass a horizon shorter than tenureMonths to bound
    * the schedule to a viewing window; pass tenureMonths when you need the

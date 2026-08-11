@@ -1,5 +1,29 @@
 import { create } from "zustand";
 import { DEFAULT_INPUTS } from "@/components/calculatorTypes";
+import type { FundingMode } from "@/lib/calculations/types";
+
+/**
+ * Full snapshot of a strategy card's chosen values, written by "Use this
+ * plan" and pulled one-way into the Planner. Rate/tenure/price are included
+ * even though a strategy's headline numbers are "down payment/MF/corpus/
+ * funding mode" — without them the Planner would show that allocation
+ * against a stale rate/tenure and no longer match the card. `ownFunds` is
+ * derived as downPayment + mfLumpsum + corpus (the strategy engine's buffer
+ * has no field in the real Planner, so it's absorbed rather than carried
+ * over — the concrete dp/mf/corpus numbers are preserved exactly).
+ */
+export interface AppliedStrategy {
+  price: number;
+  ownFunds: number;
+  downPayment: number;
+  mfLumpsum: number;
+  fundingMode: FundingMode;
+  rate: number;
+  tenure: number;
+  extraPrepayment: number;
+  prepayStepUpPercent: number;
+  annualLumpSumCount: number;
+}
 
 /**
  * Fields QuickEstimate and the full Planner both edit live: home loan
@@ -33,6 +57,11 @@ interface SharedInputsState {
   setExtraPrepayment: (extraPrepayment: number) => void;
   setPrepayStepUpPercent: (prepayStepUpPercent: number) => void;
   setEmiStepUpPercent: (emiStepUpPercent: number) => void;
+  /** Non-null once a strategy card's "Use this plan" has been clicked at least once. */
+  appliedStrategy: AppliedStrategy | null;
+  /** Increments on every applyStrategy call, so re-clicking the same card still re-triggers the Planner's pull effect. */
+  applyStrategyToken: number;
+  applyStrategy: (strategy: AppliedStrategy) => void;
 }
 
 export const useSharedInputsStore = create<SharedInputsState>((set) => ({
@@ -48,4 +77,7 @@ export const useSharedInputsStore = create<SharedInputsState>((set) => ({
   setExtraPrepayment: (extraPrepayment) => set({ extraPrepayment }),
   setPrepayStepUpPercent: (prepayStepUpPercent) => set({ prepayStepUpPercent }),
   setEmiStepUpPercent: (emiStepUpPercent) => set({ emiStepUpPercent }),
+  appliedStrategy: null,
+  applyStrategyToken: 0,
+  applyStrategy: (strategy) => set((state) => ({ appliedStrategy: strategy, applyStrategyToken: state.applyStrategyToken + 1 })),
 }));

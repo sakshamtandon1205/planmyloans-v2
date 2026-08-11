@@ -304,12 +304,20 @@ body {
 
 /* Ambient orb opacity per theme — set as a plain descendant selector
    (rather than Tailwind's dark: utility) because the two values arrive as
-   inline custom properties from AmbientBackground.tsx, one per theme. */
+   inline custom properties from AmbientBackground.tsx, one per theme.
+   --orb-mood-boost (also inline, set declaratively by React on hover/focus
+   of a strategy card) multiplies the theme-correct base so the "mood
+   shift" effect stays theme-aware without JS needing to know which theme
+   is active. Defaults to 1 (no change) when unset. The `transition` below
+   is what makes the boost change smooth — opacity is a completely
+   standard animatable property, so a plain CSS transition animates it
+   reliably even though the boost itself just snaps to its new value. */
 .ambient-orb {
-  opacity: var(--orb-alpha-light);
+  opacity: calc(var(--orb-alpha-light) * var(--orb-mood-boost, 1));
+  transition: opacity 900ms ease-in-out;
 }
 [data-theme="dark"] .ambient-orb {
-  opacity: var(--orb-alpha-dark);
+  opacity: calc(var(--orb-alpha-dark) * var(--orb-mood-boost, 1));
 }
 
 /* ---------------------------------------------------------------------- */

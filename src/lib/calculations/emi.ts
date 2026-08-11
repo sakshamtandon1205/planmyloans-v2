@@ -33,6 +33,7 @@ export function generateAmortizationSchedule(input: AmortizationInput): Amortiza
     extraMonthlyPrepayment = 0,
     annualPrepayStepUpPercent = 0,
     annualEmiStepUpPercent = 0,
+    annualLumpSumCount = 0,
     simulationMonths = tenureMonths,
   } = input;
 
@@ -64,6 +65,17 @@ export function generateAmortizationSchedule(input: AmortizationInput): Amortiza
       totalInterestPaid += interestPortion;
       totalPrincipalPaid += principalPortion;
       lastEmiUsed = currentEmi;
+
+      // Distinct from extraMonthlyPrepayment: N full EMIs knocked off the
+      // principal once a year, not spread across the year's payments.
+      if (annualLumpSumCount > 0 && balance > 0 && month % 12 === 0) {
+        for (let i = 0; i < annualLumpSumCount && balance > 0; i++) {
+          const lumpSum = Math.min(currentEmi, balance);
+          balance -= lumpSum;
+          principalPortion += lumpSum;
+          totalPrincipalPaid += lumpSum;
+        }
+      }
 
       if (balance <= 0 && payoffMonths === null) payoffMonths = month;
     }

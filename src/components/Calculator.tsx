@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { calculatePayoffMonths, generateAmortizationSchedule } from "@/lib/calculations/emi";
+import { calculateMfFutureValue } from "@/lib/calculations/mf";
 import { simulateBankCorpus, simulateSwpCorpus } from "@/lib/calculations/swp";
 import { useSharedInputsStore } from "@/lib/sharedInputsStore";
 import { calculateLoanTaxBenefitFromSchedule } from "@/lib/calculations/tax";
@@ -93,6 +94,37 @@ export function Calculator() {
     const { emiStepUpPercent, setEmiStepUpPercent } = useSharedInputsStore.getState();
     if (inputs.stepupemi !== emiStepUpPercent) setEmiStepUpPercent(inputs.stepupemi);
   }, [inputs.stepupemi]);
+
+  // One-way, store -> Planner: a strategy card's "Use this plan" writes a
+  // full snapshot into the store and bumps applyStrategyToken. Gated on the
+  // token (not the payload's identity) so re-applying the *same* strategy
+  // still re-triggers this pull — matching the reasoning documented on the
+  // store itself for why each sync direction is its own effect.
+  const appliedStrategy = useSharedInputsStore((s) => s.appliedStrategy);
+  const applyStrategyToken = useSharedInputsStore((s) => s.applyStrategyToken);
+  useEffect(() => {
+    if (applyStrategyToken === 0 || !appliedStrategy) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot pull from an external store write, token-gated so it fires exactly once per "Use this plan" click.
+    setInputs((prev) => {
+      const next: CalculatorInputs = {
+        ...prev,
+        price: appliedStrategy.price,
+        own: appliedStrategy.ownFunds,
+        dp: appliedStrategy.downPayment,
+        mf: appliedStrategy.mfLumpsum,
+        mode: appliedStrategy.fundingMode,
+        lr: appliedStrategy.rate,
+        tenure: appliedStrategy.tenure,
+        extra: appliedStrategy.extraPrepayment,
+        stepup: appliedStrategy.prepayStepUpPercent,
+        annualLumpSumCount: appliedStrategy.annualLumpSumCount,
+      };
+      const { dp, mf } = resolveOwnFundsSplit(next);
+      return { ...next, dp, mf };
+    });
+    setHorizonAuto(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally token-gated: appliedStrategy is read but must not be a dep, or re-applying an identical-looking payload wouldn't be distinguishable from "already handled".
+  }, [applyStrategyToken]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- pulls the shared store (an external system) into local state; bails via `return prev` when already equal, so it settles rather than looping (see the pairing effects above).
@@ -214,8 +246,23 @@ export function Calculator() {
 }
 
 function computeResults(inputs: CalculatorInputs, horizonAuto: boolean): CalculatorResults {
-  const { price, own, mfr, mode, swr, bankr, lr, tenure, extra, stepup, stepupemi, swptax, taxrate, horizon } =
-    inputs;
+  const {
+    price,
+    own,
+    mfr,
+    mode,
+    swr,
+    bankr,
+    lr,
+    tenure,
+    extra,
+    stepup,
+    stepupemi,
+    annualLumpSumCount,
+    swptax,
+    taxrate,
+    horizon,
+  } = inputs;
   const { dp, mf } = resolveOwnFundsSplit(inputs);
 
   const loan = Math.max(0, price - dp);
@@ -234,6 +281,7 @@ function computeResults(inputs: CalculatorInputs, horizonAuto: boolean): Calcula
     extraMonthlyPrepayment: extra,
     annualPrepayStepUpPercent: stepup,
     annualEmiStepUpPercent: stepupemi,
+    annualLumpSumCount,
   });
 
   const horizonYears = horizonAuto ? Math.min(30, Math.max(1, Math.ceil(naturalPayoffMonths / 12))) : horizon;
@@ -246,6 +294,7 @@ function computeResults(inputs: CalculatorInputs, horizonAuto: boolean): Calcula
     extraMonthlyPrepayment: extra,
     annualPrepayStepUpPercent: stepup,
     annualEmiStepUpPercent: stepupemi,
+    annualLumpSumCount,
     simulationMonths: horizonMonths,
   });
 
@@ -273,8 +322,7 @@ function computeResults(inputs: CalculatorInputs, horizonAuto: boolean): Calcula
 
   const taxBenefit = calculateLoanTaxBenefitFromSchedule(amortization.schedule, taxrate);
 
-  const mfMonthlyRate = Math.pow(1 + mfr / 100, 1 / 12) - 1;
-  const mfFutureValue = mf * Math.pow(1 + mfMonthlyRate, horizonMonths);
+  const mfFutureValue = calculateMfFutureValue(mf, mfr, horizonMonths);
 
   const interestSaved = amortization.baselineInterest - amortization.totalInterestPaid;
   const netInterest = amortization.totalInterestPaid - taxBenefit.totalTaxSaved;
@@ -286,7 +334,7 @@ function computeResults(inputs: CalculatorInputs, horizonAuto: boolean): Calcula
   const gaugePct = Math.min(100, (annualWithdrawRate / (corpusReturnPercent * 2 || 1)) * 100);
   const isRisky = corpusSim.depletedAtMonth !== null || annualWithdrawRate > corpusReturnPercent + 2;
 
-  const chartSeries = buildChartSeries(mf, corpus, loan, mfMonthlyRate, amortization, corpusSim, horizonMonths);
+  const chartSeries = buildChartSeries(mf, corpus, loan, mfr, amortization, corpusSim, horizonMonths);
 
   // generateAmortizationSchedule falls back to simulationMonths when the balance
   // never actually hits zero within the window (a horizon shorter than payoff) —
@@ -321,7 +369,7 @@ function buildChartSeries(
   mf: number,
   corpus: number,
   loan: number,
-  mfMonthlyRate: number,
+  mfr: number,
   amortization: AmortizationResult,
   corpusSim: CorpusSimulationResult,
   horizonMonths: number,
@@ -336,7 +384,7 @@ function buildChartSeries(
       points.push({
         month,
         monthLabel: `${(month / 12).toFixed(1)}y`,
-        mf: mf * Math.pow(1 + mfMonthlyRate, month),
+        mf: calculateMfFutureValue(mf, mfr, month),
         corpus: corpusRow.balance,
         loan: amortRow.balance,
         interest: amortRow.interestPortion,

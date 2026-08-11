@@ -170,6 +170,35 @@ export function ControlPanel({
           formatValue={(v) => (v > 0 ? `${v}%/yr` : "none")}
           hint="The EMI itself rises by this % each year on the anniversary, shortening the payoff. Separate from the extra prepay above."
         />
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-body-sm font-medium text-ink">Extra EMIs/year</div>
+            <p className="mt-1 text-caption text-ink-3">
+              N full EMIs paid as a lump sum every 12 months, on top of the extra prepay and step-up above.
+            </p>
+          </div>
+          <div className="flex flex-none items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => onInputChange("annualLumpSumCount", Math.max(0, inputs.annualLumpSumCount - 1))}
+              aria-label="Decrease extra EMIs per year"
+              className="flex size-7 items-center justify-center rounded-sm border border-line bg-surface-2 text-ink-2 transition-colors hover:border-indigo hover:bg-indigo-soft hover:text-indigo"
+            >
+              −
+            </button>
+            <span className="w-5 text-center font-mono text-mono-sm font-bold text-ink">
+              {inputs.annualLumpSumCount}
+            </span>
+            <button
+              type="button"
+              onClick={() => onInputChange("annualLumpSumCount", Math.min(6, inputs.annualLumpSumCount + 1))}
+              aria-label="Increase extra EMIs per year"
+              className="flex size-7 items-center justify-center rounded-sm border border-line bg-surface-2 text-ink-2 transition-colors hover:border-indigo hover:bg-indigo-soft hover:text-indigo"
+            >
+              +
+            </button>
+          </div>
+        </div>
       </Group>
 
       <Group icon={<ReceiptIcon />} title="Tax assumptions">
