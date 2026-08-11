@@ -47,8 +47,8 @@ export interface StrategyResult {
   totalInterestPaid: number;
   mfFutureValue: number;
   corpusDepletedAtMonth: number | null;
-  /** MF future value + any surviving corpus balance, at this strategy's own payoff month. */
-  netWealthAtHorizon: number;
+  /** MF future value + any surviving corpus balance, evaluated at THIS strategy's own actual payoff month — not a shared fixed tenure, since each card can pay off at a genuinely different time. */
+  netWealthAtPayoff: number;
   /** (FV(MF) - MF lumpsum) / total interest, clamped at 0 with no upper clamp. */
   interestOffsetPercent: number;
   /** Tax-Optimized Payoff only: Sec 24(b) + 80C tax saved (Old Regime only) via calculateLoanTaxBenefitFromSchedule. */
@@ -179,7 +179,7 @@ interface SimulatedCandidate extends ResolvedStack {
   corpusDepletedAtMonth: number | null;
   corpusFinalBalance: number;
   mfFutureValue: number;
-  netWealthAtHorizon: number;
+  netWealthAtPayoff: number;
   schedule: AmortizationRow[];
 }
 
@@ -224,14 +224,17 @@ function simulateCandidate(
           incomeTaxRatePercent: ctx.incomeTaxRatePercent,
         });
 
-  // MF growth is reported at the loan's full original tenure, not this
-  // candidate's own (search-varying) payoff month — the MF lumpsum keeps
-  // compounding regardless of when the loan itself closes. Using payoffMonths
-  // here would shrink the reported compounding window every time a candidate
-  // prepays faster, creating a perverse "never prepay" incentive for any
-  // objective that maximizes net wealth (Aggressive Payoff's, specifically).
-  const mfFutureValue = calculateMfFutureValue(stack.mfLumpsum, ctx.mfReturnPercent, ctx.tenureMonths);
-  const netWealthAtHorizon = mfFutureValue + Math.max(0, corpusSim.finalBalance);
+  // MF growth (and net wealth) is evaluated at THIS candidate's own actual
+  // payoff month, not the loan's original nominal tenure — a strategy that
+  // closes the loan in 9 years should have its wealth figure reflect 9
+  // years of growth, not 20. Aggressive Payoff's selection no longer
+  // depends on net wealth (see runAggressive — it directly minimizes
+  // payoff time instead, precisely to avoid the perverse "shorter payoff
+  // shrinks the reported compounding window" incentive that motivated
+  // pinning this to a fixed horizon in an earlier pass), so it's safe to
+  // report the more honest, per-candidate figure here.
+  const mfFutureValue = calculateMfFutureValue(stack.mfLumpsum, ctx.mfReturnPercent, amortization.payoffMonths);
+  const netWealthAtPayoff = mfFutureValue + Math.max(0, corpusSim.finalBalance);
 
   return {
     ...stack,
@@ -243,7 +246,7 @@ function simulateCandidate(
     corpusDepletedAtMonth: corpusSim.depletedAtMonth,
     corpusFinalBalance: corpusSim.finalBalance,
     mfFutureValue,
-    netWealthAtHorizon,
+    netWealthAtPayoff,
     schedule: amortization.schedule,
   };
 }
@@ -278,6 +281,11 @@ function computeOffsetPercent(mfLumpsum: number, mfReturnPercent: number, months
   return Math.max(0, ((fv - mfLumpsum) / totalInterestPaid) * 100);
 }
 
+/** All rupee-denominated fields are whole numbers by the time they leave this engine — no stray decimals on any card or once applied into the Planner's own inputs. */
+function roundMoney(n: number): number {
+  return Math.round(n);
+}
+
 function buildResult(
   id: StrategyId,
   name: string,
@@ -294,28 +302,30 @@ function buildResult(
     subtitle,
     fundingMode,
     capitalStack: {
-      downPayment: chosen.downPayment,
-      mfLumpsum: chosen.mfLumpsum,
-      corpus: chosen.corpus,
-      loanAmount: chosen.loanAmount,
+      downPayment: roundMoney(chosen.downPayment),
+      mfLumpsum: roundMoney(chosen.mfLumpsum),
+      corpus: roundMoney(chosen.corpus),
+      loanAmount: roundMoney(chosen.loanAmount),
     },
     downPaymentPercent: chosen.downPaymentPercent,
     emiRunwayMonths: chosen.emiRunwayMonths,
     loanRatePercent: ctx.loanRatePercent,
     tenureMonths: ctx.tenureMonths,
-    extraMonthlyPrepayment: chosen.extraMonthlyPrepayment,
+    extraMonthlyPrepayment: roundMoney(chosen.extraMonthlyPrepayment),
     prepayStepUpPercent: chosen.prepayStepUpPercent,
     annualLumpSumCount: chosen.annualLumpSumCount,
     mfReturnPercent: ctx.mfReturnPercent,
     corpusReturnPercent,
-    emi: chosen.emi,
+    emi: roundMoney(chosen.emi),
     payoffMonths: chosen.payoffMonths,
-    totalInterestPaid: chosen.totalInterestPaid,
-    mfFutureValue: chosen.mfFutureValue,
+    totalInterestPaid: roundMoney(chosen.totalInterestPaid),
+    mfFutureValue: roundMoney(chosen.mfFutureValue),
     corpusDepletedAtMonth: chosen.corpusDepletedAtMonth,
-    netWealthAtHorizon: chosen.netWealthAtHorizon,
-    interestOffsetPercent: computeOffsetPercent(chosen.mfLumpsum, ctx.mfReturnPercent, ctx.tenureMonths, chosen.totalInterestPaid),
-    ...(extra ?? {}),
+    netWealthAtPayoff: roundMoney(chosen.netWealthAtPayoff),
+    interestOffsetPercent: computeOffsetPercent(chosen.mfLumpsum, ctx.mfReturnPercent, chosen.payoffMonths, chosen.totalInterestPaid),
+    ...(extra
+      ? { taxSavingsAmount: roundMoney(extra.taxSavingsAmount), netEffectiveInterestCost: roundMoney(extra.netEffectiveInterestCost) }
+      : {}),
   };
 }
 
@@ -323,13 +333,62 @@ function buildResult(
 // Model 1 — Safety First (Capital Preservation)
 // ---------------------------------------------------------------------------
 
+/**
+ * Safety First's own capital-stack resolver — deliberately not the shared
+ * `resolveStack`, because this model's shape is different: a heavy down
+ * payment is the PRIMARY risk-reduction lever, and the bank corpus is sized
+ * to its purpose (a 10-15yr EMI runway buffer), not to "whatever's left."
+ * Any genuine surplus beyond that buffer rolls into an even higher
+ * effective down payment (shrinking the loan further) rather than being
+ * force-fed into the corpus or an MF lumpsum — this model stays at 0% MF.
+ *
+ * Two-pass: pass 1 estimates EMI (from the searched down payment alone) to
+ * size the buffer; pass 2 folds any leftover into down payment and
+ * recomputes EMI once more. Good enough for a recommendation card without
+ * an iterative fixed-point solver.
+ */
+function resolveSafetyStack(ctx: StrategyContext, downPaymentPercent: number, bufferRunwayMonths: number): ResolvedStack {
+  const dp1 = Math.max(DOWN_PAYMENT_FLOOR_PERCENT, downPaymentPercent) * ctx.propertyPrice;
+  const loan1 = Math.max(0, ctx.propertyPrice - dp1);
+  const emi1 = calculateEmi({ principal: loan1, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
+
+  const remaining1 = Math.max(0, ctx.ownFunds - dp1);
+  const corpusBeforeCap = Math.min(bufferRunwayMonths * emi1, remaining1);
+  const surplus = Math.max(0, remaining1 - corpusBeforeCap);
+
+  // Absorb surplus into a higher down payment, but a down payment can never
+  // exceed 100% of the property price. Once own funds are generous enough
+  // to hit that ceiling, any further surplus has nowhere productive to go
+  // (this model stays at 0% MF by design), so it enlarges the buffer past
+  // its own target instead of producing a nonsensical >100% down payment.
+  const maxAdditionalDp = Math.max(0, ctx.propertyPrice - dp1);
+  const dpSurplus = Math.min(surplus, maxAdditionalDp);
+  const corpusSurplus = surplus - dpSurplus;
+
+  const downPayment = dp1 + dpSurplus;
+  const corpus = corpusBeforeCap + corpusSurplus;
+  const loanAmount = Math.max(0, ctx.propertyPrice - downPayment);
+  const emi = calculateEmi({ principal: loanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
+
+  return {
+    downPaymentPercent: downPayment / ctx.propertyPrice,
+    downPayment,
+    loanAmount,
+    emi,
+    corpus,
+    mfLumpsum: 0,
+    emiRunwayMonths: emi > 0 ? corpus / emi : 0,
+  };
+}
+
 function runSafetyFirst(ctx: StrategyContext): StrategyResult {
   const candidates: SimulatedCandidate[] = [];
-  for (const downPaymentPercent of linspace(0.25, 0.3, 3)) {
-    // 0% to MF, 100% of what's left after down payment goes to the corpus.
-    const stack = resolveStack(ctx, downPaymentPercent, (_emi, remaining) => remaining);
-    for (const extra of extraPrepayGrid(stack.emi, 5, 5)) {
-      candidates.push(simulateCandidate(ctx, stack, "bank", DEFAULT_BANK_RETURN_PERCENT, extra, 0, 0));
+  for (const downPaymentPercent of linspace(0.4, 0.6, 3)) {
+    for (const bufferRunwayMonths of linspace(120, 180, 3)) {
+      const stack = resolveSafetyStack(ctx, downPaymentPercent, bufferRunwayMonths);
+      for (const extra of extraPrepayGrid(stack.emi, 5, 5)) {
+        candidates.push(simulateCandidate(ctx, stack, "bank", DEFAULT_BANK_RETURN_PERCENT, extra, 0, 0));
+      }
     }
   }
 
@@ -344,7 +403,7 @@ function runSafetyFirst(ctx: StrategyContext): StrategyResult {
   return buildResult(
     "safety",
     "Safety First",
-    "Maximum cushion — the corpus is built to never run dry",
+    "Maximum cushion — a heavy down payment and a genuine buffer, built to never run dry",
     "bank",
     DEFAULT_BANK_RETURN_PERCENT,
     ctx,

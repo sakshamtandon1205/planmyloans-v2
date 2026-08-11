@@ -229,7 +229,11 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
         <Stat label="Total interest" value={formatINR(displayTotalInterest)} testId={`strategy-interest-${result.id}`} />
       )}
 
-      <Stat label="Net wealth at horizon" value={formatINR(result.netWealthAtHorizon)} testId={`strategy-wealth-${result.id}`} />
+      <Stat
+        label={`Net wealth at payoff (${formatMonths(result.payoffMonths)})`}
+        value={formatINR(result.netWealthAtPayoff)}
+        testId={`strategy-wealth-${result.id}`}
+      />
 
       {isBonus && (
         <p className="text-caption text-amber">

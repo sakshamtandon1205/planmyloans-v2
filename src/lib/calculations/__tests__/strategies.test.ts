@@ -64,8 +64,11 @@ describe("computeStrategies", () => {
     const results = computeStrategies(BASE_INPUT);
     const caps: Record<string, number> = { safety: 5, balanced: 10, aggressive: 15, bonus: 0 };
     for (const r of results) {
+      // Both figures are now rounded to whole rupees before this ratio is
+      // taken, so a tiny bit of slack (well under a rupee's worth on a
+      // ~₹90k EMI) is expected and not a sign the search itself overshot.
       const pctOfEmi = (r.extraMonthlyPrepayment / r.emi) * 100;
-      expect(pctOfEmi).toBeLessThanOrEqual(caps[r.id] + 1e-6);
+      expect(pctOfEmi).toBeLessThanOrEqual(caps[r.id] + 0.01);
     }
   });
 
@@ -78,14 +81,22 @@ describe("computeStrategies", () => {
     expect(aggressive.corpusDepletedAtMonth).not.toBeNull();
   });
 
-  it("orders total interest paid Safety First > Balanced > Aggressive Payoff", () => {
+  it("Aggressive Payoff pays the least total interest of the three prepay-searching strategies", () => {
+    // Safety First's total interest is no longer guaranteed to be the
+    // highest of the three now that its down payment is heavy (40-60%) —
+    // a meaningfully smaller loan can legitimately cost less in absolute
+    // interest even with minimal prepayment, and that's an intentional
+    // consequence of this model favoring down payment as its primary
+    // lever, not a bug. What must still hold is Aggressive Payoff's own
+    // identity: fastest prepayment really does minimize its interest cost
+    // below the other two.
     const results = computeStrategies(BASE_INPUT);
     const safety = results.find((r) => r.id === "safety")!;
     const balanced = results.find((r) => r.id === "balanced")!;
     const aggressive = results.find((r) => r.id === "aggressive")!;
 
-    expect(safety.totalInterestPaid).toBeGreaterThan(balanced.totalInterestPaid);
-    expect(balanced.totalInterestPaid).toBeGreaterThan(aggressive.totalInterestPaid);
+    expect(aggressive.totalInterestPaid).toBeLessThan(safety.totalInterestPaid);
+    expect(aggressive.totalInterestPaid).toBeLessThan(balanced.totalInterestPaid);
   });
 
   it("Aggressive Payoff pays off faster than Balanced and Safety First (its whole identity)", () => {
@@ -122,8 +133,11 @@ describe("computeStrategies", () => {
     }).schedule;
     const taxBenefit = calculateLoanTaxBenefitFromSchedule(schedule, 30);
 
-    expect(bonus.taxSavingsAmount).toBeCloseTo(taxBenefit.totalTaxSaved, 3);
-    expect(bonus.netEffectiveInterestCost).toBeCloseTo(bonus.totalInterestPaid - taxBenefit.totalTaxSaved, 3);
+    // Both sides are within a rupee of each other — bonus.taxSavingsAmount
+    // is the rounded-to-whole-rupee figure, taxBenefit.totalTaxSaved is the
+    // unrounded one computed independently here.
+    expect(Math.abs(bonus.taxSavingsAmount! - taxBenefit.totalTaxSaved)).toBeLessThan(1);
+    expect(Math.abs(bonus.netEffectiveInterestCost! - (bonus.totalInterestPaid - taxBenefit.totalTaxSaved))).toBeLessThan(2);
   });
 
   it("only Tax-Optimized Payoff reports tax fields; the other 3 leave them undefined", () => {
@@ -139,29 +153,132 @@ describe("computeStrategies", () => {
     }
   });
 
-  it("reports a finite, non-negative EMI runway and net wealth at horizon for all 4 strategies", () => {
+  it("reports a finite, non-negative EMI runway and net wealth at payoff for all 4 strategies", () => {
     const results = computeStrategies(BASE_INPUT);
     for (const r of results) {
       expect(Number.isFinite(r.emiRunwayMonths)).toBe(true);
       expect(r.emiRunwayMonths).toBeGreaterThanOrEqual(0);
-      expect(Number.isFinite(r.netWealthAtHorizon)).toBe(true);
-      expect(r.netWealthAtHorizon).toBeGreaterThanOrEqual(0);
+      expect(Number.isFinite(r.netWealthAtPayoff)).toBe(true);
+      expect(r.netWealthAtPayoff).toBeGreaterThanOrEqual(0);
     }
   });
 
-  it("Safety First allocates 0% to the MF lumpsum — all remaining funds go to the bank corpus", () => {
+  it("rounds every monetary figure to a whole rupee — no decimals on any card, or once applied into the Planner", () => {
+    const results = computeStrategies(BASE_INPUT);
+    for (const r of results) {
+      const moneyFields: Array<number | undefined> = [
+        r.capitalStack.downPayment,
+        r.capitalStack.mfLumpsum,
+        r.capitalStack.corpus,
+        r.capitalStack.loanAmount,
+        r.emi,
+        r.extraMonthlyPrepayment,
+        r.totalInterestPaid,
+        r.mfFutureValue,
+        r.netWealthAtPayoff,
+        r.taxSavingsAmount,
+        r.netEffectiveInterestCost,
+      ];
+      for (const value of moneyFields) {
+        if (value === undefined) continue;
+        expect(Number.isInteger(value)).toBe(true);
+      }
+    }
+  });
+
+  it("Safety First allocates 0% to the MF lumpsum, funding only down payment and a bank buffer", () => {
     const results = computeStrategies(BASE_INPUT);
     const safety = results.find((r) => r.id === "safety")!;
     expect(safety.capitalStack.mfLumpsum).toBeCloseTo(0, 6);
     expect(safety.fundingMode).toBe("bank");
   });
 
-  it("verifies MF future value at the fixed loan-tenure horizon, not each candidate's own payoff month (closing the loop on netWealthAtHorizon, not just trusting it)", () => {
+  it("Safety First now favors a heavy down payment (>=40% of price) as its primary lever, not a moderate 25-30%", () => {
+    const results = computeStrategies(BASE_INPUT);
+    const safety = results.find((r) => r.id === "safety")!;
+    expect(safety.downPaymentPercent).toBeGreaterThanOrEqual(0.4 - 1e-9);
+  });
+
+  it("Safety First's bank corpus is sized as a genuine buffer, not simply 'whatever own funds are left over'", () => {
+    // A scenario engineered so the 10-15yr buffer target is comfortably
+    // smaller (in rupees) than what's left after even the search's own
+    // minimum down payment (40%) — i.e. a case where, if the corpus simply
+    // absorbed everything left over (the old behavior), it would land far
+    // above the buffer target. Comparing against that "minimum down
+    // payment, corpus = everything else" baseline (rather than against the
+    // model's OWN final down payment, which by construction already nets
+    // out to the buffer amount once surplus has been swept into it) is
+    // what actually distinguishes "genuine buffer" from "leftover bucket."
+    const input: StrategyEngineInput = {
+      propertyPrice: 10000000,
+      ownFunds: 9000000,
+      loanRatePercent: 0.5,
+      tenureYears: 30,
+    };
+    const results = computeStrategies(input);
+    const safety = results.find((r) => r.id === "safety")!;
+    const naiveLeftoverAtMinimumDp = input.ownFunds - 0.4 * input.propertyPrice;
+
+    expect(safety.capitalStack.corpus).toBeLessThan(naiveLeftoverAtMinimumDp * 0.5);
+    // And the surplus went somewhere real: a heavier down payment than the
+    // search's own 40% floor, not simply vanishing.
+    expect(safety.downPaymentPercent).toBeGreaterThan(0.4 + 1e-6);
+  });
+
+  it("caps down payment at 100% of property price even when own funds are extremely generous (no nonsensical >100% down payment)", () => {
+    const input: StrategyEngineInput = {
+      propertyPrice: 14000000,
+      ownFunds: 20000000,
+      loanRatePercent: 7.5,
+      tenureYears: 20,
+    };
+    const results = computeStrategies(input);
+    const safety = results.find((r) => r.id === "safety")!;
+    expect(safety.downPaymentPercent).toBeLessThanOrEqual(1 + 1e-9);
+    expect(safety.capitalStack.downPayment).toBeLessThanOrEqual(input.propertyPrice + 1e-6);
+  });
+
+  it("computes MF future value (and net wealth) at each strategy's own actual payoff month, not the original nominal tenure", () => {
     const results = computeStrategies(BASE_INPUT);
     const balanced = results.find((r) => r.id === "balanced")!;
 
-    const expectedMfFv = calculateMfFutureValue(balanced.capitalStack.mfLumpsum, balanced.mfReturnPercent, balanced.tenureMonths);
-    expect(balanced.mfFutureValue).toBeCloseTo(expectedMfFv, 3);
+    // Balanced prepays, so its actual payoff month is well short of the
+    // full tenure — verify the engine used THAT shorter horizon as the
+    // actual input to the MF future-value calculation, not the tenure.
+    expect(balanced.payoffMonths).toBeLessThan(balanced.tenureMonths);
+
+    const expectedAtPayoff = calculateMfFutureValue(balanced.capitalStack.mfLumpsum, balanced.mfReturnPercent, balanced.payoffMonths);
+    const wouldBeAtFullTenure = calculateMfFutureValue(balanced.capitalStack.mfLumpsum, balanced.mfReturnPercent, balanced.tenureMonths);
+
+    expect(Math.abs(balanced.mfFutureValue - expectedAtPayoff)).toBeLessThan(5);
+    // Closing the loop: confirm the two horizons genuinely produce
+    // different numbers here (proving the fix actually changes behavior,
+    // not just that the "right" formula happens to coincide with the old one).
+    expect(balanced.mfFutureValue).toBeLessThan(wouldBeAtFullTenure);
+  });
+
+  it("two strategies with different payoff months report net wealth grown over genuinely different durations", () => {
+    const results = computeStrategies(BASE_INPUT);
+    const balanced = results.find((r) => r.id === "balanced")!;
+    const aggressive = results.find((r) => r.id === "aggressive")!;
+
+    expect(balanced.payoffMonths).not.toBe(aggressive.payoffMonths);
+
+    // Independently recompute each one's MF future value at its OWN payoff
+    // month and confirm the engine's reported figure matches that (not the
+    // other strategy's payoff month, and not a shared tenure).
+    const balancedExpected = calculateMfFutureValue(balanced.capitalStack.mfLumpsum, balanced.mfReturnPercent, balanced.payoffMonths);
+    const aggressiveExpected = calculateMfFutureValue(
+      aggressive.capitalStack.mfLumpsum,
+      aggressive.mfReturnPercent,
+      aggressive.payoffMonths,
+    );
+    // Within a few rupees — the engine rounds mfLumpsum to a whole rupee
+    // before this recomputation ever sees it, while the stored
+    // mfFutureValue was rounded from the unrounded lumpsum, so a small
+    // rounding-order gap here is expected, not a sign of a wrong horizon.
+    expect(Math.abs(balanced.mfFutureValue - balancedExpected)).toBeLessThan(5);
+    expect(Math.abs(aggressive.mfFutureValue - aggressiveExpected)).toBeLessThan(5);
   });
 
   it("Safety First uses the bank funding mode and a 0% step-up; the others use SWP", () => {
