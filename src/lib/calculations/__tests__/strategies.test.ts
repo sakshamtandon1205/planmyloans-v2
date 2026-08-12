@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { generateAmortizationSchedule } from "../emi";
 import { calculateMfFutureValue } from "../mf";
-import { computeStrategies, DOWN_PAYMENT_FLOOR_PERCENT, type StrategyEngineInput } from "../strategies";
+import {
+  AGGRESSIVE_STEP_UP_PERCENT,
+  BALANCED_STEP_UP_PERCENT,
+  computeStrategies,
+  DOWN_PAYMENT_FLOOR_PERCENT,
+  type StrategyEngineInput,
+} from "../strategies";
 import { calculateLoanTaxBenefitFromSchedule } from "../tax";
 
 const BASE_INPUT: StrategyEngineInput = {
@@ -40,12 +46,22 @@ describe("computeStrategies", () => {
     }
   });
 
-  it("fixes Balanced and Tax-Optimized Payoff's down payment at exactly the 20% floor", () => {
+  it("fixes Tax-Optimized Payoff's down payment at exactly the 20% floor", () => {
     const results = computeStrategies(BASE_INPUT);
-    const balanced = results.find((r) => r.id === "balanced")!;
     const bonus = results.find((r) => r.id === "bonus")!;
-    expect(balanced.downPaymentPercent).toBeCloseTo(DOWN_PAYMENT_FLOOR_PERCENT, 6);
     expect(bonus.downPaymentPercent).toBeCloseTo(DOWN_PAYMENT_FLOOR_PERCENT, 6);
+  });
+
+  it("targets Balanced's down payment at a medium 40-50% of own funds, above the floor and below Safety First's", () => {
+    const results = computeStrategies(BASE_INPUT);
+    const safety = results.find((r) => r.id === "safety")!;
+    const balanced = results.find((r) => r.id === "balanced")!;
+
+    const balancedDpAsShareOfOwnFunds = balanced.capitalStack.downPayment / BASE_INPUT.ownFunds;
+    expect(balancedDpAsShareOfOwnFunds).toBeGreaterThanOrEqual(0.4 - 1e-6);
+    expect(balancedDpAsShareOfOwnFunds).toBeLessThanOrEqual(0.5 + 1e-6);
+    expect(balanced.downPaymentPercent).toBeGreaterThan(DOWN_PAYMENT_FLOOR_PERCENT + 1e-6);
+    expect(balanced.downPaymentPercent).toBeLessThan(safety.downPaymentPercent);
   });
 
   it("keeps each capital stack within own funds and derives loan amount from price - down payment", () => {
@@ -62,13 +78,21 @@ describe("computeStrategies", () => {
 
   it("caps extra monthly prepay as a percentage of each strategy's own EMI, at realistic salaried-person levels", () => {
     const results = computeStrategies(BASE_INPUT);
-    const caps: Record<string, number> = { safety: 5, balanced: 10, aggressive: 15, bonus: 0 };
+    const caps: Record<string, number> = { safety: 5, balanced: 12.5, aggressive: 15, bonus: 0 };
     for (const r of results) {
-      // Both figures are now rounded to whole rupees before this ratio is
-      // taken, so a tiny bit of slack (well under a rupee's worth on a
-      // ~₹90k EMI) is expected and not a sign the search itself overshot.
+      // Grid points are now rounded to the nearest ₹100 (Part 6) before
+      // simulation, so the resulting percentage-of-EMI can drift slightly
+      // past the nominal search cap — bounded by 100 rupees' worth of EMI,
+      // which is a fraction of a percentage point at realistic EMI sizes.
       const pctOfEmi = (r.extraMonthlyPrepayment / r.emi) * 100;
-      expect(pctOfEmi).toBeLessThanOrEqual(caps[r.id] + 0.01);
+      expect(pctOfEmi).toBeLessThanOrEqual(caps[r.id] + 0.5);
+    }
+  });
+
+  it("rounds every extra monthly prepay figure to a clean multiple of ₹100", () => {
+    const results = computeStrategies(BASE_INPUT);
+    for (const r of results) {
+      expect(r.extraMonthlyPrepayment % 100).toBe(0);
     }
   });
 
@@ -81,22 +105,32 @@ describe("computeStrategies", () => {
     expect(aggressive.corpusDepletedAtMonth).not.toBeNull();
   });
 
-  it("Aggressive Payoff pays the least total interest of the three prepay-searching strategies", () => {
-    // Safety First's total interest is no longer guaranteed to be the
-    // highest of the three now that its down payment is heavy (40-60%) —
-    // a meaningfully smaller loan can legitimately cost less in absolute
-    // interest even with minimal prepayment, and that's an intentional
-    // consequence of this model favoring down payment as its primary
-    // lever, not a bug. What must still hold is Aggressive Payoff's own
-    // identity: fastest prepayment really does minimize its interest cost
-    // below the other two.
+  it("Aggressive Payoff's own prepayment genuinely cuts its total interest below a no-prepay baseline on the same loan", () => {
+    // Cross-model total-interest comparisons are no longer meaningful
+    // identity checks for Aggressive Payoff: both Safety First (~80% of
+    // own funds to down payment) and Balanced (~40-50%) now put
+    // substantially more down payment than Aggressive's ~20-25% floor, so
+    // their smaller loans can legitimately rack up less absolute interest
+    // even though Aggressive prepays harder and pays off faster (already
+    // covered by the payoff-time test below) — down-payment size, not
+    // prepayment speed, dominates 20-year absolute interest across models
+    // with such different loan principals. What must still hold is
+    // Aggressive Payoff's prepayment doing real work on ITS OWN loan: the
+    // same principal, rate, and tenure with zero extra prepay must cost
+    // strictly more in interest than what the model actually chose.
     const results = computeStrategies(BASE_INPUT);
-    const safety = results.find((r) => r.id === "safety")!;
-    const balanced = results.find((r) => r.id === "balanced")!;
     const aggressive = results.find((r) => r.id === "aggressive")!;
 
-    expect(aggressive.totalInterestPaid).toBeLessThan(safety.totalInterestPaid);
-    expect(aggressive.totalInterestPaid).toBeLessThan(balanced.totalInterestPaid);
+    const noPrepayBaseline = generateAmortizationSchedule({
+      principal: aggressive.capitalStack.loanAmount,
+      annualRatePercent: aggressive.loanRatePercent,
+      tenureMonths: aggressive.tenureMonths,
+      extraMonthlyPrepayment: 0,
+      annualPrepayStepUpPercent: 0,
+      annualLumpSumCount: 0,
+    });
+
+    expect(aggressive.totalInterestPaid).toBeLessThan(noPrepayBaseline.totalInterestPaid);
   });
 
   it("Aggressive Payoff pays off faster than Balanced and Safety First (its whole identity)", () => {
@@ -186,43 +220,31 @@ describe("computeStrategies", () => {
     }
   });
 
-  it("Safety First allocates 0% to the MF lumpsum, funding only down payment and a bank buffer", () => {
+  it("Safety First puts ~80% of own funds into down payment and a small ~5-7.5% into the MF lumpsum, not zero", () => {
     const results = computeStrategies(BASE_INPUT);
     const safety = results.find((r) => r.id === "safety")!;
-    expect(safety.capitalStack.mfLumpsum).toBeCloseTo(0, 6);
+
+    const dpShareOfOwnFunds = safety.capitalStack.downPayment / BASE_INPUT.ownFunds;
+    const mfShareOfOwnFunds = safety.capitalStack.mfLumpsum / BASE_INPUT.ownFunds;
+
+    expect(dpShareOfOwnFunds).toBeGreaterThanOrEqual(0.775 - 1e-6);
+    expect(dpShareOfOwnFunds).toBeLessThanOrEqual(0.825 + 1e-6);
+    expect(mfShareOfOwnFunds).toBeGreaterThan(0);
+    expect(mfShareOfOwnFunds).toBeGreaterThanOrEqual(0.05 - 1e-6);
+    expect(mfShareOfOwnFunds).toBeLessThanOrEqual(0.075 + 1e-6);
     expect(safety.fundingMode).toBe("bank");
   });
 
-  it("Safety First now favors a heavy down payment (>=40% of price) as its primary lever, not a moderate 25-30%", () => {
+  it("Safety First's bank corpus absorbs whatever's left of own funds after down payment and the small MF lumpsum (~12.5-15%)", () => {
     const results = computeStrategies(BASE_INPUT);
     const safety = results.find((r) => r.id === "safety")!;
-    expect(safety.downPaymentPercent).toBeGreaterThanOrEqual(0.4 - 1e-9);
-  });
+    const corpusShareOfOwnFunds = safety.capitalStack.corpus / BASE_INPUT.ownFunds;
 
-  it("Safety First's bank corpus is sized as a genuine buffer, not simply 'whatever own funds are left over'", () => {
-    // A scenario engineered so the 10-15yr buffer target is comfortably
-    // smaller (in rupees) than what's left after even the search's own
-    // minimum down payment (40%) — i.e. a case where, if the corpus simply
-    // absorbed everything left over (the old behavior), it would land far
-    // above the buffer target. Comparing against that "minimum down
-    // payment, corpus = everything else" baseline (rather than against the
-    // model's OWN final down payment, which by construction already nets
-    // out to the buffer amount once surplus has been swept into it) is
-    // what actually distinguishes "genuine buffer" from "leftover bucket."
-    const input: StrategyEngineInput = {
-      propertyPrice: 10000000,
-      ownFunds: 9000000,
-      loanRatePercent: 0.5,
-      tenureYears: 30,
-    };
-    const results = computeStrategies(input);
-    const safety = results.find((r) => r.id === "safety")!;
-    const naiveLeftoverAtMinimumDp = input.ownFunds - 0.4 * input.propertyPrice;
-
-    expect(safety.capitalStack.corpus).toBeLessThan(naiveLeftoverAtMinimumDp * 0.5);
-    // And the surplus went somewhere real: a heavier down payment than the
-    // search's own 40% floor, not simply vanishing.
-    expect(safety.downPaymentPercent).toBeGreaterThan(0.4 + 1e-6);
+    expect(corpusShareOfOwnFunds).toBeGreaterThanOrEqual(0.1 - 1e-6);
+    expect(corpusShareOfOwnFunds).toBeLessThan(0.2);
+    expect(
+      safety.capitalStack.downPayment + safety.capitalStack.mfLumpsum + safety.capitalStack.corpus,
+    ).toBeCloseTo(BASE_INPUT.ownFunds, -2);
   });
 
   it("caps down payment at 100% of property price even when own funds are extremely generous (no nonsensical >100% down payment)", () => {
@@ -291,6 +313,20 @@ describe("computeStrategies", () => {
     for (const r of others) {
       expect(r.fundingMode).toBe("swp");
     }
+  });
+
+  it("uses realistic, distinct annual prepay step-ups per model: 0% / 3% / 5% for Safety / Balanced / Aggressive", () => {
+    const results = computeStrategies(BASE_INPUT);
+    const safety = results.find((r) => r.id === "safety")!;
+    const balanced = results.find((r) => r.id === "balanced")!;
+    const aggressive = results.find((r) => r.id === "aggressive")!;
+
+    expect(safety.prepayStepUpPercent).toBe(0);
+    expect(balanced.prepayStepUpPercent).toBe(BALANCED_STEP_UP_PERCENT);
+    expect(aggressive.prepayStepUpPercent).toBe(AGGRESSIVE_STEP_UP_PERCENT);
+    expect(BALANCED_STEP_UP_PERCENT).toBeGreaterThanOrEqual(2.5);
+    expect(BALANCED_STEP_UP_PERCENT).toBeLessThanOrEqual(3.75);
+    expect(AGGRESSIVE_STEP_UP_PERCENT).toBeLessThanOrEqual(5);
   });
 
   it("all 4 strategies report an MF-growth interest-offset percentage, clamped at 0", () => {

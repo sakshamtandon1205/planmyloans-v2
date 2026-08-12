@@ -68,6 +68,12 @@ const DEFAULT_SWP_CAPITAL_GAINS_TAX_PERCENT = 12.5;
 /** Hard floor every model's down payment must respect — never go below 20% of property price. */
 export const DOWN_PAYMENT_FLOOR_PERCENT = 0.2;
 
+// Realistic annual prepay step-ups — nobody bumps their EMI by 5-7.5%/yr in
+// practice. Safety First stays at 0% (no step-up at all); Balanced and
+// Aggressive use fixed, more plausible rates instead of the old 5%/7.5%.
+export const BALANCED_STEP_UP_PERCENT = 3;
+export const AGGRESSIVE_STEP_UP_PERCENT = 5;
+
 export function computeStrategies(input: StrategyEngineInput): StrategyResult[] {
   const {
     propertyPrice,
@@ -156,14 +162,22 @@ function linspace(start: number, end: number, points: number): number[] {
   return Array.from({ length: points }, (_, i) => start + step * i);
 }
 
+/** Nearest ₹100 — keeps every search-derived rupee figure looking like a plausible human-chosen amount (₹9,800, not ₹9,836). */
+function roundToHundred(n: number): number {
+  return Math.round(n / 100) * 100;
+}
+
 /**
  * Extra monthly prepay is expressed and capped as a percentage of the
  * strategy's own EMI (not an unbounded rupee search) — keeps the resulting
  * rupee figures in the range a real salaried person could plausibly commit
- * to, rather than an outlier like ₹30,000/mo on a ₹70,000 EMI.
+ * to, rather than an outlier like ₹30,000/mo on a ₹70,000 EMI. Each grid
+ * point is rounded to the nearest ₹100 before it ever reaches simulation,
+ * so the simulated interest/payoff figures always match the rupee amount
+ * actually displayed — never simulate one number and show a rounded other.
  */
 function extraPrepayGrid(emi: number, capPercentOfEmi: number, points: number): number[] {
-  return linspace(0, capPercentOfEmi, points).map((pct) => (pct / 100) * emi);
+  return linspace(0, capPercentOfEmi, points).map((pct) => roundToHundred((pct / 100) * emi));
 }
 
 // ---------------------------------------------------------------------------
@@ -335,40 +349,27 @@ function buildResult(
 
 /**
  * Safety First's own capital-stack resolver — deliberately not the shared
- * `resolveStack`, because this model's shape is different: a heavy down
- * payment is the PRIMARY risk-reduction lever, and the bank corpus is sized
- * to its purpose (a 10-15yr EMI runway buffer), not to "whatever's left."
- * Any genuine surplus beyond that buffer rolls into an even higher
- * effective down payment (shrinking the loan further) rather than being
- * force-fed into the corpus or an MF lumpsum — this model stays at 0% MF.
- *
- * Two-pass: pass 1 estimates EMI (from the searched down payment alone) to
- * size the buffer; pass 2 folds any leftover into down payment and
- * recomputes EMI once more. Good enough for a recommendation card without
- * an iterative fixed-point solver.
+ * `resolveStack`, because this model's shape is different: down payment and
+ * MF lumpsum are both sized directly as a percentage of OWN FUNDS (not
+ * property price), with the 20%-of-price floor still enforced underneath
+ * as a hard safety rail. Everything left after those two goes to the bank
+ * corpus, which naturally lands around ~12.5-15% of own funds when down
+ * payment is ~80% and MF is ~5-7.5% — no separate leftover-absorption pass
+ * needed, since the three percentages are designed to sum to ~100%.
  */
-function resolveSafetyStack(ctx: StrategyContext, downPaymentPercent: number, bufferRunwayMonths: number): ResolvedStack {
-  const dp1 = Math.max(DOWN_PAYMENT_FLOOR_PERCENT, downPaymentPercent) * ctx.propertyPrice;
-  const loan1 = Math.max(0, ctx.propertyPrice - dp1);
-  const emi1 = calculateEmi({ principal: loan1, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
-
-  const remaining1 = Math.max(0, ctx.ownFunds - dp1);
-  const corpusBeforeCap = Math.min(bufferRunwayMonths * emi1, remaining1);
-  const surplus = Math.max(0, remaining1 - corpusBeforeCap);
-
-  // Absorb surplus into a higher down payment, but a down payment can never
-  // exceed 100% of the property price. Once own funds are generous enough
-  // to hit that ceiling, any further surplus has nowhere productive to go
-  // (this model stays at 0% MF by design), so it enlarges the buffer past
-  // its own target instead of producing a nonsensical >100% down payment.
-  const maxAdditionalDp = Math.max(0, ctx.propertyPrice - dp1);
-  const dpSurplus = Math.min(surplus, maxAdditionalDp);
-  const corpusSurplus = surplus - dpSurplus;
-
-  const downPayment = dp1 + dpSurplus;
-  const corpus = corpusBeforeCap + corpusSurplus;
+function resolveSafetyStack(
+  ctx: StrategyContext,
+  downPaymentPercentOfOwnFunds: number,
+  mfPercentOfOwnFunds: number,
+): ResolvedStack {
+  const dpTarget = downPaymentPercentOfOwnFunds * ctx.ownFunds;
+  const downPayment = Math.min(ctx.propertyPrice, Math.max(DOWN_PAYMENT_FLOOR_PERCENT * ctx.propertyPrice, dpTarget));
   const loanAmount = Math.max(0, ctx.propertyPrice - downPayment);
   const emi = calculateEmi({ principal: loanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
+
+  const remaining = Math.max(0, ctx.ownFunds - downPayment);
+  const mfLumpsum = Math.min(mfPercentOfOwnFunds * ctx.ownFunds, remaining);
+  const corpus = Math.max(0, remaining - mfLumpsum);
 
   return {
     downPaymentPercent: downPayment / ctx.propertyPrice,
@@ -376,16 +377,20 @@ function resolveSafetyStack(ctx: StrategyContext, downPaymentPercent: number, bu
     loanAmount,
     emi,
     corpus,
-    mfLumpsum: 0,
+    mfLumpsum,
     emiRunwayMonths: emi > 0 ? corpus / emi : 0,
   };
 }
 
 function runSafetyFirst(ctx: StrategyContext): StrategyResult {
   const candidates: SimulatedCandidate[] = [];
-  for (const downPaymentPercent of linspace(0.4, 0.6, 3)) {
-    for (const bufferRunwayMonths of linspace(120, 180, 3)) {
-      const stack = resolveSafetyStack(ctx, downPaymentPercent, bufferRunwayMonths);
+  // ~80% of own funds to down payment (the primary lever that keeps EMI
+  // low), ~5-7.5% to a small, low-key MF lumpsum (not zero — a little
+  // market exposure is still part of this model), remainder (~12.5-15%)
+  // to the bank corpus.
+  for (const dpPercentOfOwnFunds of linspace(0.775, 0.825, 3)) {
+    for (const mfPercentOfOwnFunds of linspace(0.05, 0.075, 3)) {
+      const stack = resolveSafetyStack(ctx, dpPercentOfOwnFunds, mfPercentOfOwnFunds);
       for (const extra of extraPrepayGrid(stack.emi, 5, 5)) {
         candidates.push(simulateCandidate(ctx, stack, "bank", DEFAULT_BANK_RETURN_PERCENT, extra, 0, 0));
       }
@@ -415,14 +420,53 @@ function runSafetyFirst(ctx: StrategyContext): StrategyResult {
 // Model 2 — Balanced (Recommended default)
 // ---------------------------------------------------------------------------
 
+/**
+ * Balanced's own resolver — down payment is a medium ~40-50% of own funds
+ * (between Safety's ~80% and Aggressive's ~20% floor), the corpus is sized
+ * to the existing 36-48mo runway target, and only a modest share of
+ * whatever's left goes to the MF lumpsum. The rest is deliberately left
+ * undeployed here (still within `ownFunds`, per the capital-stack
+ * invariant) rather than forced into MF — this model's interest reduction
+ * is meant to come from a bigger monthly prepayment search budget (see
+ * `runBalanced`'s higher `extraPrepayGrid` cap), not from a large lumpsum's
+ * paper growth.
+ */
+function resolveBalancedStack(ctx: StrategyContext, downPaymentPercentOfOwnFunds: number, runwayMonths: number): ResolvedStack {
+  const dpTarget = downPaymentPercentOfOwnFunds * ctx.ownFunds;
+  const downPayment = Math.min(ctx.propertyPrice, Math.max(DOWN_PAYMENT_FLOOR_PERCENT * ctx.propertyPrice, dpTarget));
+  const loanAmount = Math.max(0, ctx.propertyPrice - downPayment);
+  const emi = calculateEmi({ principal: loanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
+
+  const remaining = Math.max(0, ctx.ownFunds - downPayment);
+  const corpus = Math.min(runwayMonths * emi, remaining);
+  const afterCorpus = Math.max(0, remaining - corpus);
+  const mfLumpsum = BALANCED_MF_SHARE_OF_REMAINDER * afterCorpus;
+
+  return {
+    downPaymentPercent: downPayment / ctx.propertyPrice,
+    downPayment,
+    loanAmount,
+    emi,
+    corpus,
+    mfLumpsum,
+    emiRunwayMonths: emi > 0 ? corpus / emi : 0,
+  };
+}
+
+/** A modest, not-100%, share of what's left after down payment and corpus — the rest funds a bigger monthly-prepay search budget instead of a large MF lumpsum. */
+const BALANCED_MF_SHARE_OF_REMAINDER = 0.45;
+
 function runBalanced(ctx: StrategyContext): StrategyResult {
   const candidates: SimulatedCandidate[] = [];
-  for (const runwayMonths of linspace(36, 48, 4)) {
-    // All remaining funds after down payment and the runway-sized corpus go
-    // to the MF lumpsum — no separate fixed split.
-    const stack = resolveStack(ctx, DOWN_PAYMENT_FLOOR_PERCENT, (emi) => runwayMonths * emi);
-    for (const extra of extraPrepayGrid(stack.emi, 10, 5)) {
-      candidates.push(simulateCandidate(ctx, stack, "swp", DEFAULT_SWP_RETURN_PERCENT, extra, 5, 0));
+  for (const dpPercentOfOwnFunds of linspace(0.4, 0.5, 3)) {
+    for (const runwayMonths of linspace(36, 48, 4)) {
+      const stack = resolveBalancedStack(ctx, dpPercentOfOwnFunds, runwayMonths);
+      // Cap raised from the old 10% to 12.5% of EMI — with less going to
+      // the MF lumpsum, this model leans more on real monthly prepayment to
+      // cut interest, while staying below Aggressive Payoff's 15% cap.
+      for (const extra of extraPrepayGrid(stack.emi, 12.5, 5)) {
+        candidates.push(simulateCandidate(ctx, stack, "swp", DEFAULT_SWP_RETURN_PERCENT, extra, BALANCED_STEP_UP_PERCENT, 0));
+      }
     }
   }
 
@@ -457,7 +501,7 @@ function runAggressive(ctx: StrategyContext): StrategyResult {
     // payment and that buffer goes to the MF lumpsum.
     const stack = resolveStack(ctx, downPaymentPercent, (emi) => 12 * emi);
     for (const extra of extraPrepayGrid(stack.emi, 15, 5)) {
-      candidates.push(simulateCandidate(ctx, stack, "swp", DEFAULT_SWP_RETURN_PERCENT, extra, 7.5, 0));
+      candidates.push(simulateCandidate(ctx, stack, "swp", DEFAULT_SWP_RETURN_PERCENT, extra, AGGRESSIVE_STEP_UP_PERCENT, 0));
     }
   }
 

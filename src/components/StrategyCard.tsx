@@ -41,9 +41,9 @@ function riskProfile(result: StrategyResult) {
 // What each strategy is actually doing with the money — shown as a single
 // line under the mini capital stack, distinct from the header tagline above.
 const ALLOCATION_INTENT: Record<StrategyResult["id"], string> = {
-  safety: "Minimal market exposure — funds held in bank, larger buffer for certainty.",
-  balanced: "Down payment held at the 20% floor, the rest split between equity growth and a resilient SWP cushion.",
-  aggressive: "Maximum capital working in equity — fastest payoff, more volatility.",
+  safety: "A heavy down payment does the heavy lifting — a small MF lumpsum for low-key equity exposure, and a bank buffer for certainty.",
+  balanced: "A medium down payment, a modest MF lumpsum, and a bigger monthly prepayment budget — interest comes down from real prepayment, not paper MF growth alone.",
+  aggressive: "Little down payment, maximum capital working in equity — fastest payoff, more volatility.",
   bonus: "One bonus EMI a year, funded by tax savings rather than extra monthly cash flow.",
 };
 
@@ -71,7 +71,13 @@ function MiniCapitalStack({ result }: { result: StrategyResult }) {
   };
 
   return (
-    <div className="flex h-[22px] overflow-hidden rounded-sm" aria-hidden>
+    // gap-x-px + the segments' own background creates a thin visible
+    // divider between adjacent segments — at this small a scale, two
+    // differently-colored labels sitting flush against each other with no
+    // seam is what read as "overlapping" in review; a hairline gap plus a
+    // little horizontal padding on each label fixes that without needing
+    // more vertical height.
+    <div className="flex h-6 gap-x-px overflow-hidden rounded-sm bg-line" aria-hidden>
       {STACK_SEGMENTS.map((s) => {
         const pct = total > 0 ? (values[s.key] / total) * 100 : 0;
         const label = s.key === "corpus" ? corpusLabel : s.label;
@@ -79,7 +85,7 @@ function MiniCapitalStack({ result }: { result: StrategyResult }) {
           <div
             key={s.key}
             style={{ width: `${pct}%` }}
-            className={`@container/miniseg flex items-center justify-center overflow-hidden ${s.className}`}
+            className={`@container/miniseg flex items-center justify-center overflow-hidden px-0.5 ${s.className}`}
           >
             {/* Same width-aware hide (not truncate) as the main Capital
                 Stack bar — at this scale even a 2-3 letter abbreviation
@@ -152,8 +158,16 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
   const interestSavedVsSafety =
     safetyResult && !isSafety && !isBonus ? safetyResult.totalInterestPaid - result.totalInterestPaid : null;
 
+  // Never show "100%+" — a badge claiming a paper MF-growth offset beyond
+  // the interest actually paid reads as implausible. Clamp the display
+  // (not the underlying figure) at "up to 100%".
   const offsetLabel =
-    result.interestOffsetPercent >= 100 ? "100%+" : `${result.interestOffsetPercent.toFixed(0)}%`;
+    result.interestOffsetPercent >= 100 ? "up to 100%" : `${result.interestOffsetPercent.toFixed(0)}%`;
+  const offsetCopy = isBalanced
+    ? `Interest cut ${offsetLabel} via a blend of prepayment and MF growth`
+    : `MF growth offsets ${offsetLabel} of interest`;
+
+  const emiRunwayLabel = formatMonths(result.emiRunwayMonths);
 
   return (
     <motion.div
@@ -165,16 +179,6 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
       onFocus={() => setHoveredStrategyId(result.id)}
       onBlur={() => clearHoveredStrategyId(result.id)}
     >
-      {/* The badge gets its own row, always above icon+title in normal
-          document flow — never side-by-side with them. Side-by-side (even
-          with flex-wrap) let "RECOMMENDED"'s pill width compete with the
-          title for space on narrow cards, which is exactly what read as
-          "overlapping" at the 2x2 mobile grid width. */}
-      {isBalanced && (
-        <div>
-          <Badge tone="jade">Recommended</Badge>
-        </div>
-      )}
       <div className="flex min-w-0 items-start gap-2.5">
         <span className="mt-0.5 flex size-8 flex-none items-center justify-center rounded-sm bg-indigo-soft text-indigo">
           {ICONS[result.id]}
@@ -241,13 +245,20 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
         </p>
       )}
 
+      {isSafety && (
+        <p className="text-caption font-semibold text-ink-2">
+          This {formatINR(result.capitalStack.corpus)} bank balance funds your EMI for the first {emiRunwayLabel} —
+          after that, EMI comes from your salary.
+        </p>
+      )}
+
       {interestSavedVsSafety !== null && interestSavedVsSafety > 0 && (
         <p className="text-caption text-jade">Saves {formatINR(interestSavedVsSafety)} in interest vs. Safety First</p>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center rounded-full bg-jade-soft px-2 py-0.5 text-caption font-semibold text-jade">
-          MF growth offsets {offsetLabel} of interest
+          {offsetCopy}
         </span>
       </div>
 
@@ -305,7 +316,15 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
         </div>
       )}
 
-      <div className="mt-auto pt-1">
+      <div className="mt-auto flex flex-col gap-2 pt-1">
+        {/* Moved to the bottom, above the CTA — sitting above the icon/title
+            competed with the title for space on narrow cards; down here it
+            reads as "here's the plan to pick," right where the user acts. */}
+        {isBalanced && (
+          <div className="flex justify-center">
+            <Badge tone="jade">Recommended</Badge>
+          </div>
+        )}
         <button
           type="button"
           onClick={() =>

@@ -92,9 +92,12 @@ test.describe("Strategy recommendations", () => {
     const swpToggle = planner.getByRole("button", { name: "SWP (mutual fund)" });
 
     await expect(price).toHaveValue("14000000");
-    // Balanced's down payment is fixed at exactly the 20% floor.
-    await expect(dp).toHaveValue("2800000");
-    await expect(stepup).toHaveValue("5");
+    // Balanced's down payment now targets a medium ~40-50% of own funds
+    // (floored at 20% of price if that's ever higher) — no longer a fixed
+    // value, so just check it landed meaningfully above the floor.
+    const dpValue = Number(await dp.inputValue());
+    expect(dpValue).toBeGreaterThan(0.2 * 14000000);
+    await expect(stepup).toHaveValue("3");
     await expect(swpToggle).toHaveAttribute("aria-pressed", "true");
 
     const mfValue = Number(await mf.inputValue());
@@ -104,24 +107,33 @@ test.describe("Strategy recommendations", () => {
     await expect(page.locator("#planner")).toBeInViewport();
   });
 
-  test("mobile viewport (2x2 grid) renders without horizontal overflow", async ({ page }) => {
+  test("mobile viewport (swipeable carousel) renders one card at a time without horizontal page overflow", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await showStrategies(page);
 
+    // All 4 cards exist in the DOM (inside the horizontally-scrolling
+    // carousel track), but only the first is in view before any swipe.
     for (const id of ["safety", "balanced", "aggressive", "bonus"]) {
-      await expect(page.getByTestId(`strategy-card-${id}`)).toBeVisible();
+      await expect(page.getByTestId(`strategy-card-${id}`)).toBeAttached();
     }
+    await expect(page.getByTestId("strategy-card-safety")).toBeInViewport();
+    await expect(page.getByTestId("strategy-card-bonus")).not.toBeInViewport();
 
     const hasOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
     );
     expect(hasOverflow).toBe(false);
 
-    // 2x2: Safety First and Balanced share a row, distinct from Aggressive/Bonus's row.
-    const safetyBox = await page.getByTestId("strategy-card-safety").boundingBox();
-    const balancedBox = await page.getByTestId("strategy-card-balanced").boundingBox();
-    const aggressiveBox = await page.getByTestId("strategy-card-aggressive").boundingBox();
-    expect(safetyBox && balancedBox && Math.abs(safetyBox.y - balancedBox.y)).toBeLessThan(5);
-    expect(safetyBox && aggressiveBox && Math.abs(safetyBox.y - aggressiveBox.y)).toBeGreaterThan(50);
+    // The carousel's own scroller may legitimately overflow horizontally
+    // (that's the swipe surface) — confirm it's actually scrollable.
+    const carousel = page.getByTestId("strategy-carousel");
+    const isScrollable = await carousel.evaluate((el) => el.scrollWidth > el.clientWidth + 1);
+    expect(isScrollable).toBe(true);
+
+    // The "next" dot/arrow advances the carousel to the next card.
+    await page.getByRole("button", { name: "Next strategy" }).click();
+    await expect(page.getByTestId("strategy-card-balanced")).toBeInViewport();
   });
 });
