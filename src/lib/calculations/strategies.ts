@@ -119,38 +119,6 @@ interface ResolvedStack {
   emiRunwayMonths: number;
 }
 
-/**
- * Down payment is a percentage of property price (clamped to the 20% floor),
- * chosen per-model. The corpus is sized directly by `corpusFn` (in rupees,
- * typically expressed as a multiple of the resulting EMI — "months of
- * runway"); everything left over after down payment and corpus goes to the
- * MF lumpsum. There's no separate held-back reserve bucket in this model —
- * own funds split exactly three ways.
- */
-function resolveStack(
-  ctx: StrategyContext,
-  downPaymentPercent: number,
-  corpusFn: (emi: number, remaining: number) => number,
-): ResolvedStack {
-  const downPayment = Math.max(DOWN_PAYMENT_FLOOR_PERCENT, downPaymentPercent) * ctx.propertyPrice;
-  const loanAmount = Math.max(0, ctx.propertyPrice - downPayment);
-  const emi = calculateEmi({ principal: loanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
-
-  const remaining = Math.max(0, ctx.ownFunds - downPayment);
-  const corpus = Math.min(Math.max(0, corpusFn(emi, remaining)), remaining);
-  const mfLumpsum = Math.max(0, remaining - corpus);
-
-  return {
-    downPaymentPercent: downPayment / ctx.propertyPrice,
-    downPayment,
-    loanAmount,
-    emi,
-    corpus,
-    mfLumpsum,
-    emiRunwayMonths: emi > 0 ? corpus / emi : 0,
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Search grid helpers
 // ---------------------------------------------------------------------------
@@ -421,26 +389,40 @@ function runSafetyFirst(ctx: StrategyContext): StrategyResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Balanced's own resolver — down payment is a medium ~40-50% of own funds
- * (between Safety's ~80% and Aggressive's ~20% floor), the corpus is sized
- * to the existing 36-48mo runway target, and only a modest share of
- * whatever's left goes to the MF lumpsum. The rest is deliberately left
- * undeployed here (still within `ownFunds`, per the capital-stack
- * invariant) rather than forced into MF — this model's interest reduction
- * is meant to come from a bigger monthly prepayment search budget (see
- * `runBalanced`'s higher `extraPrepayGrid` cap), not from a large lumpsum's
- * paper growth.
+ * Balanced's own resolver — down payment starts at a medium ~40-50% of own
+ * funds (between Safety's ~80% and Aggressive's ~20% floor). MF gets a
+ * direct target share of TOTAL own funds (like Safety First's own 5-7.5%,
+ * just bigger), reserved BEFORE the corpus — not sized from whatever
+ * residue a runway-driven corpus target happens to leave behind. In
+ * tighter scenarios (modest own funds relative to price) a 36-48mo runway
+ * corpus can consume all of what's left after down payment on its own,
+ * which would crowd MF out to zero and make this model's MF growth look
+ * artificially smaller than Safety First's fixed, always-preserved slice —
+ * exactly backwards, since Balanced is supposed to carry MORE equity
+ * exposure than Safety, not less. Whatever's left after both down payment
+ * and MF (i.e. after corpus is sized from that remainder) becomes EXTRA
+ * DOWN PAYMENT rather than sitting undeployed (the previous bug) or a
+ * monthly-prepay top-up: this engine computes EMI once at origination from
+ * the loan principal (see emi.ts — prepayment only shortens tenure, it
+ * never recomputes EMI), so a monthly-prepay budget could never make the
+ * displayed EMI figure move at all. Extra down payment is the only lever
+ * that genuinely, visibly lowers both EMI and total interest here.
  */
 function resolveBalancedStack(ctx: StrategyContext, downPaymentPercentOfOwnFunds: number, runwayMonths: number): ResolvedStack {
   const dpTarget = downPaymentPercentOfOwnFunds * ctx.ownFunds;
-  const downPayment = Math.min(ctx.propertyPrice, Math.max(DOWN_PAYMENT_FLOOR_PERCENT * ctx.propertyPrice, dpTarget));
+  const baseDownPayment = Math.min(ctx.propertyPrice, Math.max(DOWN_PAYMENT_FLOOR_PERCENT * ctx.propertyPrice, dpTarget));
+  const baseLoanAmount = Math.max(0, ctx.propertyPrice - baseDownPayment);
+  const baseEmi = calculateEmi({ principal: baseLoanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
+
+  const remaining = Math.max(0, ctx.ownFunds - baseDownPayment);
+  const mfLumpsum = Math.min(BALANCED_MF_PERCENT_OF_OWN_FUNDS * ctx.ownFunds, remaining);
+  const afterMf = remaining - mfLumpsum;
+  const corpus = Math.min(runwayMonths * baseEmi, afterMf);
+  const extraFromLeftover = afterMf - corpus;
+
+  const downPayment = Math.min(ctx.propertyPrice, baseDownPayment + extraFromLeftover);
   const loanAmount = Math.max(0, ctx.propertyPrice - downPayment);
   const emi = calculateEmi({ principal: loanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
-
-  const remaining = Math.max(0, ctx.ownFunds - downPayment);
-  const corpus = Math.min(runwayMonths * emi, remaining);
-  const afterCorpus = Math.max(0, remaining - corpus);
-  const mfLumpsum = BALANCED_MF_SHARE_OF_REMAINDER * afterCorpus;
 
   return {
     downPaymentPercent: downPayment / ctx.propertyPrice,
@@ -453,17 +435,18 @@ function resolveBalancedStack(ctx: StrategyContext, downPaymentPercentOfOwnFunds
   };
 }
 
-/** A modest, not-100%, share of what's left after down payment and corpus — the rest funds a bigger monthly-prepay search budget instead of a large MF lumpsum. */
-const BALANCED_MF_SHARE_OF_REMAINDER = 0.45;
+/** Target MF share of TOTAL own funds (capped by what's actually available) — comfortably above Safety First's 5-7.5%, since Balanced is meant to carry more equity exposure, not less. */
+const BALANCED_MF_PERCENT_OF_OWN_FUNDS = 0.12;
 
 function runBalanced(ctx: StrategyContext): StrategyResult {
   const candidates: SimulatedCandidate[] = [];
   for (const dpPercentOfOwnFunds of linspace(0.4, 0.5, 3)) {
     for (const runwayMonths of linspace(36, 48, 4)) {
       const stack = resolveBalancedStack(ctx, dpPercentOfOwnFunds, runwayMonths);
-      // Cap raised from the old 10% to 12.5% of EMI — with less going to
-      // the MF lumpsum, this model leans more on real monthly prepayment to
-      // cut interest, while staying below Aggressive Payoff's 15% cap.
+      // Cap raised from the old 10% to 12.5% of this model's own (now
+      // smaller, thanks to the extra down payment above) EMI — still below
+      // Aggressive Payoff's 15% cap, but a genuinely bigger monthly
+      // prepayment budget on top of the principal reduction.
       for (const extra of extraPrepayGrid(stack.emi, 12.5, 5)) {
         candidates.push(simulateCandidate(ctx, stack, "swp", DEFAULT_SWP_RETURN_PERCENT, extra, BALANCED_STEP_UP_PERCENT, 0));
       }
@@ -494,14 +477,54 @@ function runBalanced(ctx: StrategyContext): StrategyResult {
 // Model 3 — Aggressive Payoff (Wealth Maximizer)
 // ---------------------------------------------------------------------------
 
+interface ResolvedStackWithPrepayTopUp extends ResolvedStack {
+  /**
+   * Monthly-equivalent of the leftover own funds NOT sent to the MF
+   * lumpsum, spread evenly across the loan's original tenure — a simple,
+   * explicable way to turn a one-time rupee reserve into a recurring
+   * prepayment figure. Added on top of whatever the model's own prepay
+   * search separately chooses, never a substitute for it (down payment
+   * stays pinned near this model's own ~20-25% floor, so unlike Balanced
+   * this leftover can't go toward extra down payment without diluting
+   * "little down payment, maximum capital in equity" — its whole identity).
+   */
+  additionalMonthlyPrepayFromLeftover: number;
+}
+
+/** Majority (not all) of leftover own funds to the MF lumpsum — the rest funds real extra prepayment instead of defaulting entirely to equity. */
+const AGGRESSIVE_MF_SHARE_OF_LEFTOVER = 0.75;
+
+function resolveAggressiveStack(ctx: StrategyContext, downPaymentPercent: number): ResolvedStackWithPrepayTopUp {
+  const downPayment = Math.max(DOWN_PAYMENT_FLOOR_PERCENT, downPaymentPercent) * ctx.propertyPrice;
+  const loanAmount = Math.max(0, ctx.propertyPrice - downPayment);
+  const emi = calculateEmi({ principal: loanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
+
+  // Thin, fixed 12-month runway buffer, same as before.
+  const remaining = Math.max(0, ctx.ownFunds - downPayment);
+  const corpus = Math.min(12 * emi, remaining);
+  const afterCorpus = Math.max(0, remaining - corpus);
+  const mfLumpsum = AGGRESSIVE_MF_SHARE_OF_LEFTOVER * afterCorpus;
+  const leftoverForPrepay = afterCorpus - mfLumpsum;
+
+  return {
+    downPaymentPercent: downPayment / ctx.propertyPrice,
+    downPayment,
+    loanAmount,
+    emi,
+    corpus,
+    mfLumpsum,
+    emiRunwayMonths: emi > 0 ? corpus / emi : 0,
+    additionalMonthlyPrepayFromLeftover: ctx.tenureMonths > 0 ? leftoverForPrepay / ctx.tenureMonths : 0,
+  };
+}
+
 function runAggressive(ctx: StrategyContext): StrategyResult {
   const candidates: SimulatedCandidate[] = [];
   for (const downPaymentPercent of linspace(DOWN_PAYMENT_FLOOR_PERCENT, 0.25, 3)) {
-    // Thin, fixed 12-month runway buffer; everything else after down
-    // payment and that buffer goes to the MF lumpsum.
-    const stack = resolveStack(ctx, downPaymentPercent, (emi) => 12 * emi);
+    const stack = resolveAggressiveStack(ctx, downPaymentPercent);
     for (const extra of extraPrepayGrid(stack.emi, 15, 5)) {
-      candidates.push(simulateCandidate(ctx, stack, "swp", DEFAULT_SWP_RETURN_PERCENT, extra, AGGRESSIVE_STEP_UP_PERCENT, 0));
+      const totalExtra = roundToHundred(extra + stack.additionalMonthlyPrepayFromLeftover);
+      candidates.push(simulateCandidate(ctx, stack, "swp", DEFAULT_SWP_RETURN_PERCENT, totalExtra, AGGRESSIVE_STEP_UP_PERCENT, 0));
     }
   }
 
@@ -535,13 +558,58 @@ function runAggressive(ctx: StrategyContext): StrategyResult {
 // Model 4 — Tax-Optimized Payoff (Bonus)
 // ---------------------------------------------------------------------------
 
+/**
+ * A 24-month runway corpus, then leftover own funds split between MF and
+ * extra down payment — same reasoning as Balanced (see its resolver): this
+ * model's whole identity is "no extra monthly cash flow" (zero monthly
+ * prepay, funded instead by one annual lump-sum EMI and Sec 24(b)/80C tax
+ * savings), so its leftover share can't become a monthly prepay top-up
+ * without contradicting that. Down payment is the only capital-stack lever
+ * left that doesn't imply recurring monthly cash flow.
+ *
+ * Like Balanced, MF is reserved as a direct target share of TOTAL own
+ * funds BEFORE corpus is sized (not from whatever residue a 24mo runway
+ * target leaves behind) — otherwise a large-enough corpus target can crowd
+ * MF to zero in tighter scenarios, undermining "some real equity exposure"
+ * for this model too. The target here (18%) is deliberately its own value
+ * — between Balanced's 12% and Aggressive's effective majority share — so
+ * this model's own offset % lands somewhere distinctly its own rather than
+ * mirroring either.
+ */
+const BONUS_MF_PERCENT_OF_OWN_FUNDS = 0.18;
+
+function resolveTaxOptimizedStack(ctx: StrategyContext): ResolvedStack {
+  const baseDownPayment = DOWN_PAYMENT_FLOOR_PERCENT * ctx.propertyPrice;
+  const baseLoanAmount = Math.max(0, ctx.propertyPrice - baseDownPayment);
+  const baseEmi = calculateEmi({ principal: baseLoanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
+
+  const remaining = Math.max(0, ctx.ownFunds - baseDownPayment);
+  const mfLumpsum = Math.min(BONUS_MF_PERCENT_OF_OWN_FUNDS * ctx.ownFunds, remaining);
+  const afterMf = remaining - mfLumpsum;
+  const corpus = Math.min(24 * baseEmi, afterMf);
+  const extraFromLeftover = afterMf - corpus;
+
+  const downPayment = Math.min(ctx.propertyPrice, baseDownPayment + extraFromLeftover);
+  const loanAmount = Math.max(0, ctx.propertyPrice - downPayment);
+  const emi = calculateEmi({ principal: loanAmount, annualRatePercent: ctx.loanRatePercent, tenureMonths: ctx.tenureMonths });
+
+  return {
+    downPaymentPercent: downPayment / ctx.propertyPrice,
+    downPayment,
+    loanAmount,
+    emi,
+    corpus,
+    mfLumpsum,
+    emiRunwayMonths: emi > 0 ? corpus / emi : 0,
+  };
+}
+
 function runTaxOptimized(ctx: StrategyContext): StrategyResult {
-  // Every parameter here is fixed, not searched: 20% down payment, a 24-
-  // month runway corpus, zero monthly extra prepay, and exactly 1 extra
-  // EMI-equivalent lump sum per year — a defining, non-adjustable
-  // characteristic of this model (distinct from Safety First's user-facing
-  // stepper).
-  const stack = resolveStack(ctx, DOWN_PAYMENT_FLOOR_PERCENT, (emi) => 24 * emi);
+  // Zero monthly extra prepay and exactly 1 extra EMI-equivalent lump sum
+  // per year stay fixed, non-adjustable characteristics of this model
+  // (distinct from Safety First's user-facing stepper) — only the capital
+  // stack itself (down payment vs. MF split) is computed, not searched.
+  const stack = resolveTaxOptimizedStack(ctx);
   const chosen = simulateCandidate(ctx, stack, "swp", DEFAULT_SWP_RETURN_PERCENT, 0, 0, 1);
 
   // Sec 24(b) (interest, capped ₹2L/yr) + 80C (principal, capped ₹1.5L/yr) —

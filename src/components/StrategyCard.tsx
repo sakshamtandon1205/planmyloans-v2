@@ -158,11 +158,12 @@ export function StrategyCard({ result, safetyResult, onUsePlan }: StrategyCardPr
   const interestSavedVsSafety =
     safetyResult && !isSafety && !isBonus ? safetyResult.totalInterestPaid - result.totalInterestPaid : null;
 
-  // Never show "100%+" — a badge claiming a paper MF-growth offset beyond
-  // the interest actually paid reads as implausible. Clamp the display
-  // (not the underlying figure) at "up to 100%".
-  const offsetLabel =
-    result.interestOffsetPercent >= 100 ? "up to 100%" : `${result.interestOffsetPercent.toFixed(0)}%`;
+  // No display-layer cap — the allocation engine itself now splits leftover
+  // own funds between MF and extra down payment/prepayment per strategy
+  // (see strategies.ts), so this percentage is the real, uncapped figure;
+  // it's expected to vary meaningfully (and sometimes legitimately exceed
+  // 100%, e.g. for Aggressive Payoff) rather than clustering near a ceiling.
+  const offsetLabel = `${result.interestOffsetPercent.toFixed(0)}%`;
   const offsetCopy = isBalanced
     ? `Interest cut ${offsetLabel} via a blend of prepayment and MF growth`
     : `MF growth offsets ${offsetLabel} of interest`;

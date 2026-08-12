@@ -46,20 +46,27 @@ describe("computeStrategies", () => {
     }
   });
 
-  it("fixes Tax-Optimized Payoff's down payment at exactly the 20% floor", () => {
+  it("Tax-Optimized Payoff's down payment starts at the 20% floor but can grow from leftover funds routed there instead of sitting undeployed", () => {
     const results = computeStrategies(BASE_INPUT);
     const bonus = results.find((r) => r.id === "bonus")!;
-    expect(bonus.downPaymentPercent).toBeCloseTo(DOWN_PAYMENT_FLOOR_PERCENT, 6);
+    // Never below the floor it starts from.
+    expect(bonus.downPaymentPercent).toBeGreaterThanOrEqual(DOWN_PAYMENT_FLOOR_PERCENT - 1e-6);
   });
 
-  it("targets Balanced's down payment at a medium 40-50% of own funds, above the floor and below Safety First's", () => {
+  it("targets Balanced's down payment at a medium level, above the floor and below Safety First's", () => {
     const results = computeStrategies(BASE_INPUT);
     const safety = results.find((r) => r.id === "safety")!;
     const balanced = results.find((r) => r.id === "balanced")!;
 
+    // The 40-50%-of-own-funds figure is only this model's STARTING down
+    // payment target — leftover funds not claimed by MF or corpus get
+    // folded in on top (see resolveBalancedStack), so the final down
+    // payment can land a bit above 50% of own funds. What must still hold
+    // is the medium positioning: comfortably above the floor, comfortably
+    // below Safety First's ~80%-of-own-funds down payment.
     const balancedDpAsShareOfOwnFunds = balanced.capitalStack.downPayment / BASE_INPUT.ownFunds;
     expect(balancedDpAsShareOfOwnFunds).toBeGreaterThanOrEqual(0.4 - 1e-6);
-    expect(balancedDpAsShareOfOwnFunds).toBeLessThanOrEqual(0.5 + 1e-6);
+    expect(balancedDpAsShareOfOwnFunds).toBeLessThan(0.7);
     expect(balanced.downPaymentPercent).toBeGreaterThan(DOWN_PAYMENT_FLOOR_PERCENT + 1e-6);
     expect(balanced.downPaymentPercent).toBeLessThan(safety.downPaymentPercent);
   });
@@ -78,7 +85,15 @@ describe("computeStrategies", () => {
 
   it("caps extra monthly prepay as a percentage of each strategy's own EMI, at realistic salaried-person levels", () => {
     const results = computeStrategies(BASE_INPUT);
-    const caps: Record<string, number> = { safety: 5, balanced: 12.5, aggressive: 15, bonus: 0 };
+    // Aggressive Payoff's own prepay SEARCH is still capped at 15% of EMI,
+    // same as the others' fixed caps — but it also gets a real, additional
+    // monthly top-up funded by the minority of leftover own funds not sent
+    // to MF (see resolveAggressiveStack), which is a genuine extra
+    // commitment on top of the search, not bounded by the search's own
+    // cap. Safety/Balanced/Bonus have no such top-up (Balanced and Bonus
+    // route their leftover into down payment instead — see their own
+    // resolvers), so their caps stay tight.
+    const caps: Record<string, number> = { safety: 5, balanced: 12.5, aggressive: 40, bonus: 0 };
     for (const r of results) {
       // Grid points are now rounded to the nearest ₹100 (Part 6) before
       // simulation, so the resulting percentage-of-EMI can drift slightly
@@ -334,6 +349,40 @@ describe("computeStrategies", () => {
     for (const r of results) {
       expect(r.interestOffsetPercent).toBeGreaterThanOrEqual(0);
       expect(Number.isFinite(r.interestOffsetPercent)).toBe(true);
+    }
+  });
+
+  it("produces real, varied interest-offset percentages across scenarios, with Safety First consistently lowest", () => {
+    // Regression coverage for the leftover-funds modeling flaw: leftover own
+    // funds used to default 100% into the MF lumpsum for Balanced/
+    // Aggressive/Tax-Optimized, producing inflated, clustered-near-or-above-
+    // 100% offsets. Checked across several distinct realistic scenarios
+    // (not just BASE_INPUT) so this isn't one lucky case — property price,
+    // own funds, and tenure all vary.
+    const scenarios: StrategyEngineInput[] = [
+      BASE_INPUT,
+      { propertyPrice: 8000000, ownFunds: 3000000, loanRatePercent: 8.5, tenureYears: 15 },
+      { propertyPrice: 30000000, ownFunds: 20000000, loanRatePercent: 9, tenureYears: 25 },
+      { propertyPrice: 6000000, ownFunds: 5000000, loanRatePercent: 8, tenureYears: 10 },
+    ];
+
+    for (const scenario of scenarios) {
+      const results = computeStrategies(scenario);
+      const byId = Object.fromEntries(results.map((r) => [r.id, r.interestOffsetPercent]));
+
+      // Safety First's offset is the lowest of the four in every scenario —
+      // its minimal, fixed 5-7.5%-of-own-funds MF slice should never be
+      // outgrown by another model's offset collapsing to near-zero (e.g.
+      // from a large corpus target crowding MF out entirely).
+      expect(byId.safety).toBeLessThan(byId.balanced);
+      expect(byId.safety).toBeLessThan(byId.aggressive);
+      expect(byId.safety).toBeLessThan(byId.bonus);
+
+      // Real spread, not 3 clustered near-duplicates of each other.
+      const others = [byId.balanced, byId.aggressive, byId.bonus];
+      const maxOthers = Math.max(...others);
+      const minOthers = Math.min(...others);
+      expect(maxOthers - minOthers).toBeGreaterThan(5);
     }
   });
 
