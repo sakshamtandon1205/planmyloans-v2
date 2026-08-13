@@ -1,30 +1,93 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import { generateAmortizationSchedule } from "@/lib/calculations/emi";
-import { formatINR } from "@/lib/format";
+import { formatINR, formatLakh } from "@/lib/format";
+import { useCountUp } from "@/lib/useCountUp";
+import { useDraftNumberInput } from "@/lib/useDraftNumberInput";
 import { useSharedInputsStore } from "@/lib/sharedInputsStore";
-import { GlassCard } from "./GlassCard";
 import { PrincipalInterestBar } from "./PrincipalInterestBar";
-import { SliderField } from "./SliderField";
 
-/** Smoothly counts a displayed number toward `value` instead of jumping on every keystroke/slider tick. */
-function useCountUp(value: number) {
-  const motionValue = useMotionValue(value);
-  // Stiff and fast: a big jump (e.g. typing a whole new loan amount) should
-  // read as "already updated" within a couple hundred ms, not visibly lag
-  // behind the rest of the page while it counts up.
-  const spring = useSpring(motionValue, { stiffness: 400, damping: 40, mass: 0.5 });
-  const [display, setDisplay] = useState(value);
+const LOAN_MIN = 1000000; // 10L
+const LOAN_MAX = 50000000; // 5Cr
+const LOAN_STEP = 100000;
+const CR_THRESHOLD = 10000000; // 1Cr — display switches from Lakh to Cr at/above this
 
-  useEffect(() => {
-    motionValue.set(value);
-  }, [value, motionValue]);
+/** label + right-aligned editable number + unit suffix, with a gradient-fill range below. */
+function EstimateRow({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  inputValue,
+  inputStep,
+  suffix,
+  onInputChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+  inputValue: number;
+  inputStep: number;
+  suffix: string;
+  onInputChange: (raw: number) => void;
+}) {
+  // Same effective-range-expansion approach as SliderField: the number
+  // input is the source of truth and is never clamped mid-typing (fighting
+  // a user/test typing digit-by-digit is what previously turned "12" into
+  // "30" — the first "1" would clamp to the min, then "2" appended to the
+  // clamped display). The range's own visible bounds grow to keep the
+  // thumb valid instead.
+  const effectiveMin = Math.min(min, value);
+  const effectiveMax = Math.max(max, value);
+  const pct = effectiveMax > effectiveMin ? ((value - effectiveMin) / (effectiveMax - effectiveMin)) * 100 : 0;
+  const numberInput = useDraftNumberInput(inputValue, onInputChange);
 
-  useEffect(() => spring.on("change", (v) => setDisplay(v)), [spring]);
-
-  return display;
+  return (
+    <div className="mb-[15px]">
+      <div className="mb-[7px] flex items-center justify-between">
+        <span className="text-[13.5px] font-semibold text-ink-2">{label}</span>
+        <div className="flex items-center gap-[5px]">
+          {/* useDraftNumberInput hands back plain functions that close over a ref
+              internally (see its doc comment) — only ever called from these event
+              handlers, never dereferenced during render — but the react-compiler
+              lint can't see through that indirection, hence the disables below. */}
+          <input
+            type="number"
+            inputMode="decimal"
+            aria-label={`${label} (exact value)`}
+            // eslint-disable-next-line react-hooks/refs
+            ref={numberInput.ref}
+            // eslint-disable-next-line react-hooks/refs
+            defaultValue={numberInput.defaultValue}
+            step={inputStep}
+            onFocus={(e) => numberInput.onFocus(e)}
+            onChange={(e) => numberInput.onChange(e.target.value)}
+            onBlur={(e) => numberInput.onBlur(e)}
+            className="w-[62px] rounded-xs border border-line-2 bg-surface-2 px-1.5 py-1 text-right font-mono text-[13px] font-semibold text-ink focus:border-indigo focus:outline-none"
+          />
+          <span className="text-[12px] font-semibold text-ink-3">{suffix}</span>
+        </div>
+      </div>
+      <input
+        type="range"
+        aria-label={label}
+        min={effectiveMin}
+        max={effectiveMax}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(+e.target.value)}
+        style={{ background: `linear-gradient(90deg, var(--indigo) ${pct}%, var(--surface-2) ${pct}%)` }}
+        className="h-1.5 w-full"
+      />
+    </div>
+  );
 }
 
 export function QuickEstimate() {
@@ -44,7 +107,7 @@ export function QuickEstimate() {
   // fed the same prepayment/step-up state (shared via the store) — so these
   // numbers are always the Planner's real, current numbers, not a
   // simplified baseline that silently drifts once prepayment is configured.
-  const { emi, totalInterest, totalPayable } = useMemo(() => {
+  const { emi, totalInterest } = useMemo(() => {
     const tenureMonths = tenure * 12;
     const amortization = generateAmortizationSchedule({
       principal: loanAmount,
@@ -56,109 +119,85 @@ export function QuickEstimate() {
     });
     // amortization.emi is the original/starting EMI (pre-step-up) — the
     // Planner's own "Monthly EMI" card shows this same starting figure.
-    return {
-      emi: amortization.emi,
-      totalInterest: amortization.totalInterestPaid,
-      totalPayable: loanAmount + amortization.totalInterestPaid,
-    };
+    return { emi: amortization.emi, totalInterest: amortization.totalInterestPaid };
   }, [loanAmount, rate, tenure, extraPrepayment, prepayStepUpPercent, emiStepUpPercent]);
 
   const displayEmi = useCountUp(emi);
 
+  // Loan amount displays/edits in Lakhs below 1Cr, auto-switching to Cr
+  // (finer step) at/above the threshold — same rule applies whether the
+  // value changed via drag or typed input.
+  const inLakh = loanAmount < CR_THRESHOLD;
+  const loanInputValue = inLakh ? Math.round(loanAmount / 100000) : +(loanAmount / 10000000).toFixed(2);
+  const loanInputStep = inLakh ? 1 : 0.01;
+
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 pb-10">
-      <GlassCard className="p-5 sm:p-7">
-        <h2 className="mb-5 font-heading text-h3 text-ink">Quick estimate</h2>
+    <div className="glass-panel p-6">
+      <div className="mb-4 text-[12px] font-bold uppercase tracking-[.06em] text-ink-3">Quick estimate</div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <SliderField
-            label="Loan amount"
-            value={loanAmount}
-            min={500000}
-            max={100000000}
-            step={100000}
-            onChange={setLoanAmount}
-            formatValue={(v) => formatINR(v)}
-          />
-          <SliderField
-            label="Interest rate"
-            value={rate}
-            min={6}
-            max={13}
-            step={0.05}
-            onChange={setRate}
-            formatValue={(v) => `${v}%`}
-          />
-          <SliderField
-            label="Tenure"
-            value={tenure}
-            min={5}
-            max={30}
-            step={1}
-            onChange={setTenure}
-            formatValue={(v) => `${v} yrs`}
-          />
+      <EstimateRow
+        label="Loan amount"
+        value={loanAmount}
+        min={LOAN_MIN}
+        max={LOAN_MAX}
+        step={LOAN_STEP}
+        onChange={setLoanAmount}
+        inputValue={loanInputValue}
+        inputStep={loanInputStep}
+        suffix={inLakh ? "L" : "Cr"}
+        onInputChange={(raw) => {
+          const rupees = inLakh ? raw * 100000 : raw * 10000000;
+          setLoanAmount(Math.max(0, rupees));
+        }}
+      />
+      <EstimateRow
+        label="Interest rate"
+        value={rate}
+        min={5}
+        max={15}
+        step={0.1}
+        onChange={setRate}
+        inputValue={rate}
+        inputStep={0.1}
+        suffix="%"
+        onInputChange={setRate}
+      />
+      <EstimateRow
+        label="Tenure"
+        value={tenure}
+        min={5}
+        max={30}
+        step={1}
+        onChange={setTenure}
+        inputValue={tenure}
+        inputStep={1}
+        suffix="yrs"
+        onInputChange={setTenure}
+      />
+
+      <div className="my-[18px] flex gap-3.5 border-y border-line-2 py-[18px]">
+        <div className="flex-1">
+          <div className="text-[11.5px] font-semibold text-ink-3">Monthly EMI</div>
+          <motion.div data-testid="quick-emi" className="break-words font-mono text-[25px] font-bold text-accent-text">
+            {formatINR(displayEmi)}
+          </motion.div>
         </div>
-
-        <div className="mt-8 grid grid-cols-1 gap-6 border-t border-line pt-8 sm:grid-cols-[auto_1fr] sm:items-end">
-          <div className="relative min-w-0">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-x-6 -inset-y-8 -z-10 rounded-full opacity-70 blur-3xl"
-              style={{ background: "radial-gradient(circle, var(--indigo) 0%, transparent 65%)" }}
-            />
-            <div className="mb-1.5 text-label uppercase text-ink-3">Monthly EMI</div>
-            <motion.div
-              data-testid="quick-emi"
-              className="break-words font-mono text-[clamp(2.5rem,7vw,4rem)] font-bold leading-none text-indigo"
-            >
-              {formatINR(displayEmi)}
-            </motion.div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
-            <div className="min-w-0">
-              <div className="mb-1 text-label uppercase text-ink-3">Total interest</div>
-              <div
-                data-testid="quick-total-interest"
-                className="whitespace-nowrap font-mono text-mono-lg font-bold text-amber"
-              >
-                {formatINR(totalInterest)}
-              </div>
-            </div>
-            <div className="min-w-0">
-              <div className="mb-1 text-label uppercase text-ink-3">Total amount payable</div>
-              <div className="whitespace-nowrap font-mono text-mono-lg font-bold text-ink">{formatINR(totalPayable)}</div>
-            </div>
+        <div className="w-px bg-line-2" />
+        <div className="flex-1">
+          <div className="text-[11.5px] font-semibold text-ink-3">Total interest</div>
+          <div data-testid="quick-total-interest" className="break-words font-mono text-[25px] font-bold text-ink">
+            ₹{formatLakh(totalInterest)}
           </div>
         </div>
+      </div>
 
-        <div className="mt-8">
-          <PrincipalInterestBar principal={loanAmount} interest={totalInterest} />
-        </div>
+      <PrincipalInterestBar principal={loanAmount} interest={totalInterest} />
 
-        <p className="mt-5 text-caption text-ink-3">
-          {hasPrepayPlan
-            ? "Includes your prepayment plan set below — see the full planner for the tax and payoff-time impact."
-            : "Simple estimate — see the full planner below for prepayment savings and tax impact."}
-        </p>
-      </GlassCard>
-
-      <a
-        href="#planner"
-        className="group mt-6 flex flex-col items-center gap-1.5 text-center text-body-sm font-medium text-ink-2 transition-colors hover:text-indigo"
-      >
-        Want to plan this against your own savings and investments?
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2.5}
-          className="size-5 animate-bounce text-indigo transition-transform group-hover:translate-y-0.5"
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </a>
-    </section>
+      <p className="mt-5 text-caption text-ink-3">
+        {hasPrepayPlan
+          ? "Includes your prepayment plan set below — see the full planner for the tax and payoff-time impact."
+          : "Simple estimate — see the full planner below for prepayment savings and tax impact."}
+      </p>
+    </div>
   );
 }

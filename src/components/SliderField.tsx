@@ -1,3 +1,5 @@
+import { useDraftNumberInput } from "@/lib/useDraftNumberInput";
+
 interface InfoTipProps {
   text: string;
 }
@@ -36,6 +38,7 @@ export function SliderField({ label, value, min, max, step, onChange, formatValu
   const effectiveMin = Math.min(min, value);
   const effectiveMax = Math.max(max, value);
   const pct = effectiveMax > effectiveMin ? ((value - effectiveMin) / (effectiveMax - effectiveMin)) * 100 : 0;
+  const numberInput = useDraftNumberInput(value, onChange);
 
   return (
     <div>
@@ -58,16 +61,22 @@ export function SliderField({ label, value, min, max, step, onChange, formatValu
           style={{ background: `linear-gradient(90deg, var(--indigo) ${pct}%, var(--surface-2) ${pct}%)` }}
           className="h-1.5 min-w-[80px] flex-1 basis-[140px]"
         />
+        {/* useDraftNumberInput hands back plain functions that close over a ref
+            internally (see its doc comment) — only ever called from these event
+            handlers, never dereferenced during render — but the react-compiler
+            lint can't see through that indirection, hence the disables below. */}
         <input
           type="number"
+          inputMode="decimal"
           aria-label={`${label} (exact value)`}
-          value={value}
+          // eslint-disable-next-line react-hooks/refs
+          ref={numberInput.ref}
+          // eslint-disable-next-line react-hooks/refs
+          defaultValue={numberInput.defaultValue}
           step={step}
-          onChange={(e) => {
-            const raw = e.target.value;
-            if (raw === "" || Number.isNaN(+raw)) return;
-            onChange(+raw);
-          }}
+          onFocus={(e) => numberInput.onFocus(e)}
+          onChange={(e) => numberInput.onChange(e.target.value)}
+          onBlur={(e) => numberInput.onBlur(e)}
           className="w-[92px] flex-none rounded-sm border border-line-2 bg-surface px-2 py-1.5 font-mono text-mono-sm font-semibold text-ink focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo-soft"
         />
       </div>

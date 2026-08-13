@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { AffiliateBanner } from "@/components/AffiliateBanner";
 import { Calculator } from "@/components/Calculator";
 import { Hero } from "@/components/Hero";
-import { QuickEstimate } from "@/components/QuickEstimate";
-import { StrategyRecommendations } from "@/components/StrategyRecommendations";
+import { StrategyTeaserGrid } from "@/components/StrategyTeaserGrid";
 
 export const metadata: Metadata = {
   title: "PlanMyLoans · Home Loan, EMI & SWP Planner",
@@ -14,8 +14,13 @@ export default function Home() {
   return (
     <div className="flex min-w-0 flex-1 flex-col">
       <Hero />
-      <QuickEstimate />
-      <StrategyRecommendations />
+      <div className="mx-auto w-full max-w-6xl px-6 py-2">
+        <AffiliateBanner
+          title="Not sure you'll qualify for this EMI?"
+          description="Check your free CIBIL score & loan eligibility in 2 minutes — no impact on your score."
+        />
+      </div>
+      <StrategyTeaserGrid />
       <Calculator />
     </div>
   );

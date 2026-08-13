@@ -1,294 +1,141 @@
-"use client";
-
-import { useId } from "react";
-import { useTheme } from "next-themes";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Legend,
-  ReferenceDot,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { formatINR, formatLakh } from "@/lib/format";
-import { useMounted } from "@/lib/useMounted";
+import { motion } from "framer-motion";
 import { GlassCard } from "./GlassCard";
 import type { ChartPoint } from "./calculatorTypes";
-
-const yearTick = (month: number) => `${(month / 12).toFixed(1)}y`;
-
-/** Dark gets a richer, more saturated fill; light stays soft/airy — tuned
- * per theme rather than reusing one fixed gradient for both. */
-const FILL_PEAK_OPACITY = { light: 0.16, dark: 0.34 };
-
-function useChartFillOpacity() {
-  const { resolvedTheme } = useTheme();
-  const mounted = useMounted();
-  return mounted && resolvedTheme === "dark" ? FILL_PEAK_OPACITY.dark : FILL_PEAK_OPACITY.light;
-}
 
 interface BalanceChartProps {
   series: ChartPoint[];
   corpusLabel: string;
   horizonMonths: number;
-  /** Month the loan balance hits zero, or null if it's still outstanding at the end of the horizon. */
-  payoffMonth: number | null;
-  /** Month the funding corpus hits zero, or null if it lasts the full horizon. */
-  depletionMonth: number | null;
 }
 
-export function BalanceChart({ series, corpusLabel, horizonMonths, payoffMonth, depletionMonth }: BalanceChartProps) {
-  const gradientId = useId();
-  const mfGradient = `${gradientId}-mf`;
-  const corpusGradient = `${gradientId}-corpus`;
-  const loanGradient = `${gradientId}-loan`;
-  const peakOpacity = useChartFillOpacity();
+const VIEW_W = 480;
+const VIEW_H = 200;
+const Y_TOP = 8;
+const Y_BOTTOM = 195;
+
+/** month -> x, value -> y, scaled into the 480x200 viewBox — same raw-SVG-polyline recipe as the design spec, fed real simulation data instead of illustrative points. */
+function toPoints(series: ChartPoint[], horizonMonths: number, maxValue: number, key: "mf" | "corpus" | "loan"): string {
+  return series
+    .map((point) => {
+      const x = horizonMonths > 0 ? (point.month / horizonMonths) * VIEW_W : 0;
+      const ratio = maxValue > 0 ? Math.min(1, Math.max(0, point[key] / maxValue)) : 0;
+      const y = Y_TOP + (1 - ratio) * (Y_BOTTOM - Y_TOP);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+/**
+ * "Balances over time" — a plain 3-line SVG chart with no axes, gridlines,
+ * or fills, matching the design spec's raw-polyline recipe exactly (rather
+ * than a fuller chart-library rendering). Fed the real simulation series.
+ * Lines draw themselves in once scrolled into view.
+ */
+export function BalanceChart({ series, corpusLabel, horizonMonths }: BalanceChartProps) {
+  const maxValue = Math.max(1, ...series.map((p) => Math.max(p.mf, p.corpus, p.loan)));
+  const mfPoints = toPoints(series, horizonMonths, maxValue, "mf");
+  const corpusPoints = toPoints(series, horizonMonths, maxValue, "corpus");
+  const loanPoints = toPoints(series, horizonMonths, maxValue, "loan");
 
   return (
-    <GlassCard className="p-5">
-      <h3 className="font-heading text-h3 text-ink">Balances over time</h3>
-      <p className="mb-4 text-body-sm text-ink-3">
-        MF grows untouched · {corpusLabel.toLowerCase()} funds the EMI monthly · loan balance amortises
-      </p>
-      <ResponsiveContainer width="100%" height={340}>
-        <AreaChart data={series} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={mfGradient} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--jade)" stopOpacity={peakOpacity} />
-              <stop offset="95%" stopColor="var(--jade)" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id={corpusGradient} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--indigo)" stopOpacity={peakOpacity} />
-              <stop offset="95%" stopColor="var(--indigo)" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id={loanGradient} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--amber)" stopOpacity={peakOpacity * 0.9} />
-              <stop offset="95%" stopColor="var(--amber)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid stroke="var(--line)" vertical={false} />
-          <XAxis
-            dataKey="month"
-            type="number"
-            domain={[0, horizonMonths]}
-            tick={{ fill: "var(--ink-3)", fontSize: 11 }}
-            tickFormatter={yearTick}
-            axisLine={{ stroke: "var(--line)" }}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fill: "var(--ink-3)", fontSize: 11 }}
-            tickFormatter={(v: number) => formatLakh(v)}
-            axisLine={{ stroke: "var(--line)" }}
-            tickLine={false}
-            // Recharts wraps a tick label onto multiple lines once its
-            // measured width exceeds this allocation — 56px wasn't enough
-            // for "50.00 L"/"2.00 Cr" and wrapped at every container width
-            // tested (not just narrow ones), since the allocation itself,
-            // not the container, was the constraint. 70px clears the widest
-            // realistic label ("19.99 Cr") with room to spare.
-            width={70}
-          />
-          <Tooltip content={<ChartTooltip />} />
-          <Legend content={<ChartLegend />} />
-          <Area type="monotone" dataKey="mf" name="MF corpus" stroke="var(--jade)" strokeWidth={2.5} fill={`url(#${mfGradient})`} dot={false} />
-          <Area
-            type="monotone"
-            dataKey="corpus"
-            name={corpusLabel}
-            stroke="var(--indigo)"
-            strokeWidth={2.5}
-            fill={`url(#${corpusGradient})`}
-            dot={false}
-          />
-          <Area
-            type="monotone"
-            dataKey="loan"
-            name="Loan outstanding"
-            stroke="var(--amber)"
-            strokeWidth={2.5}
-            strokeDasharray="5 4"
-            fill={`url(#${loanGradient})`}
-            dot={false}
-          />
-          {payoffMonth !== null && (
-            <ReferenceDot
-              x={payoffMonth}
-              y={0}
-              r={4}
-              fill="var(--amber)"
-              stroke="var(--surface)"
-              strokeWidth={2}
-              ifOverflow="extendDomain"
-              label={(props: CalloutLabelRenderProps) => (
-                <CalloutLabel
-                  {...props}
-                  text={`Loan cleared: Year ${(payoffMonth / 12).toFixed(1)}`}
-                  side={payoffMonth < horizonMonths / 2 ? "right" : "left"}
-                  lift={42}
-                />
-              )}
-            />
-          )}
-          {depletionMonth !== null && (
-            <ReferenceDot
-              x={depletionMonth}
-              y={0}
-              r={4}
-              fill="var(--indigo)"
-              stroke="var(--surface)"
-              strokeWidth={2}
-              ifOverflow="extendDomain"
-              label={(props: CalloutLabelRenderProps) => (
-                <CalloutLabel
-                  {...props}
-                  text={`Corpus depleted: Month ${depletionMonth}`}
-                  side={depletionMonth < horizonMonths / 2 ? "right" : "left"}
-                  lift={22}
-                />
-              )}
-            />
-          )}
-        </AreaChart>
-      </ResponsiveContainer>
+    <GlassCard className="flex h-full flex-col p-[22px]">
+      <div className="mb-1 font-heading text-[14px] font-bold text-ink">Balances over time</div>
+      <div className="mb-4 text-[12px] text-ink-3">
+        MF grows untouched · {corpusLabel.toLowerCase()} funds the EMI monthly · loan amortises
+      </div>
+      <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} preserveAspectRatio="none" className="min-h-[140px] w-full flex-1">
+        <motion.polyline
+          points={mfPoints}
+          fill="none"
+          stroke="var(--indigo)"
+          strokeWidth={3}
+          initial={{ pathLength: 0 }}
+          whileInView={{ pathLength: 1 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
+        />
+        <motion.polyline
+          points={corpusPoints}
+          fill="none"
+          stroke="var(--jade)"
+          strokeWidth={3}
+          initial={{ pathLength: 0 }}
+          whileInView={{ pathLength: 1 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 }}
+        />
+        <motion.polyline
+          points={loanPoints}
+          fill="none"
+          stroke="var(--ink-4)"
+          strokeWidth={2}
+          strokeDasharray="6,6"
+          initial={{ pathLength: 0 }}
+          whileInView={{ pathLength: 1 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }}
+        />
+      </svg>
+      <div className="mt-2 flex flex-wrap gap-4">
+        <LegendLine color="var(--indigo)" label="MF corpus" />
+        <LegendLine color="var(--jade)" label={corpusLabel} />
+        <LegendLine color="var(--ink-4)" label="Loan balance" />
+      </div>
     </GlassCard>
   );
 }
 
+const EMI_BAR_COUNT = 12;
+
+/**
+ * "EMI breakup" — a plain CSS stacked-bar chart (12 bars, principal at the
+ * bottom, interest on top), matching the spec exactly. Bars are sampled
+ * evenly across the real amortization series rather than the spec's fixed
+ * illustrative percentages. Bars grow from 0 once scrolled into view.
+ */
 export function AmortizationChart({ series }: { series: ChartPoint[] }) {
-  const peakOpacity = useChartFillOpacity();
+  const points = series.filter((p) => p.month > 0);
+  const step = Math.max(1, Math.floor(points.length / EMI_BAR_COUNT));
+  const bars = Array.from({ length: EMI_BAR_COUNT }, (_, i) => {
+    const point = points[Math.min(points.length - 1, i * step)];
+    const total = point.interest + point.principal;
+    const principalPct = total > 0 ? (point.principal / total) * 100 : 0;
+    return { principalPct, interestPct: 100 - principalPct };
+  });
 
   return (
-    <GlassCard className="p-5">
-      <h3 className="font-heading text-h3 text-ink">EMI breakup: interest vs. principal</h3>
-      <p className="mb-4 text-body-sm text-ink-3">
-        Exactly how a bank amortises each payment: early EMIs are mostly interest, later ones mostly principal,
-        until the two swap.
-      </p>
-      <ResponsiveContainer width="100%" height={320}>
-        <AreaChart data={series} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke="var(--line)" vertical={false} />
-          <XAxis dataKey="monthLabel" tick={{ fill: "var(--ink-3)", fontSize: 11 }} axisLine={{ stroke: "var(--line)" }} tickLine={false} />
-          <YAxis
-            tick={{ fill: "var(--ink-3)", fontSize: 11 }}
-            tickFormatter={(v: number) => formatLakh(v)}
-            axisLine={{ stroke: "var(--line)" }}
-            tickLine={false}
-            // Recharts wraps a tick label onto multiple lines once its
-            // measured width exceeds this allocation — 56px wasn't enough
-            // for "50.00 L"/"2.00 Cr" and wrapped at every container width
-            // tested (not just narrow ones), since the allocation itself,
-            // not the container, was the constraint. 70px clears the widest
-            // realistic label ("19.99 Cr") with room to spare.
-            width={70}
-          />
-          <Tooltip content={<ChartTooltip />} />
-          <Legend content={<ChartLegend />} />
-          <Area
-            type="monotone"
-            dataKey="interest"
-            name="Interest portion"
-            stroke="var(--amber)"
-            fill="var(--amber)"
-            fillOpacity={peakOpacity * 0.9}
-            strokeWidth={2.5}
-          />
-          <Area
-            type="monotone"
-            dataKey="principal"
-            name="Principal portion"
-            stroke="var(--jade)"
-            fill="var(--jade)"
-            fillOpacity={peakOpacity}
-            strokeWidth={2.5}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+    <GlassCard className="flex h-full flex-col p-[22px]">
+      <div className="mb-1 font-heading text-[14px] font-bold text-ink">EMI breakup</div>
+      <div className="mb-4 text-[12px] text-ink-3">Interest vs. principal per payment</div>
+      <div className="flex min-h-[140px] flex-1 items-end gap-[5px]">
+        {bars.map((bar, i) => (
+          <div key={i} className="flex h-full flex-1 flex-col-reverse overflow-hidden rounded-[3px]">
+            <motion.div
+              initial={{ height: "0%" }}
+              whileInView={{ height: `${bar.principalPct}%` }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.04 }}
+              className="bg-[var(--indigo)]"
+            />
+            <motion.div
+              initial={{ height: "0%" }}
+              whileInView={{ height: `${bar.interestPct}%` }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.04 }}
+              className="bg-surface-2"
+            />
+          </div>
+        ))}
+      </div>
     </GlassCard>
   );
 }
 
-interface ChartTooltipProps {
-  active?: boolean;
-  label?: string | number;
-  payload?: { dataKey?: string; name?: string; value?: number }[];
-}
-
-function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
-  if (!active || !payload?.length) return null;
-  const displayLabel = typeof label === "number" ? yearTick(label) : label;
+function LegendLine({ color, label }: { color: string; label: string }) {
   return (
-    <div className="rounded border border-line-2 bg-ink px-3 py-2.5 text-caption shadow">
-      <div className="mb-1.5 font-medium text-paper">{displayLabel}</div>
-      {payload.map((p) => (
-        <div key={p.dataKey} className="font-mono text-paper/85">
-          {p.name}: {formatINR(p.value)}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-interface ChartLegendEntry {
-  value?: string;
-  color?: string;
-  dataKey?: string;
-}
-
-function ChartLegend({ payload }: { payload?: ChartLegendEntry[] }) {
-  if (!payload?.length) return null;
-  return (
-    <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5">
-      {payload.map((entry) => (
-        <span key={entry.dataKey ?? entry.value} className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-[3px] w-4 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="font-mono text-mono-sm text-ink-2">{entry.value}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-interface CalloutLabelRenderProps {
-  viewBox?: { x?: number; y?: number };
-}
-
-interface CalloutLabelProps extends CalloutLabelRenderProps {
-  text: string;
-  side: "left" | "right";
-  /** Vertical distance (px) to lift the label above the marker, so nearby callouts can stack without overlapping. */
-  lift: number;
-}
-
-/** A small marker + leader line + text bubble, "peak value"-annotation style, anchored to a ReferenceDot. */
-function CalloutLabel({ viewBox, text, side, lift }: CalloutLabelProps) {
-  if (viewBox?.x === undefined || viewBox?.y === undefined) return null;
-  const { x, y } = viewBox;
-  const dx = side === "right" ? 18 : -18;
-  const labelX = x + dx;
-  const labelY = y - lift;
-  const textAnchor = side === "right" ? "start" : "end";
-  const boxWidth = text.length * 5.5 + 14;
-  const boxX = side === "right" ? labelX - 5 : labelX - boxWidth + 5;
-
-  return (
-    <g pointerEvents="none">
-      <line x1={x} y1={y} x2={labelX} y2={labelY + 6} stroke="var(--ink-3)" strokeWidth={1} />
-      <rect x={boxX} y={labelY - 11} width={boxWidth} height={16} rx={4} fill="var(--surface)" stroke="var(--line-2)" strokeWidth={1} />
-      <text
-        x={labelX}
-        y={labelY - 3}
-        textAnchor={textAnchor}
-        fontSize={10}
-        fontWeight={600}
-        fontFamily="var(--font-jetbrains-mono)"
-        fill="var(--ink)"
-      >
-        {text}
-      </text>
-    </g>
+    <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-3">
+      <span className="inline-block h-[3px] w-4" style={{ backgroundColor: color }} />
+      {label}
+    </span>
   );
 }

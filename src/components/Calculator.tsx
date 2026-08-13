@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { calculatePayoffMonths, generateAmortizationSchedule } from "@/lib/calculations/emi";
 import { calculateMfFutureValue } from "@/lib/calculations/mf";
 import { simulateBankCorpus, simulateSwpCorpus } from "@/lib/calculations/swp";
@@ -12,8 +13,10 @@ import { AmortizationChart, BalanceChart } from "./BalanceChart";
 import { AmortizationTable } from "./AmortizationTable";
 import { CapitalStack } from "./CapitalStack";
 import { ControlPanel } from "./ControlPanel";
+import { MobileInputSheet } from "./MobileInputSheet";
 import { ResultCards } from "./ResultCards";
 import { SustainabilityGauge } from "./SustainabilityGauge";
+import { TaxImpactCard } from "./TaxImpactCard";
 import { DEFAULT_INPUTS, type CalculatorInputs, type CalculatorResults, type ChartPoint } from "./calculatorTypes";
 
 /** Keeps down payment + MF lumpsum from exceeding own funds, mirroring the original dashboard's clamp. */
@@ -165,6 +168,16 @@ export function Calculator() {
   };
 
   const results = useMemo<CalculatorResults>(() => computeResults(inputs, horizonAuto), [inputs, horizonAuto]);
+  const isMobile = useIsMobile();
+
+  const controlPanelProps = {
+    inputs,
+    onInputChange: updateInput,
+    corpus: results.corpus,
+    corpusLabel: results.corpusLabel,
+    displayHorizon: results.horizonYears,
+    onHorizonChange: handleHorizonChange,
+  };
 
   return (
     <motion.div
@@ -172,7 +185,7 @@ export function Calculator() {
       initial="hidden"
       animate="show"
       variants={stagger}
-      className="mx-auto flex w-full min-w-0 max-w-6xl scroll-mt-6 flex-col gap-6 px-6 py-10"
+      className={`mx-auto flex w-full min-w-0 max-w-6xl scroll-mt-6 flex-col gap-6 px-6 py-10 ${isMobile ? "pb-[76px]" : ""}`}
     >
       <motion.div variants={fadeUp} className="min-w-0">
         <CapitalStack
@@ -185,25 +198,9 @@ export function Calculator() {
         />
       </motion.div>
 
-      {/* Collapses at 900px, not the default lg (1024px): between those two the
-          two-column split left both the sidebar and the results column too
-          narrow to be comfortable (chart Y-axis labels wrapping, cards
-          cramped) — full-width single column reads better than a cramped
-          split in that range. */}
-      <div className="grid min-w-0 grid-cols-1 gap-6 min-[900px]:grid-cols-[340px_1fr] min-[900px]:items-start">
-        <motion.div variants={fadeUp} className="min-w-0 min-[900px]:sticky min-[900px]:top-4">
-          <ControlPanel
-            inputs={inputs}
-            onInputChange={updateInput}
-            corpus={results.corpus}
-            corpusLabel={results.corpusLabel}
-            displayHorizon={results.horizonYears}
-            onHorizonChange={handleHorizonChange}
-            onReset={handleReset}
-          />
-        </motion.div>
-
-        <div className="flex min-w-0 flex-col gap-6">
+      {isMobile ? (
+        <>
+          <h2 className="font-heading text-h2 text-ink">Loan &amp; growth outcome</h2>
           <motion.div variants={fadeUp} className="min-w-0">
             <ResultCards inputs={inputs} results={results} />
           </motion.div>
@@ -223,24 +220,75 @@ export function Calculator() {
           </motion.div>
 
           <motion.div variants={fadeUp} className="min-w-0">
-            <BalanceChart
-              series={results.chartSeries}
-              corpusLabel={results.corpusLabel}
-              horizonMonths={results.horizonMonths}
-              payoffMonth={results.loanClearedWithinHorizon ? results.amortization.payoffMonths : null}
-              depletionMonth={results.corpusSim.depletedAtMonth}
-            />
+            <TaxImpactCard inputs={inputs} results={results} />
           </motion.div>
 
-          <motion.div variants={fadeUp} className="min-w-0">
-            <AmortizationChart series={results.chartSeries} />
-          </motion.div>
+          <h2 className="font-heading text-h2 font-extrabold text-ink">Charts</h2>
+          <div className="grid min-w-0 grid-cols-1 gap-4">
+            <motion.div variants={fadeUp} className="min-w-0">
+              <BalanceChart series={results.chartSeries} corpusLabel={results.corpusLabel} horizonMonths={results.horizonMonths} />
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="min-w-0">
+              <AmortizationChart series={results.chartSeries} />
+            </motion.div>
+          </div>
 
           <motion.div variants={fadeUp} className="min-w-0">
             <AmortizationTable schedule={results.amortization.schedule} />
           </motion.div>
+
+          <MobileInputSheet {...controlPanelProps} onReset={handleReset} />
+        </>
+      ) : (
+        <div className="grid min-w-0 grid-cols-1 gap-[26px] lg:grid-cols-[1fr_0.82fr] lg:items-start">
+          <motion.div variants={fadeUp} className="min-w-0">
+            <ControlPanel {...controlPanelProps} onReset={handleReset} />
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="min-w-0 lg:sticky lg:top-[90px]">
+            <h2 className="mb-3 font-heading text-h1 font-extrabold text-ink">Loan &amp; growth outcome</h2>
+            <div className="mb-4">
+              <ResultCards inputs={inputs} results={results} />
+            </div>
+
+            <div className="mb-4">
+              <SustainabilityGauge
+                isRisky={results.isRisky}
+                corpusLabel={results.corpusLabel}
+                corpus={results.corpus}
+                annualWithdrawRate={results.annualWithdrawRate}
+                returnPct={results.corpusReturnPercent}
+                gaugePct={results.gaugePct}
+                depletedAtMonth={results.corpusSim.depletedAtMonth}
+                payoffYears={results.payoffYears}
+                finalBalance={results.corpusSim.finalBalance}
+              />
+            </div>
+
+            <TaxImpactCard inputs={inputs} results={results} />
+          </motion.div>
         </div>
-      </div>
+      )}
+
+      {!isMobile && (
+        <>
+          <h2 className="font-heading text-h2 font-extrabold text-ink">Charts</h2>
+          <div className="grid min-w-0 grid-cols-2 gap-4">
+            <motion.div variants={fadeUp} className="min-w-0">
+              <BalanceChart series={results.chartSeries} corpusLabel={results.corpusLabel} horizonMonths={results.horizonMonths} />
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="min-w-0">
+              <AmortizationChart series={results.chartSeries} />
+            </motion.div>
+          </div>
+
+          <motion.div variants={fadeUp} className="min-w-0">
+            <AmortizationTable schedule={results.amortization.schedule} />
+          </motion.div>
+        </>
+      )}
     </motion.div>
   );
 }

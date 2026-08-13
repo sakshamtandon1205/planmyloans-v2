@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+3:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Source Sans 3',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{text-decoration:none}
+@keyframes floatBlob{0%{transform:translate(0,0) scale(1)}50%{transform:translate(24px,-30px) scale(1.06)}100%{transform:translate(0,0) scale(1)}}
+@keyframes floatBlob2{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,24px) scale(1.04)}100%{transform:translate(0,0) scale(1)}}
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:{{c.bg}}">
+  <div style="position:absolute;top:-10%;left:-8%;width:520px;height:520px;border-radius:50%;background:{{c.blob1}};filter:blur(95px);animation:floatBlob 20s ease-in-out infinite"></div>
+  <div style="position:absolute;top:20%;right:-10%;width:480px;height:480px;border-radius:50%;background:{{c.blob2}};filter:blur(105px);animation:floatBlob2 24s ease-in-out infinite"></div>
+</div>
+
+<div style="position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:0 24px 80px">
+
+<header style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:15px 20px;margin:16px 0;border-radius:16px;background:{{c.glassBg}};backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid {{c.glassBorder}}">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});display:flex;align-items:center;justify-content:center">
+      <div style="width:12px;height:12px;border-radius:3px;background:white;transform:rotate(45deg)"></div>
+    </div>
+    <span style="font:800 18px Manrope,sans-serif;color:{{c.textPrimary}};letter-spacing:-0.01em">PlanMyLoans</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:20px">
+    <nav style="display:flex;align-items:center;gap:28px">
+      <sc-for list="{{navLinks}}" as="link" hint-placeholder-count="4">
+        <a href="{{link.href}}" style="font:600 14.5px 'Source Sans 3',sans-serif;color:{{link.color}}">{{link.label}}</a>
+      </sc-for>
+    </nav>
+    <button onClick="{{toggleTheme}}" style="border:1px solid {{c.glassBorder}};background:{{c.chipBg}};width:38px;height:38px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <div style="width:16px;height:16px;border-radius:50%;background:{{c.textPrimary}}"></div>
+    </button>
+  </div>
+</header>
+
+<section style="padding:44px 0 8px">
+  <div style="font:700 12.5px 'Source Sans 3',sans-serif;color:{{c.accentText}};text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Guides</div>
+  <h1 style="font:800 38px/1.1 Manrope,sans-serif;color:{{c.textPrimary}};letter-spacing:-0.02em;margin:0 0 12px">Understand every number before you sign.</h1>
+  <p style="font:400 16.5px/1.6 'Source Sans 3',sans-serif;color:{{c.textMuted}};max-width:600px;margin:0">Plain-English explainers on EMIs, prepayment, tax deductions, and how to think about splitting your capital.</p>
+</section>
+
+<section style="padding:32px 0">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+    <sc-for list="{{guides}}" as="g" hint-placeholder-count="6">
+      <a href="#" style="display:block;background:{{c.glassBg}};backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:22px">
+        <div style="display:inline-block;font:700 11px 'Source Sans 3',sans-serif;color:{{c.accentText}};background:{{c.chipBg}};padding:5px 10px;border-radius:100px;margin-bottom:14px">{{g.tag}}</div>
+        <div style="font:700 17px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:8px;line-height:1.3">{{g.title}}</div>
+        <div style="font:400 13.5px/1.5 'Source Sans 3',sans-serif;color:{{c.textMuted}};margin-bottom:14px">{{g.excerpt}}</div>
+        <div style="font:600 12px 'Source Sans 3',sans-serif;color:{{c.textDim}}">{{g.readTime}}</div>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<section style="padding:8px 0 40px">
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:18px;padding:20px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});flex-shrink:0;display:flex;align-items:center;justify-content:center;font:800 18px Manrope,sans-serif;color:white">✓</div>
+    <div style="flex:1;min-width:200px">
+      <div style="font:700 15.5px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:3px">Ready to check where you stand?</div>
+      <div style="font:400 13.5px 'Source Sans 3',sans-serif;color:{{c.textMuted}}">See your free CIBIL score & eligibility before you apply — no impact on your score.</div>
+    </div>
+    <a href="https://www.bankbazaar.com/cibil-score-check.html" target="_blank" rel="noopener noreferrer" style="background:{{c.textPrimary}};color:{{c.bg}};font:700 14px Manrope,sans-serif;padding:12px 20px;border-radius:10px;white-space:nowrap">Check eligibility →</a>
+  </div>
+</section>
+
+<footer style="border-top:1px solid {{c.glassBorder}};padding:30px 0 38px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div style="font:400 12px 'Source Sans 3',sans-serif;color:{{c.textDim}};max-width:560px">PlanMyLoans is an independent, free tool. Illustrative only — not financial, tax, or legal advice. © 2026 PlanMyLoans.</div>
+  <a href="mailto:sakshamtandon1205@gmail.com" style="font:600 13px 'Source Sans 3',sans-serif;color:{{c.accentText}}">sakshamtandon1205@gmail.com</a>
+</footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: 'dark' };
+  toggleTheme = () => this.setState(s => ({ theme: s.theme === 'dark' ? 'light' : 'dark' }));
+
+  renderVals() {
+    const dark = this.state.theme === 'dark';
+    const c = dark ? {
+      bg: 'oklch(17% 0.018 265)', blob1: 'oklch(55% 0.15 270 / 32%)', blob2: 'oklch(58% 0.14 305 / 26%)',
+      glassBg: 'rgba(255,255,255,0.055)', glassBorder: 'rgba(255,255,255,0.11)',
+      textPrimary: 'oklch(94% 0.005 270)', textMuted: 'oklch(70% 0.02 270)', textDim: 'oklch(58% 0.02 270)',
+      chipBg: 'rgba(255,255,255,0.07)', accent1: 'oklch(66% 0.15 270)', accent2: 'oklch(66% 0.12 175)', accentText: 'oklch(80% 0.11 270)'
+    } : {
+      bg: 'oklch(97% 0.006 258)', blob1: 'oklch(75% 0.11 270 / 38%)', blob2: 'oklch(78% 0.1 305 / 32%)',
+      glassBg: 'rgba(255,255,255,0.38)', glassBorder: 'rgba(255,255,255,0.6)',
+      textPrimary: 'oklch(24% 0.015 258)', textMuted: 'oklch(48% 0.02 258)', textDim: 'oklch(58% 0.02 258)',
+      chipBg: 'rgba(255,255,255,0.42)', accent1: 'oklch(54% 0.16 270)', accent2: 'oklch(52% 0.13 175)', accentText: 'oklch(46% 0.15 270)'
+    };
+    return {
+      c, toggleTheme: this.toggleTheme,
+      navLinks: [
+        {label:'Calculator', href:'PlanMyLoans Redesign.dc.html', color:c.textMuted},
+        {label:'Guides', href:'Guides.dc.html', color:c.textPrimary},
+        {label:'About', href:'About.dc.html', color:c.textMuted},
+        {label:'Contact', href:'Contact.dc.html', color:c.textMuted}
+      ],
+      guides: [
+        {tag:'Basics', title:'How your EMI is actually calculated', excerpt:'The formula behind your monthly payment, and why early EMIs are mostly interest.', readTime:'4 min read'},
+        {tag:'Strategy', title:'Should you prepay or invest the difference?', excerpt:'Comparing prepayment against a loan vs. investing in a mutual fund lumpsum.', readTime:'6 min read'},
+        {tag:'Tax', title:'Section 24(b) and 80C, explained simply', excerpt:'How much you can actually save on taxes from your home loan interest and principal.', readTime:'5 min read'},
+        {tag:'Planning', title:'What is an SWP and how it funds an EMI', excerpt:'Using a systematic withdrawal plan to cover your monthly payment from invested capital.', readTime:'5 min read'},
+        {tag:'Risk', title:'Why your SWP corpus can run dry early', excerpt:'The math behind withdrawal rate vs. expected return, and when a corpus depletes.', readTime:'4 min read'},
+        {tag:'Basics', title:'Down payment, lumpsum, or both?', excerpt:'Four ways to structure your own capital before you take on a home loan.', readTime:'5 min read'}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

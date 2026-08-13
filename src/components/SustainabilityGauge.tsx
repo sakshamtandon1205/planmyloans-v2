@@ -13,6 +13,12 @@ interface SustainabilityGaugeProps {
   finalBalance: number;
 }
 
+/**
+ * The planner's warning callout — matches the design spec's SWP-depletion
+ * card (amber dot + bold headline + prose) when risky, and a calmer jade
+ * equivalent when the corpus holds up. Below the prose, an animated gauge
+ * bar still shows drawn-vs-earned at a glance.
+ */
 export function SustainabilityGauge({
   isRisky,
   corpusLabel,
@@ -26,56 +32,40 @@ export function SustainabilityGauge({
 }: SustainabilityGaugeProps) {
   const gaugeLabel = `${annualWithdrawRate.toFixed(1)}% drawn vs ${returnPct.toFixed(1)}% earned`;
 
-  const warnText = isRisky ? (
+  const headline = isRisky ? `${corpusLabel} runs dry` : `${corpusLabel} holds up`;
+  const body = isRisky ? (
     <>
-      <b className="text-amber">{corpusLabel} runs dry.</b> The EMI draws about {annualWithdrawRate.toFixed(1)}
-      %/year from a {formatLakh(corpus)} corpus, against a {returnPct.toFixed(1)}% return.{" "}
+      Draws ~{annualWithdrawRate.toFixed(1)}%/yr from a {formatLakh(corpus)} corpus against a {returnPct.toFixed(1)}%
+      return.{" "}
       {depletedAtMonth !== null
-        ? `It hits zero around month ${depletedAtMonth} (year ${(depletedAtMonth / 12).toFixed(1)}), before the loan is repaid (payoff at ${payoffYears.toFixed(1)} yrs). The EMI must come from other income after that.`
+        ? `Hits zero around month ${depletedAtMonth} (year ${(depletedAtMonth / 12).toFixed(1)}), before the loan is repaid at ${payoffYears.toFixed(1)} yrs. The EMI must come from other income after that.`
         : "The draw outpaces growth, so the corpus shrinks over time. Set aside more, lower the EMI, or fund part of it from salary."}
     </>
-  ) : null;
-
-  const okText = !isRisky ? (
+  ) : (
     <>
-      <b className="text-jade">{corpusLabel} holds up.</b> At {annualWithdrawRate.toFixed(1)}%/year drawn against a{" "}
-      {returnPct.toFixed(1)}% return, it funds every EMI and still closes at {formatINR(Math.max(0, finalBalance))}.
+      At {annualWithdrawRate.toFixed(1)}%/yr drawn against a {returnPct.toFixed(1)}% return, it funds every EMI and
+      still closes at {formatINR(Math.max(0, finalBalance))}.
     </>
-  ) : null;
+  );
 
   const tone = isRisky
-    ? { border: "border-amber/40", bg: "bg-amber-soft/75 dark:bg-amber-soft/65", text: "text-ink", fill: "bg-amber" }
-    : { border: "border-jade/40", bg: "bg-jade-soft/75 dark:bg-jade-soft/65", text: "text-ink", fill: "bg-jade" };
+    ? { bg: "var(--warn-bg)", borderColor: "var(--warn-border)", text: "text-warn-text", textMuted: "text-warn-text-muted", dot: "bg-warn-dot", fill: "bg-warn-dot" }
+    : { bg: "var(--jade-soft)", borderColor: "var(--jade)", text: "text-jade", textMuted: "text-ink-2", dot: "bg-jade", fill: "bg-jade" };
 
   return (
     <div
-      className={`flex gap-4 rounded-lg border ${tone.border} ${tone.bg} p-5 shadow-sm backdrop-blur-[14px] [-webkit-backdrop-filter:blur(14px)]`}
+      style={{ borderColor: tone.borderColor, background: tone.bg }}
+      className="glass-panel-sm flex gap-2.5 rounded-[13px] p-[15px]"
     >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        className={`mt-0.5 size-8 flex-none ${isRisky ? "text-amber" : "text-jade"}`}
-      >
-        {isRisky ? (
-          <>
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            <path d="M12 9v4M12 17h.01" />
-          </>
-        ) : (
-          <>
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-            <path d="M22 4L12 14.01l-3-3" />
-          </>
-        )}
-      </svg>
-
+      <div className={`mt-0.5 flex size-5 flex-none items-center justify-center rounded-full font-heading text-[12px] font-bold text-paper ${tone.dot}`}>
+        !
+      </div>
       <div className="flex-1">
-        <p className={`text-body leading-relaxed ${tone.text}`}>{isRisky ? warnText : okText}</p>
+        <div className={`mb-[3px] font-heading text-[13.5px] font-bold ${tone.text}`}>{headline}</div>
+        <p className={`text-[12.5px] leading-[1.5] ${tone.textMuted}`}>{body}</p>
 
-        <div className="mt-4">
-          <div className="h-3 overflow-hidden rounded-full bg-ink/[0.07] shadow-inner">
+        <div className="mt-3.5">
+          <div className="h-2.5 overflow-hidden rounded-full bg-ink/[0.07] shadow-inner">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(100, Math.max(0, gaugePct))}%` }}

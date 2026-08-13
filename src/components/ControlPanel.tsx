@@ -5,38 +5,31 @@ import { GlassCard } from "./GlassCard";
 import { SliderField } from "./SliderField";
 import type { CalculatorInputs } from "./calculatorTypes";
 
-interface ControlPanelProps {
+interface ControlPanelFieldsProps {
   inputs: CalculatorInputs;
   onInputChange: <K extends keyof CalculatorInputs>(key: K, value: CalculatorInputs[K]) => void;
   corpus: number;
   corpusLabel: string;
   displayHorizon: number;
   onHorizonChange: (value: number) => void;
-  onReset: () => void;
 }
 
-export function ControlPanel({
+/**
+ * The actual input groups — property/funding, growth, loan/prepayment, tax,
+ * horizon. Extracted from `ControlPanel` so both the desktop sidebar card
+ * and the mobile bottom sheet (which each supply their own outer chrome)
+ * can render the exact same live-bound fields rather than duplicating them.
+ */
+export function ControlPanelFields({
   inputs,
   onInputChange,
   corpus,
   corpusLabel,
   displayHorizon,
   onHorizonChange,
-  onReset,
-}: ControlPanelProps) {
+}: ControlPanelFieldsProps) {
   return (
-    <GlassCard>
-      <div className="flex items-center justify-between border-b border-line px-5 py-4">
-        <h2 className="font-heading text-h3 text-ink">Your inputs</h2>
-        <button
-          type="button"
-          onClick={onReset}
-          className="rounded-sm border border-line bg-surface-2 px-3 py-1.5 text-body-sm font-medium text-ink-2 transition-colors hover:border-indigo hover:bg-indigo-soft hover:text-indigo"
-        >
-          Reset
-        </button>
-      </div>
-
+    <>
       <Group icon={<HomeIcon />} title="Property & funding" defaultOpen>
         <SliderField
           label="Property price"
@@ -238,6 +231,29 @@ export function ControlPanel({
           hint="Follows the loan's payoff automatically. Drag it yourself to look further out."
         />
       </Group>
+    </>
+  );
+}
+
+interface ControlPanelProps extends ControlPanelFieldsProps {
+  onReset: () => void;
+}
+
+/** Desktop sidebar chrome around ControlPanelFields — a glass card with a "Your inputs" header + Reset. */
+export function ControlPanel({ onReset, ...fields }: ControlPanelProps) {
+  return (
+    <GlassCard>
+      <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <h2 className="font-heading text-h3 text-ink">Your inputs</h2>
+        <button
+          type="button"
+          onClick={onReset}
+          className="rounded-sm border border-line bg-surface-2 px-3 py-1.5 text-body-sm font-medium text-ink-2 transition-colors hover:border-indigo hover:bg-indigo-soft hover:text-indigo"
+        >
+          Reset
+        </button>
+      </div>
+      <ControlPanelFields {...fields} />
     </GlassCard>
   );
 }

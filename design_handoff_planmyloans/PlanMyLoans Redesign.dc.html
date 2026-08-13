@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&amp;family=Source+Sans+3:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Source Sans 3',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .3s ease}
+a{text-decoration:none}
+@keyframes floatBlob{0%{transform:translate(0,0) scale(1)}50%{transform:translate(24px,-30px) scale(1.06)}100%{transform:translate(0,0) scale(1)}}
+@keyframes floatBlob2{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,24px) scale(1.04)}100%{transform:translate(0,0) scale(1)}}
+input[type=range]{-webkit-appearance:none;appearance:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#5b7cfa;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer;margin-top:-7px}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#5b7cfa;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:transparent}
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:{{c.bg}};transition:background .3s ease">
+  <div style="position:absolute;top:-10%;left:-8%;width:520px;height:520px;border-radius:50%;background:{{c.blob1}};filter:blur(95px);animation:floatBlob 20s ease-in-out infinite"></div>
+  <div style="position:absolute;top:20%;right:-10%;width:480px;height:480px;border-radius:50%;background:{{c.blob2}};filter:blur(105px);animation:floatBlob2 24s ease-in-out infinite"></div>
+  <div style="position:absolute;bottom:-15%;left:20%;width:560px;height:560px;border-radius:50%;background:{{c.blob3}};filter:blur(115px);animation:floatBlob 28s ease-in-out infinite"></div>
+</div>
+
+<div style="position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:0 24px 120px">
+
+<header style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:15px 20px;margin:16px 0;border-radius:16px;background:{{c.glassBg}};backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid {{c.glassBorder}}">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});display:flex;align-items:center;justify-content:center">
+      <div style="width:12px;height:12px;border-radius:3px;background:white;transform:rotate(45deg)"></div>
+    </div>
+    <span style="font:800 18px Manrope,sans-serif;color:{{c.textPrimary}};letter-spacing:-0.01em">PlanMyLoans</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:20px">
+    <sc-if value="{{!isMobile}}" hint-placeholder-val="{{true}}">
+      <nav style="display:flex;align-items:center;gap:28px">
+        <sc-for list="{{navLinks}}" as="link" hint-placeholder-count="4">
+          <a href="{{link.href}}" style="font:600 14.5px 'Source Sans 3',sans-serif;color:{{c.textMuted}}">{{link.label}}</a>
+        </sc-for>
+      </nav>
+    </sc-if>
+    <button onClick="{{toggleTheme}}" style="border:1px solid {{c.glassBorder}};background:{{c.chipBg}};width:38px;height:38px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <div style="width:16px;height:16px;border-radius:50%;background:{{c.textPrimary}};box-shadow:{{c.themeIconShadow}}"></div>
+    </button>
+    <a href="#planner" style="background:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});color:white;font:700 13.5px Manrope,sans-serif;padding:10px 18px;border-radius:10px">{{ctaLabel}}</a>
+  </div>
+</header>
+
+<section style="padding:44px 0 32px;display:grid;grid-template-columns:{{heroGridCols}};gap:44px;align-items:center">
+  <div>
+    <div style="display:inline-flex;align-items:center;gap:8px;background:{{c.chipBg}};border:1px solid {{c.glassBorder}};color:{{c.accentText}};font:600 12.5px 'Source Sans 3',sans-serif;padding:7px 14px;border-radius:100px;margin-bottom:20px">
+      <span style="width:6px;height:6px;border-radius:50%;background:{{c.accent2}}"></span>
+      Free · No signup · Recalculates live
+    </div>
+    <h1 style="font:800 {{heroFontSize}}/1.08 Manrope,sans-serif;color:{{c.textPrimary}};letter-spacing:-0.02em;margin:0 0 18px">Plan your home loan <span style="background-image:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});-webkit-background-clip:text;-moz-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;display:inline-block">against your own capital.</span></h1>
+    <p style="font:400 16.5px/1.6 'Source Sans 3',sans-serif;color:{{c.textMuted}};max-width:500px;margin:0 0 28px">Split funds across a mutual fund lumpsum, an EMI-funding SWP, and a down payment — see prepayment savings and tax impact, live.</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <a href="#planner" style="background:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});color:white;font:700 15.5px Manrope,sans-serif;padding:14px 24px;border-radius:12px;box-shadow:{{c.ctaShadow}}">Build my plan</a>
+      <a href="#strategies" style="background:{{c.chipBg}};border:1px solid {{c.glassBorder}};color:{{c.textPrimary}};font:700 15.5px Manrope,sans-serif;padding:14px 24px;border-radius:12px">See 4 strategies</a>
+    </div>
+  </div>
+
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:20px;padding:24px;box-shadow:{{c.cardShadow}}">
+    <div style="font:700 12px Manrope,sans-serif;color:{{c.textMuted}};text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px">Quick estimate</div>
+    <sc-for list="{{quickInputs}}" as="qi" hint-placeholder-count="3">
+      <div style="margin-bottom:15px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+          <span style="font:600 13.5px 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{qi.label}}</span>
+          <div style="display:flex;align-items:center;gap:5px">
+            <input type="number" value="{{qi.inputValue}}" step="{{qi.inputStep}}" onChange="{{qi.onInputChange}}" style="width:62px;text-align:right;background:{{c.trackBg}};border:1px solid {{c.glassBorder}};color:{{c.textPrimary}};border-radius:6px;padding:4px 6px;font:600 13px 'IBM Plex Mono',monospace">
+            <span style="font:600 12px 'Source Sans 3',sans-serif;color:{{c.textMuted}}">{{qi.inputSuffix}}</span>
+          </div>
+        </div>
+        <input type="range" min="{{qi.min}}" max="{{qi.max}}" step="{{qi.step}}" value="{{qi.raw}}" onChange="{{qi.onChange}}" style="width:100%;height:6px;border-radius:3px;background:{{qi.trackStyle}};margin:0">
+      </div>
+    </sc-for>
+    <div style="display:flex;gap:14px;margin:18px 0;padding:18px 0;border-top:1px solid {{c.glassBorder}};border-bottom:1px solid {{c.glassBorder}}">
+      <div style="flex:1">
+        <div style="font:600 11.5px 'Source Sans 3',sans-serif;color:{{c.textMuted}}">Monthly EMI</div>
+        <div style="font:700 25px 'IBM Plex Mono',monospace;color:{{c.accentText}}">₹{{emiDisplay}}</div>
+      </div>
+      <div style="width:1px;background:{{c.glassBorder}}"></div>
+      <div style="flex:1">
+        <div style="font:600 11.5px 'Source Sans 3',sans-serif;color:{{c.textMuted}}">Total interest</div>
+        <div style="font:700 25px 'IBM Plex Mono',monospace;color:{{c.textPrimary}}">₹{{interestDisplay}}</div>
+      </div>
+    </div>
+    <div style="display:flex;height:13px;border-radius:7px;overflow:hidden">
+      <div style="width:{{principalPct}}%;background:linear-gradient(90deg,{{c.accent1}},{{c.accent2}})"></div>
+      <div style="width:{{interestPct}}%;background:{{c.trackBg}}"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font:500 12px 'Source Sans 3',sans-serif;color:{{c.textMuted}}">
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:{{c.accent1}};margin-right:6px"></span>Principal {{principalDisplay}}</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:{{c.trackBg}};margin-right:6px"></span>Interest {{interestDisplay}}</span>
+    </div>
+  </div>
+</section>
+
+<section style="padding:8px 0 40px">
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:18px;padding:20px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});flex-shrink:0;display:flex;align-items:center;justify-content:center;font:800 18px Manrope,sans-serif;color:white">✓</div>
+    <div style="flex:1;min-width:200px">
+      <div style="font:700 15.5px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:3px">Not sure you'll qualify for this EMI?</div>
+      <div style="font:400 13.5px 'Source Sans 3',sans-serif;color:{{c.textMuted}}">Check your free CIBIL score &amp; loan eligibility in 2 minutes — no impact on your score.</div>
+    </div>
+    <a href="https://www.bankbazaar.com/cibil-score-check.html" target="_blank" rel="noopener noreferrer" style="background:{{c.textPrimary}};color:{{c.bg}};font:700 14px Manrope,sans-serif;padding:12px 20px;border-radius:10px;white-space:nowrap">Check eligibility →</a>
+    
+  </div>
+</section>
+
+<section id="strategies" style="padding:8px 0 40px">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:8px">
+    <h2 style="font:800 24px Manrope,sans-serif;color:{{c.textPrimary}};margin:0;letter-spacing:-0.01em">Not sure how to split your funds?</h2>
+    <span style="font:500 13.5px 'Source Sans 3',sans-serif;color:{{c.textMuted}}">4 tailored strategies</span>
+  </div>
+  <div style="display:grid;grid-template-columns:{{strategyCols}};gap:16px">
+    <sc-for list="{{strategies}}" as="s" hint-placeholder-count="4">
+      <div style="background:{{c.glassBg}};backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:20px">
+        <div style="width:34px;height:34px;border-radius:9px;background:{{s.chipBg}};display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+          <div style="width:12px;height:12px;border-radius:4px;background:{{s.chipDot}}"></div>
+        </div>
+        <div style="font:700 15.5px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:7px">{{s.name}}</div>
+        <div style="font:400 13px/1.5 'Source Sans 3',sans-serif;color:{{c.textMuted}};margin-bottom:12px">{{s.desc}}</div>
+        <div style="font:600 12px 'IBM Plex Mono',monospace;color:{{c.accentText}}">{{s.split}}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section style="padding:8px 0 40px">
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:18px;padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px;flex-wrap:wrap;gap:8px">
+      <div style="font:700 15px Manrope,sans-serif;color:{{c.textPrimary}}">Capital stack</div>
+      <div style="font:600 13px 'IBM Plex Mono',monospace;color:{{c.textMuted}}">Total 1.40 Cr</div>
+    </div>
+    <div style="display:flex;height:34px;border-radius:9px;overflow:hidden">
+      <div style="width:28.6%;background:{{c.trackBg}}"></div>
+      <div style="width:14.3%;background:{{c.accent2}}"></div>
+      <div style="width:28.6%;background:{{c.accent2light}}"></div>
+      <div style="width:28.6%;background:linear-gradient(90deg,{{c.accent1}},{{c.accent1dark}})"></div>
+    </div>
+    <div style="display:flex;gap:26px;flex-wrap:wrap;margin-top:14px">
+      <sc-for list="{{capitalStack}}" as="cs" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:10px;height:10px;border-radius:3px;background:{{cs.color}}"></span>
+          <span style="font:600 13px 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{cs.label}}</span>
+          <span style="font:600 13px 'IBM Plex Mono',monospace;color:{{c.textMuted}}">{{cs.value}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<sc-if value="{{!isMobile}}" hint-placeholder-val="{{true}}">
+<section id="planner" style="padding:8px 0 40px;display:grid;grid-template-columns:1fr 0.82fr;gap:26px;align-items:start">
+  <div>
+    <h2 style="font:800 24px Manrope,sans-serif;color:{{c.textPrimary}};margin:0 0 16px;letter-spacing:-0.01em">Your inputs</h2>
+    <sc-for list="{{inputGroups}}" as="grp" hint-placeholder-count="4">
+      <div style="background:{{c.glassBg}};backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:14px;padding:18px 20px;margin-bottom:12px">
+        <div style="font:700 12.5px Manrope,sans-serif;color:{{c.accentText}};text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">{{grp.title}}</div>
+        <sc-for list="{{grp.fields}}" as="f" hint-placeholder-count="3">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid {{c.hairline}}">
+            <span style="font:500 13.5px 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{f.label}}</span>
+            <span style="font:600 13.5px 'IBM Plex Mono',monospace;color:{{c.textPrimary}}">{{f.value}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="position:sticky;top:90px">
+    <div style="font:800 18px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:12px">Loan &amp; growth outcome</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px">
+      <sc-for list="{{metrics}}" as="m" hint-placeholder-count="6">
+        <div style="background:{{c.glassBg}};backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);border:1px solid {{m.border}};border-radius:13px;padding:14px">
+          <div style="font:600 11px 'Source Sans 3',sans-serif;color:{{c.textMuted}};margin-bottom:7px">{{m.label}}</div>
+          <div style="font:700 19px 'IBM Plex Mono',monospace;color:{{m.color}};margin-bottom:3px">{{m.value}}</div>
+          <div style="font:400 11px 'Source Sans 3',sans-serif;color:{{c.textDim}}">{{m.sub}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background:{{c.warnBg}};border:1px solid {{c.warnBorder}};backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);border-radius:13px;padding:15px 17px;margin-bottom:16px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:20px;height:20px;border-radius:50%;background:{{c.warnDot}};flex-shrink:0;display:flex;align-items:center;justify-content:center;font:700 12px Manrope,sans-serif;color:{{c.bg}}">!</div>
+        <div>
+          <div style="font:700 13.5px Manrope,sans-serif;color:{{c.warnText}};margin-bottom:3px">SWP corpus runs dry</div>
+          <div style="font:400 12.5px/1.5 'Source Sans 3',sans-serif;color:{{c.warnTextMuted}}">Draws ~24.2%/yr from a 40.00L corpus against a 7.5% return — hits zero around month 58, before the loan is repaid at 20.0 yrs.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:{{c.glassBg}};backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:13px;padding:17px">
+      <div style="font:700 13px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:11px">Tax impact</div>
+      <sc-for list="{{taxRows}}" as="t" hint-placeholder-count="3">
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid {{c.hairline}}">
+          <span style="font:500 12.5px 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{t.label}}</span>
+          <span style="font:600 12.5px 'IBM Plex Mono',monospace;color:{{c.textPrimary}}">{{t.value}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+</sc-if>
+
+<sc-if value="{{isMobile}}" hint-placeholder-val="{{false}}">
+<section id="planner" style="padding:8px 0 40px">
+  <div style="font:800 21px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:12px">Loan &amp; growth outcome</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
+    <sc-for list="{{metrics}}" as="m" hint-placeholder-count="6">
+      <div style="background:{{c.glassBg}};backdrop-filter:blur(12px) saturate(160%);border:1px solid {{m.border}};border-radius:13px;padding:12px">
+        <div style="font:600 10.5px 'Source Sans 3',sans-serif;color:{{c.textMuted}};margin-bottom:5px">{{m.label}}</div>
+        <div style="font:700 17px 'IBM Plex Mono',monospace;color:{{m.color}};margin-bottom:2px">{{m.value}}</div>
+        <div style="font:400 10.5px 'Source Sans 3',sans-serif;color:{{c.textDim}}">{{m.sub}}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:{{c.warnBg}};border:1px solid {{c.warnBorder}};backdrop-filter:blur(12px) saturate(160%);border-radius:13px;padding:15px;margin-bottom:14px">
+    <div style="font:700 13px Manrope,sans-serif;color:{{c.warnText}};margin-bottom:3px">⚠ SWP corpus runs dry at month 58</div>
+    <div style="font:400 12px/1.5 'Source Sans 3',sans-serif;color:{{c.warnTextMuted}}">Well before the loan is repaid at 20.0 yrs.</div>
+  </div>
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(12px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:13px;padding:15px">
+    <div style="font:700 12.5px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:9px">Tax impact</div>
+    <sc-for list="{{taxRows}}" as="t" hint-placeholder-count="3">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid {{c.hairline}}">
+        <span style="font:500 12px 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{t.label}}</span>
+        <span style="font:600 12px 'IBM Plex Mono',monospace;color:{{c.textPrimary}}">{{t.value}}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="height:76px"></div>
+</section>
+
+<div style="position:fixed;left:0;right:0;bottom:0;z-index:60;transform:{{sheetTransform}};transition:transform .4s cubic-bezier(.2,.8,.2,1)">
+  <div style="max-width:1240px;margin:0 auto;background:{{c.sheetBg}};backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-top:1px solid {{c.glassBorder}};border-radius:20px 20px 0 0;box-shadow:{{c.sheetShadow}};max-height:78vh;display:flex;flex-direction:column">
+    <div onClick="{{toggleSheet}}" style="display:flex;flex-direction:column;align-items:center;padding:12px 0 6px;cursor:pointer">
+      <div style="width:38px;height:4px;border-radius:2px;background:{{c.glassBorder}};margin-bottom:10px"></div>
+      <div style="font:700 14px Manrope,sans-serif;color:{{c.textPrimary}}">{{sheetLabel}}</div>
+    </div>
+    <div style="overflow-y:auto;padding:6px 20px 24px">
+      <sc-for list="{{inputGroups}}" as="grp" hint-placeholder-count="4">
+        <div style="margin-bottom:14px">
+          <div style="font:700 11.5px Manrope,sans-serif;color:{{c.accentText}};text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px">{{grp.title}}</div>
+          <sc-for list="{{grp.fields}}" as="f" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid {{c.hairline}}">
+              <span style="font:500 13px 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{f.label}}</span>
+              <span style="font:600 13px 'IBM Plex Mono',monospace;color:{{c.textPrimary}}">{{f.value}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<section style="padding:8px 0 40px">
+  <h2 style="font:800 24px Manrope,sans-serif;color:{{c.textPrimary}};margin:0 0 18px;letter-spacing:-0.01em">Charts</h2>
+  <div style="display:grid;grid-template-columns:{{chartCols}};gap:16px">
+    <div style="background:{{c.glassBg}};backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:22px">
+      <div style="font:700 14px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:4px">Balances over time</div>
+      <div style="font:400 12px 'Source Sans 3',sans-serif;color:{{c.textMuted}};margin-bottom:16px">MF grows untouched · SWP funds the EMI · loan amortises</div>
+      <svg viewBox="0 0 480 200" style="width:100%;height:180px">
+        <polyline points="0,150 60,140 120,120 180,95 240,70 300,50 360,32 420,18 480,8" fill="none" stroke="{{c.accent1}}" stroke-width="3"></polyline>
+        <polyline points="0,110 60,60 120,80 180,120 240,160 300,190 360,198 420,200 480,200" fill="none" stroke="{{c.accent2}}" stroke-width="3"></polyline>
+        <polyline points="0,180 60,178 120,172 180,160 240,142 300,118 360,90 420,55 480,8" fill="none" stroke="{{c.textDim}}" stroke-width="2" stroke-dasharray="6,6"></polyline>
+      </svg>
+      <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
+        <span style="font:500 12px 'Source Sans 3',sans-serif;color:{{c.textMuted}}"><span style="display:inline-block;width:16px;height:3px;background:{{c.accent1}};margin-right:6px;vertical-align:middle"></span>MF corpus</span>
+        <span style="font:500 12px 'Source Sans 3',sans-serif;color:{{c.textMuted}}"><span style="display:inline-block;width:16px;height:3px;background:{{c.accent2}};margin-right:6px;vertical-align:middle"></span>SWP corpus</span>
+        <span style="font:500 12px 'Source Sans 3',sans-serif;color:{{c.textMuted}}"><span style="display:inline-block;width:16px;height:3px;background:{{c.textDim}};margin-right:6px;vertical-align:middle"></span>Loan balance</span>
+      </div>
+    </div>
+
+    <div style="background:{{c.glassBg}};backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:22px">
+      <div style="font:700 14px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:4px">EMI breakup</div>
+      <div style="font:400 12px 'Source Sans 3',sans-serif;color:{{c.textMuted}};margin-bottom:16px">Interest vs. principal per payment</div>
+      <div style="display:flex;align-items:flex-end;gap:5px;height:140px">
+        <sc-for list="{{emiBars}}" as="b" hint-placeholder-count="12">
+          <div style="flex:1;display:flex;flex-direction:column-reverse;height:100%;border-radius:3px;overflow:hidden">
+            <div style="height:{{b.principal}};background:{{c.accent1}}"></div>
+            <div style="height:{{b.interest}};background:{{c.trackBg}}"></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding:8px 0 40px">
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:{{amortPad}}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="font:700 15px Manrope,sans-serif;color:{{c.textPrimary}}">Amortization schedule</div>
+      <div style="display:flex;background:{{c.trackBg}};border-radius:9px;padding:4px">
+        <button onClick="{{setYearly}}" style="border:none;background:{{yearlyBg}};color:{{yearlyColor}};font:600 12.5px 'Source Sans 3',sans-serif;padding:8px 16px;border-radius:7px;cursor:pointer">Yearly</button>
+        <button onClick="{{setMonthly}}" style="border:none;background:{{monthlyBg}};color:{{monthlyColor}};font:600 12.5px 'Source Sans 3',sans-serif;padding:8px 16px;border-radius:7px;cursor:pointer">Monthly</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:9px 0;border-bottom:2px solid {{c.glassBorder}};font:700 10.5px Manrope,sans-serif;color:{{c.textMuted}};text-transform:uppercase;letter-spacing:.04em">
+      <span>{{periodLabel}}</span><span>EMI paid</span><span>Principal</span><span>Balance</span>
+    </div>
+    <sc-for list="{{amortRows}}" as="row" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:12px 0;border-bottom:1px solid {{c.hairline}};font:500 12.5px 'IBM Plex Mono',monospace;color:{{c.textSecondary}}">
+        <span>{{row.period}}</span><span>{{row.emi}}</span><span>{{row.principal}}</span><span>{{row.balance}}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<footer style="border-top:1px solid {{c.glassBorder}};padding:30px 0 38px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div style="font:400 12px 'Source Sans 3',sans-serif;color:{{c.textDim}};max-width:560px">PlanMyLoans is an independent, free tool. Illustrative only — not financial, tax, or legal advice. © 2026 PlanMyLoans.</div>
+  <a href="mailto:sakshamtandon1205@gmail.com" style="font:600 13px 'Source Sans 3',sans-serif;color:{{c.accentText}}">sakshamtandon1205@gmail.com</a>
+</footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { isMobile: false, period: 'yearly', sheetOpen: false, theme: 'dark', loanAmount: 10000000, rate: 7.5, tenureYears: 20 };
+  fmtINR(v) {
+    if (v >= 10000000) return (v / 10000000).toFixed(2) + ' Cr';
+    if (v >= 100000) return (v / 100000).toFixed(2) + ' L';
+    return Math.round(v).toLocaleString('en-IN');
+  }
+
+  componentDidMount() {
+    this.updateSize();
+    window.addEventListener('resize', this.updateSize);
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.updateSize); }
+  updateSize = () => {
+    const mobile = window.innerWidth < 860;
+    if (mobile !== this.state.isMobile) this.setState({ isMobile: mobile });
+  };
+  toggleSheet = () => this.setState(s => ({ sheetOpen: !s.sheetOpen }));
+  toggleTheme = () => this.setState(s => ({ theme: s.theme === 'dark' ? 'light' : 'dark' }));
+
+  renderVals() {
+    const yearly = this.state.period === 'yearly';
+    const isMobile = this.state.isMobile;
+    const dark = this.state.theme === 'dark';
+    const { loanAmount, rate, tenureYears } = this.state;
+    const r = rate / 100 / 12;
+    const n = tenureYears * 12;
+    const emi = loanAmount * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+    const totalPayable = emi * n;
+    const totalInterest = totalPayable - loanAmount;
+    const principalPct = (loanAmount / totalPayable) * 100;
+    const interestPct = 100 - principalPct;
+
+    const c = dark ? {
+      bg: 'oklch(17% 0.018 265)',
+      blob1: 'oklch(55% 0.15 270 / 32%)', blob2: 'oklch(58% 0.14 305 / 26%)', blob3: 'oklch(60% 0.12 175 / 24%)',
+      glassBg: 'rgba(255,255,255,0.055)', glassBorder: 'rgba(255,255,255,0.11)',
+      sheetBg: 'rgba(28,24,44,0.88)', sheetShadow: '0 -16px 40px rgba(0,0,0,0.35)',
+      cardShadow: '0 20px 45px -20px rgba(0,0,0,0.5)', ctaShadow: '0 8px 22px -8px oklch(58% 0.16 275 / 45%)',
+      textPrimary: 'oklch(94% 0.005 270)', textSecondary: 'oklch(84% 0.01 270)', textMuted: 'oklch(70% 0.02 270)', textDim: 'oklch(58% 0.02 270)',
+      trackBg: 'rgba(255,255,255,0.1)', hairline: 'rgba(255,255,255,0.08)', chipBg: 'rgba(255,255,255,0.07)',
+      accent1: 'oklch(66% 0.15 270)', accent1dark: 'oklch(58% 0.14 280)', accent2: 'oklch(66% 0.12 175)', accent2light: 'oklch(74% 0.1 175 / 70%)',
+      accentText: 'oklch(80% 0.11 270)', themeIconShadow: '0 0 0 3px rgba(255,255,255,0.08) inset',
+      warnBg: 'oklch(30% 0.05 55 / 26%)', warnBorder: 'oklch(58% 0.1 55 / 45%)', warnDot: 'oklch(70% 0.13 60)', warnText: 'oklch(90% 0.03 60)', warnTextMuted: 'oklch(78% 0.04 60)'
+    } : {
+      bg: 'oklch(97% 0.006 258)',
+      blob1: 'oklch(75% 0.11 270 / 38%)', blob2: 'oklch(78% 0.1 305 / 32%)', blob3: 'oklch(80% 0.1 175 / 34%)',
+      glassBg: 'rgba(255,255,255,0.38)', glassBorder: 'rgba(255,255,255,0.6)',
+      sheetBg: 'rgba(255,255,255,0.55)', sheetShadow: '0 -16px 40px rgba(20,20,45,0.12)',
+      cardShadow: '0 20px 45px -22px rgba(20,20,45,0.22)', ctaShadow: '0 8px 22px -8px oklch(55% 0.16 270 / 35%)',
+      textPrimary: 'oklch(24% 0.015 258)', textSecondary: 'oklch(38% 0.015 258)', textMuted: 'oklch(48% 0.02 258)', textDim: 'oklch(58% 0.02 258)',
+      trackBg: 'rgba(20,20,45,0.1)', hairline: 'rgba(20,20,45,0.08)', chipBg: 'rgba(255,255,255,0.42)',
+      accent1: 'oklch(54% 0.16 270)', accent1dark: 'oklch(46% 0.15 280)', accent2: 'oklch(52% 0.13 175)', accent2light: 'oklch(65% 0.11 175 / 60%)',
+      accentText: 'oklch(46% 0.15 270)', themeIconShadow: '0 0 0 3px rgba(20,20,45,0.06) inset',
+      warnBg: 'oklch(95% 0.05 60)', warnBorder: 'oklch(78% 0.1 60)', warnDot: 'oklch(62% 0.13 55)', warnText: 'oklch(38% 0.1 55)', warnTextMuted: 'oklch(46% 0.08 55)'
+    };
+
+    const metricBase = [
+      {label:'Monthly EMI', value:'₹80,559', sub:'over 20 yr tenure'},
+      {label:'Loan payoff', value:'20.0 yrs', sub:'240 months'},
+      {label:'MF corpus after horizon', value:'₹1.93 Cr', sub:'from 20L, untouched'},
+      {label:'Interest saved', value:'₹0', sub:'vs EMI-only'},
+      {label:'SWP corpus after horizon', value:'₹0', sub:'depleted month 58'},
+      {label:'Total wealth after horizon', value:'₹1.93 Cr', sub:'loan-adjusted'}
+    ];
+    const metrics = metricBase.map((m, i) => ({
+      ...m,
+      color: i === 2 ? c.accent2 : i === 4 ? c.warnDot : i === 5 ? c.accentText : c.textPrimary,
+      border: i === 4 ? c.warnBorder : c.glassBorder
+    }));
+
+    return {
+      isMobile, c,
+      ctaLabel: dark ? 'Start Planning' : 'Start Planning',
+      heroGridCols: isMobile ? '1fr' : '1.05fr 0.95fr',
+      heroFontSize: isMobile ? '34px' : '44px',
+      strategyCols: isMobile ? '1fr 1fr' : 'repeat(4,1fr)',
+      chartCols: isMobile ? '1fr' : '1.3fr 1fr',
+      amortPad: isMobile ? '20px 16px' : '24px',
+      emiDisplay: Math.round(emi).toLocaleString('en-IN'),
+      interestDisplay: this.fmtINR(totalInterest),
+      principalDisplay: this.fmtINR(loanAmount),
+      principalPct: principalPct.toFixed(1),
+      interestPct: interestPct.toFixed(1),
+      quickInputs: [
+        (() => {
+          const inLakh = loanAmount < 10000000;
+          return { label: 'Loan amount', min: 1000000, max: 50000000, step: 100000, raw: loanAmount,
+            inputValue: inLakh ? Math.round(loanAmount / 100000) : +(loanAmount / 10000000).toFixed(2),
+            inputStep: inLakh ? 1 : 0.01, inputSuffix: inLakh ? 'L' : 'Cr',
+            onChange: (e) => this.setState({ loanAmount: Number(e.target.value) }),
+            onInputChange: (e) => {
+              const raw = Number(e.target.value) || 0;
+              const rupees = inLakh ? raw * 100000 : raw * 10000000;
+              this.setState({ loanAmount: Math.min(50000000, Math.max(1000000, rupees)) });
+            },
+            trackStyle: `linear-gradient(90deg, ${c.accent1} 0%, ${c.accent1} ${((loanAmount - 1000000) / 49000000) * 100}%, ${c.trackBg} ${((loanAmount - 1000000) / 49000000) * 100}%, ${c.trackBg} 100%)` };
+        })(),
+        { label: 'Interest rate', min: 5, max: 15, step: 0.1, raw: rate,
+          inputValue: rate, inputStep: 0.1, inputSuffix: '%',
+          onChange: (e) => this.setState({ rate: Number(e.target.value) }),
+          onInputChange: (e) => { const v = Math.min(15, Math.max(5, Number(e.target.value) || 0)); this.setState({ rate: v }); },
+          trackStyle: `linear-gradient(90deg, ${c.accent1} 0%, ${c.accent1} ${((rate - 5) / 10) * 100}%, ${c.trackBg} ${((rate - 5) / 10) * 100}%, ${c.trackBg} 100%)` },
+        { label: 'Tenure', min: 5, max: 30, step: 1, raw: tenureYears,
+          inputValue: tenureYears, inputStep: 1, inputSuffix: 'yrs',
+          onChange: (e) => this.setState({ tenureYears: Number(e.target.value) }),
+          onInputChange: (e) => { const v = Math.min(30, Math.max(5, Number(e.target.value) || 0)); this.setState({ tenureYears: v }); },
+          trackStyle: `linear-gradient(90deg, ${c.accent1} 0%, ${c.accent1} ${((tenureYears - 5) / 25) * 100}%, ${c.trackBg} ${((tenureYears - 5) / 25) * 100}%, ${c.trackBg} 100%)` }
+      ],
+      sheetTransform: this.state.sheetOpen ? 'translateY(0)' : 'translateY(calc(100% - 58px))',
+      sheetLabel: this.state.sheetOpen ? 'Edit inputs  ▼' : 'Edit inputs  ▲',
+      toggleSheet: this.toggleSheet,
+      toggleTheme: this.toggleTheme,
+      navLinks: [{label:'Calculator', href:'PlanMyLoans Redesign.dc.html'},{label:'Guides', href:'Guides.dc.html'},{label:'About', href:'About.dc.html'},{label:'Contact', href:'Contact.dc.html'}],
+      strategies: [
+        {name:'Aggressive Growth', desc:'Minimal down payment, max lumpsum invested for compounding.', split:'10% DP · 70% MF · 20% SWP', chipBg: dark?'oklch(35% 0.1 270 / 55%)':'oklch(90% 0.06 270)', chipDot: dark?'oklch(75% 0.15 270)':'oklch(55% 0.16 270)'},
+        {name:'Balanced', desc:'Even split across down payment, lumpsum, and EMI corpus.', split:'30% DP · 35% MF · 35% SWP', chipBg: dark?'oklch(38% 0.1 175 / 55%)':'oklch(90% 0.06 175)', chipDot: dark?'oklch(78% 0.14 175)':'oklch(55% 0.13 175)'},
+        {name:'Conservative', desc:'Higher down payment, smaller loan, lower exposure.', split:'55% DP · 25% MF · 20% SWP', chipBg: dark?'oklch(40% 0.08 100 / 55%)':'oklch(91% 0.06 100)', chipDot: dark?'oklch(80% 0.12 100)':'oklch(58% 0.12 100)'},
+        {name:'Debt-Free Fast', desc:'Max down payment and prepayment to close the loan early.', split:'70% DP · 20% MF · 10% SWP', chipBg: dark?'oklch(40% 0.1 30 / 55%)':'oklch(91% 0.06 30)', chipDot: dark?'oklch(78% 0.14 30)':'oklch(58% 0.13 30)'}
+      ],
+      capitalStack: [
+        {label:'Down payment', value:'40.00L', color: c.trackBg},
+        {label:'MF lumpsum', value:'20.00L', color: c.accent2},
+        {label:'SWP corpus', value:'40.00L', color: c.accent2light},
+        {label:'Home loan', value:'1.00 Cr', color: c.accent1}
+      ],
+      inputGroups: [
+        {title:'Property & funding', fields:[
+          {label:'Property price', value:'1.40 Cr'},
+          {label:'Own funds available', value:'1.00 Cr'},
+          {label:'Down payment', value:'40.00 L'},
+          {label:'MF lumpsum', value:'20.00 L'},
+          {label:'SWP corpus (auto)', value:'40.00 L'}
+        ]},
+        {title:'Growth & EMI funding', fields:[
+          {label:'MF expected return', value:'12%'},
+          {label:'Fund EMI from', value:'SWP'},
+          {label:'SWP expected return', value:'7.5%'}
+        ]},
+        {title:'Loan & prepayment', fields:[
+          {label:'Home loan interest', value:'7.5%'},
+          {label:'Loan tenure', value:'20 yrs'},
+          {label:'Extra monthly prepay', value:'None'},
+          {label:'Step up prepay yearly', value:'None'},
+          {label:'Extra EMIs/year', value:'0'}
+        ]},
+        {title:'Tax assumptions', fields:[
+          {label:'SWP capital gains tax', value:'12.5%'},
+          {label:'Marginal income tax', value:'30%'},
+          {label:'View results after', value:'20 yrs'}
+        ]}
+      ],
+      metrics,
+      taxRows: [
+        {label:'Tax paid on SWP withdrawals', value:'₹95,070'},
+        {label:'Tax saved via loan (24b+80C)', value:'₹20,13,096'},
+        {label:'Net effective interest cost', value:'₹73,21,140'}
+      ],
+      emiBars: [
+        {interest:'88%', principal:'12%'},{interest:'85%', principal:'15%'},{interest:'80%', principal:'20%'},
+        {interest:'74%', principal:'26%'},{interest:'66%', principal:'34%'},{interest:'58%', principal:'42%'},
+        {interest:'49%', principal:'51%'},{interest:'40%', principal:'60%'},{interest:'30%', principal:'70%'},
+        {interest:'20%', principal:'80%'},{interest:'10%', principal:'90%'},{interest:'4%', principal:'96%'}
+      ],
+      periodLabel: yearly ? 'Year' : 'Month',
+      amortRows: yearly
+        ? [{period:'1',emi:'₹9,66,708',principal:'₹2,32,236',balance:'₹97,67,764'},
+           {period:'5',emi:'₹9,66,708',principal:'₹3,44,847',balance:'₹85,63,706'},
+           {period:'10',emi:'₹9,66,708',principal:'₹5,32,918',balance:'₹65,42,398'},
+           {period:'15',emi:'₹9,66,708',principal:'₹8,23,466',balance:'₹34,29,573'},
+           {period:'20',emi:'₹9,66,708',principal:'₹8,99,201',balance:'₹0'}]
+        : [{period:'1',emi:'₹80,559',principal:'₹17,892',balance:'₹99,82,108'},
+           {period:'2',emi:'₹80,559',principal:'₹18,004',balance:'₹99,64,104'},
+           {period:'3',emi:'₹80,559',principal:'₹18,117',balance:'₹99,45,987'},
+           {period:'4',emi:'₹80,559',principal:'₹18,230',balance:'₹99,27,757'},
+           {period:'5',emi:'₹80,559',principal:'₹18,344',balance:'₹99,09,413'}],
+      yearlyBg: yearly ? c.trackBg : 'transparent',
+      yearlyColor: yearly ? c.textPrimary : c.textMuted,
+      monthlyBg: !yearly ? c.trackBg : 'transparent',
+      monthlyColor: !yearly ? c.textPrimary : c.textMuted,
+      setYearly: () => this.setState({period:'yearly'}),
+      setMonthly: () => this.setState({period:'monthly'})
+    };
+  }
+}
+</script>
+</body>
+</html>

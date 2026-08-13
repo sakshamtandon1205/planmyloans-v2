@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+3:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Source Sans 3',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{text-decoration:none}
+@keyframes floatBlob{0%{transform:translate(0,0) scale(1)}50%{transform:translate(24px,-30px) scale(1.06)}100%{transform:translate(0,0) scale(1)}}
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:{{c.bg}}">
+  <div style="position:absolute;top:-10%;right:-8%;width:520px;height:520px;border-radius:50%;background:{{c.blob1}};filter:blur(100px);animation:floatBlob 22s ease-in-out infinite"></div>
+</div>
+
+<div style="position:relative;z-index:1;max-width:760px;margin:0 auto;padding:0 24px 80px">
+
+<header style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:15px 20px;margin:16px 0;border-radius:16px;background:{{c.glassBg}};backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid {{c.glassBorder}}">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});display:flex;align-items:center;justify-content:center">
+      <div style="width:12px;height:12px;border-radius:3px;background:white;transform:rotate(45deg)"></div>
+    </div>
+    <span style="font:800 18px Manrope,sans-serif;color:{{c.textPrimary}};letter-spacing:-0.01em">PlanMyLoans</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:20px">
+    <nav style="display:flex;align-items:center;gap:28px">
+      <sc-for list="{{navLinks}}" as="link" hint-placeholder-count="4">
+        <a href="{{link.href}}" style="font:600 14.5px 'Source Sans 3',sans-serif;color:{{link.color}}">{{link.label}}</a>
+      </sc-for>
+    </nav>
+    <button onClick="{{toggleTheme}}" style="border:1px solid {{c.glassBorder}};background:{{c.chipBg}};width:38px;height:38px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <div style="width:16px;height:16px;border-radius:50%;background:{{c.textPrimary}}"></div>
+    </button>
+  </div>
+</header>
+
+<section style="padding:48px 0 8px">
+  <div style="font:700 12.5px 'Source Sans 3',sans-serif;color:{{c.accentText}};text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">About</div>
+  <h1 style="font:800 34px/1.2 Manrope,sans-serif;color:{{c.textPrimary}};letter-spacing:-0.02em;margin:0 0 16px">Hi, I'm the person who got too curious about spreadsheets.</h1>
+  <p style="font:400 16.5px/1.6 'Source Sans 3',sans-serif;color:{{c.textMuted}};margin:0 0 36px">A short, honest explanation of why this site exists, who built it, and why it's obsessed with the difference between a 12% return and a 12.5% return.</p>
+</section>
+
+<section style="padding:0 0 8px">
+  <p style="font:400 16px/1.75 'Source Sans 3',sans-serif;color:{{c.textSecondary}};margin:0 0 22px">Somewhere between debugging a payments pipeline at 11pm and half-heartedly building yet another Excel sheet to figure out my own home loan, I had an uncomfortable realisation: I understood banking systems for a living, and I still couldn't answer a simple question about my own money without twenty minutes and three tabs of contradictory blog posts.</p>
+  <p style="font:400 16px/1.75 'Source Sans 3',sans-serif;color:{{c.textSecondary}};margin:0 0 36px">So I built the tool I wanted. Then I kept adding to it, because it turns out "just one more slider" is a very dangerous sentence to say to yourself at midnight.</p>
+</section>
+
+<section style="padding:0 0 32px">
+  <h2 style="font:800 22px Manrope,sans-serif;color:{{c.textPrimary}};margin:0 0 14px;letter-spacing:-0.01em">Who's behind this</h2>
+  <p style="font:400 16px/1.75 'Source Sans 3',sans-serif;color:{{c.textSecondary}};margin:0 0 18px">I'm a backend software engineer: the kind who spends the day writing the systems that move money around inside a large financial institution, and the evening wondering why none of the public-facing tools for personal finance felt half as rigorous as the internal ones. PlanMyLoans is what happens when that itch doesn't go away.</p>
+  <p style="font:400 16px/1.75 'Source Sans 3',sans-serif;color:{{c.textSecondary}};margin:0">I'm not a financial advisor, a CA, or a wealth manager with a nice suit and a nicer office. I'm an engineer who likes numbers to add up, and who got mildly obsessed with modelling exactly how a home loan interacts with a mutual fund, a bank account, prepayments, and the Indian tax code, all at the same time, live, without needing to open Excel.</p>
+</section>
+
+<section style="padding:0 0 32px">
+  <h2 style="font:800 22px Manrope,sans-serif;color:{{c.textPrimary}};margin:0 0 14px;letter-spacing:-0.01em">Why this site exists</h2>
+  <p style="font:400 16px/1.75 'Source Sans 3',sans-serif;color:{{c.textSecondary}};margin:0 0 18px">Most loan calculators online do one thing: they compute an EMI and stop there, as if that's the whole story. It isn't. The real question anyone buying a property is asking is messier: "If I split my savings this way, will I still be okay in five years? What does prepaying save me? Is my SWP going to run dry before my loan does?" Nobody was answering that question with a tool you could just play with, so I built one.</p>
+  <p style="font:400 16px/1.75 'Source Sans 3',sans-serif;color:{{c.textSecondary}};margin:0">There's also a smaller, pettier reason: I got tired of financial content that either oversimplifies everything into "just invest in SIPs" or buries you in jargon that assumes you already have a finance degree. I wanted something in between: rigorous enough to trust, plain enough to use.</p>
+</section>
+
+<section style="padding:0 0 28px">
+  <h2 style="font:800 22px Manrope,sans-serif;color:{{c.textPrimary}};margin:0 0 16px;letter-spacing:-0.01em">What you'll find here</h2>
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:22px">
+    <sc-for list="{{findHere}}" as="item" hint-placeholder-count="5">
+      <div style="display:flex;gap:12px;padding:10px 0;align-items:flex-start">
+        <div style="width:16px;height:16px;border-radius:50%;background:{{c.accent2}};flex-shrink:0;margin-top:3px"></div>
+        <span style="font:400 15px/1.6 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{item}}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section style="padding:0 0 28px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:22px">
+    <div style="font:700 15px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:14px">What it does</div>
+    <sc-for list="{{does}}" as="d" hint-placeholder-count="4">
+      <div style="display:flex;gap:10px;padding:7px 0;align-items:flex-start">
+        <div style="width:14px;height:14px;border-radius:50%;background:{{c.accent2}};flex-shrink:0;margin-top:3px"></div>
+        <span style="font:400 13.5px/1.5 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{d}}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:22px">
+    <div style="font:700 15px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:14px">What it doesn't do</div>
+    <sc-for list="{{doesNot}}" as="d" hint-placeholder-count="4">
+      <div style="display:flex;gap:10px;padding:7px 0;align-items:flex-start">
+        <div style="width:14px;height:14px;border-radius:50%;background:{{c.trackBg}};flex-shrink:0;margin-top:3px"></div>
+        <span style="font:400 13.5px/1.5 'Source Sans 3',sans-serif;color:{{c.textSecondary}}">{{d}}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section style="padding:0 0 36px">
+  <div style="background:{{c.warnBg}};border:1px solid {{c.warnBorder}};backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border-radius:16px;padding:22px 24px">
+    <div style="font:700 15px Manrope,sans-serif;color:{{c.warnText}};margin-bottom:8px">The honesty clause</div>
+    <p style="font:400 14.5px/1.65 'Source Sans 3',sans-serif;color:{{c.warnTextMuted}};margin:0">Everything on this site is a model, not a guarantee. Markets move, interest rates reset, and I'm one guy with a laptop, not a SEBI-registered advisor. Use this to think more clearly, not as a substitute for professional advice on anything that involves real money and real consequences.</p>
+  </div>
+</section>
+
+<section style="padding:0 0 40px">
+  <div style="background:{{c.glassBg}};backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid {{c.glassBorder}};border-radius:16px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font:700 16px Manrope,sans-serif;color:{{c.textPrimary}};margin-bottom:4px">Say hello</div>
+      <div style="font:400 14px/1.6 'Source Sans 3',sans-serif;color:{{c.textMuted}}">If something's broken, confusing, or the SWP gauge helped you dodge a bad decision — I'd genuinely like to hear it.</div>
+    </div>
+    <a href="Contact.dc.html" style="background:linear-gradient(135deg,{{c.accent1}},{{c.accent2}});color:white;font:700 14px Manrope,sans-serif;padding:12px 20px;border-radius:10px;white-space:nowrap">Get in touch →</a>
+  </div>
+</section>
+
+<footer style="border-top:1px solid {{c.glassBorder}};padding:30px 0 38px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div style="font:400 12px 'Source Sans 3',sans-serif;color:{{c.textDim}};max-width:560px">PlanMyLoans is an independent, free tool. Illustrative only — not financial, tax, or legal advice. © 2026 PlanMyLoans.</div>
+  <a href="mailto:sakshamtandon1205@gmail.com" style="font:600 13px 'Source Sans 3',sans-serif;color:{{c.accentText}}">sakshamtandon1205@gmail.com</a>
+</footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: 'dark' };
+  toggleTheme = () => this.setState(s => ({ theme: s.theme === 'dark' ? 'light' : 'dark' }));
+
+  renderVals() {
+    const dark = this.state.theme === 'dark';
+    const c = dark ? {
+      bg: 'oklch(17% 0.018 265)', blob1: 'oklch(58% 0.14 305 / 28%)',
+      glassBg: 'rgba(255,255,255,0.055)', glassBorder: 'rgba(255,255,255,0.11)',
+      textPrimary: 'oklch(94% 0.005 270)', textSecondary: 'oklch(84% 0.01 270)', textMuted: 'oklch(70% 0.02 270)', textDim: 'oklch(58% 0.02 270)',
+      chipBg: 'rgba(255,255,255,0.07)', accent1: 'oklch(66% 0.15 270)', accent2: 'oklch(66% 0.12 175)', accentText: 'oklch(80% 0.11 270)',
+      warnBg: 'oklch(30% 0.05 55 / 22%)', warnBorder: 'oklch(58% 0.1 55 / 40%)', warnText: 'oklch(90% 0.03 60)', warnTextMuted: 'oklch(78% 0.04 60)'
+    } : {
+      bg: 'oklch(97% 0.006 258)', blob1: 'oklch(78% 0.1 305 / 34%)',
+      glassBg: 'rgba(255,255,255,0.38)', glassBorder: 'rgba(255,255,255,0.6)',
+      textPrimary: 'oklch(24% 0.015 258)', textSecondary: 'oklch(38% 0.015 258)', textMuted: 'oklch(48% 0.02 258)', textDim: 'oklch(58% 0.02 258)',
+      chipBg: 'rgba(255,255,255,0.42)', accent1: 'oklch(54% 0.16 270)', accent2: 'oklch(52% 0.13 175)', accentText: 'oklch(46% 0.15 270)',
+      warnBg: 'oklch(95% 0.05 60)', warnBorder: 'oklch(78% 0.1 60)', warnText: 'oklch(38% 0.1 55)', warnTextMuted: 'oklch(46% 0.08 55)'
+    };
+    return {
+      c, toggleTheme: this.toggleTheme,
+      navLinks: [
+        {label:'Calculator', href:'PlanMyLoans Redesign.dc.html', color:c.textMuted},
+        {label:'Guides', href:'Guides.dc.html', color:c.textMuted},
+        {label:'About', href:'About.dc.html', color:c.textPrimary},
+        {label:'Contact', href:'Contact.dc.html', color:c.textMuted}
+      ],
+      trackBg: c.trackBg,
+      does: [
+        'Models EMI, prepayment, and payoff time live as you adjust inputs',
+        'Splits your own capital across down payment, MF lumpsum, and SWP',
+        'Estimates tax impact under Sec 24(b) and 80C',
+        'Runs entirely in your browser — no signup, no data stored'
+      ],
+      doesNot: [
+        'Give personalised financial, tax, or legal advice',
+        "Connect to your bank or pull real account data",
+        'Guarantee mutual fund or SWP returns — those are assumptions you set',
+        'Process loan applications directly'
+      ],
+      findHere: [
+        "A free, interactive planner that models a property purchase against your own capital: no signup, no email wall, no \"unlock full results\" nonsense.",
+        "Plain-English guides on the parts of home loans and personal finance that are usually explained badly: SWPs, prepayment math, tax deductions, the works.",
+        "Zero financial advice dressed up as fact. Just a clearer way to see your own numbers, so you can make your own call.",
+        "Transparency about money: I'm not formally partnered with anyone yet, but this site may carry affiliate links (like BankBazaar's) — if you sign up through one, I could earn a small commission. It never changes the numbers the calculator shows you."
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

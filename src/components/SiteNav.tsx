@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
@@ -12,80 +13,66 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
+/** True once the page has scrolled past a small threshold — used to close the nav's top gap so no page content is ever visible above it. */
+function useScrolled(thresholdPx: number) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > thresholdPx);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [thresholdPx]);
+  return scrolled;
+}
+
 export function SiteNav() {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const scrolled = useScrolled(8);
 
   return (
-    <nav className="sticky top-0 z-30 border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-4">
-        <Link href="/" className="flex items-center gap-2 font-heading text-h3 font-bold text-ink">
-          <span className="inline-flex size-6 items-center justify-center rounded-sm bg-indigo-solid text-body-sm text-white">
-            ◆
+    <div className={`sticky z-50 mx-auto w-full max-w-6xl px-6 ${scrolled ? "top-0" : "top-4"}`}>
+      <nav className="glass-panel flex items-center justify-between gap-2 rounded-[16px] px-3.5 py-3 sm:gap-4 sm:px-5 sm:py-3.5">
+        <Link
+          href="/"
+          className="flex min-w-0 items-center gap-2 font-heading text-[15.5px] font-extrabold tracking-[-0.01em] text-ink sm:gap-2.5 sm:text-[18px]"
+        >
+          <span className="flex size-7 flex-none items-center justify-center rounded-[9px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] sm:size-8">
+            <span className="size-2.5 rotate-45 rounded-[3px] bg-white sm:size-3" />
           </span>
-          PlanMyLoans
+          <span className="truncate">PlanMyLoans</span>
         </Link>
 
-        {/* Nav links: horizontal from md up. Below that they move into the
-            collapsible panel — the theme toggle stays put either way, since
-            it's a sibling here rather than nested inside the wrapping link
-            group (that nesting was what dropped it to its own row before). */}
-        <div className="ml-auto flex items-center gap-4">
-          <div className="hidden items-center gap-5 md:flex">
-            {NAV_LINKS.map((link) => {
-              const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`border-b-2 pb-0.5 text-body-sm font-medium transition-colors ${
-                    isActive ? "border-indigo text-indigo" : "border-transparent text-ink-2 hover:text-indigo"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
+        <div className="flex flex-none items-center gap-2.5 sm:gap-5">
+          {!isMobile && (
+            <div className="flex items-center gap-7">
+              {NAV_LINKS.map((link) => {
+                const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`text-[14.5px] font-semibold transition-colors ${
+                      isActive ? "text-ink" : "text-ink-3 hover:text-ink"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
           <ThemeToggle />
 
-          <button
-            type="button"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav-menu"
-            aria-label="Toggle navigation menu"
-            className="inline-flex size-9 flex-none items-center justify-center rounded-sm border border-line-2 bg-surface text-ink-2 transition-colors hover:border-indigo hover:text-indigo md:hidden"
+          <Link
+            href="/#planner"
+            className="cta-tap whitespace-nowrap rounded-[10px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-3 py-2 font-heading text-[12.5px] font-bold text-white sm:px-[18px] sm:py-2.5 sm:text-[13.5px]"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="size-[18px]">
-              {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-            </svg>
-          </button>
+            Start Planning
+          </Link>
         </div>
-      </div>
-
-      {menuOpen && (
-        <div id="mobile-nav-menu" className="border-t border-line px-6 py-3 md:hidden">
-          <div className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => {
-              const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className={`rounded-sm px-2 py-2.5 text-body-sm font-medium transition-colors ${
-                    isActive ? "bg-indigo-soft text-indigo" : "text-ink-2 hover:bg-surface-2 hover:text-indigo"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </nav>
+      </nav>
+    </div>
   );
 }

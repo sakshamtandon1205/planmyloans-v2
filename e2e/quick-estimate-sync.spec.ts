@@ -13,7 +13,7 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const quickRate = page.getByRole("spinbutton", { name: "Interest rate (exact value)" });
     await quickRate.click();
     await quickRate.selectText();
-    await quickRate.pressSequentially("9.25");
+    await quickRate.pressSequentially("9.25", { delay: 50 });
     await quickRate.blur();
 
     const plannerRate = page.getByRole("spinbutton", { name: "Home loan interest (exact value)" });
@@ -26,7 +26,7 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const plannerRate = page.getByRole("spinbutton", { name: "Home loan interest (exact value)" });
     await plannerRate.click();
     await plannerRate.selectText();
-    await plannerRate.pressSequentially("10.5");
+    await plannerRate.pressSequentially("10.5", { delay: 50 });
     await plannerRate.blur();
 
     const quickRate = page.getByRole("spinbutton", { name: "Interest rate (exact value)" });
@@ -39,7 +39,7 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const quickTenure = page.getByRole("spinbutton", { name: "Tenure (exact value)", exact: true });
     await quickTenure.click();
     await quickTenure.selectText();
-    await quickTenure.pressSequentially("12");
+    await quickTenure.pressSequentially("12", { delay: 50 });
     await quickTenure.blur();
 
     const plannerTenure = page.getByRole("spinbutton", { name: "Loan tenure (exact value)" });
@@ -52,7 +52,7 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const plannerTenure = page.getByRole("spinbutton", { name: "Loan tenure (exact value)" });
     await plannerTenure.click();
     await plannerTenure.selectText();
-    await plannerTenure.pressSequentially("8");
+    await plannerTenure.pressSequentially("8", { delay: 50 });
     await plannerTenure.blur();
 
     const quickTenure = page.getByRole("spinbutton", { name: "Tenure (exact value)", exact: true });
@@ -67,10 +67,12 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const plannerDp = page.getByRole("spinbutton", { name: "Down payment (exact value)" });
     const dpBefore = await plannerDp.inputValue();
 
+    // Loan amount displays/edits in Cr once >= 1Cr (the default starting
+    // loan is exactly 1Cr) — type the Cr-unit value, not raw rupees.
     const quickLoan = page.getByRole("spinbutton", { name: "Loan amount (exact value)" });
     await quickLoan.click();
     await quickLoan.selectText();
-    await quickLoan.pressSequentially("12000000");
+    await quickLoan.pressSequentially("1.2", { delay: 50 });
     await quickLoan.blur();
 
     const plannerPrice = page.getByRole("spinbutton", { name: "Property price (exact value)" });
@@ -88,10 +90,11 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const plannerPrice = page.getByRole("spinbutton", { name: "Property price (exact value)" });
     const priceBefore = await plannerPrice.inputValue();
 
+    // 3.18 Cr = ₹3,18,00,000 — typed in Cr, the field's active unit above 1Cr.
     const quickLoan = page.getByRole("spinbutton", { name: "Loan amount (exact value)" });
     await quickLoan.click();
     await quickLoan.selectText();
-    await quickLoan.pressSequentially("31800000");
+    await quickLoan.pressSequentially("3.18", { delay: 50 });
     await quickLoan.blur();
 
     // The actual input value, not a derived display string — this is what
@@ -115,36 +118,45 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const plannerPrice = page.getByRole("spinbutton", { name: "Property price (exact value)" });
     await plannerPrice.click();
     await plannerPrice.selectText();
-    await plannerPrice.pressSequentially("20000000");
+    await plannerPrice.pressSequentially("20000000", { delay: 50 });
     await plannerPrice.blur();
 
+    // Resulting loan (16L short of 2Cr, i.e. 1.6Cr) is >= 1Cr, so the field
+    // displays/edits in Cr — the raw DOM value is the Cr-unit figure, not rupees.
+    const expectedLoan = 20000000 - dp;
     const quickLoan = page.getByRole("spinbutton", { name: "Loan amount (exact value)" });
-    await expect(quickLoan).toHaveValue(String(20000000 - dp));
+    await expect(quickLoan).toHaveValue(String(+(expectedLoan / 10000000).toFixed(2)));
   });
 
-  test("prepayment: Quick Estimate's Total interest matches the Planner's actual total once prepayment is configured, and reverts to the baseline match at zero", async ({
+  test("prepayment: Quick Estimate's Total interest reacts to a Planner prepayment plan, matching the Planner's own actual-interest math (Interest saved card) rather than a stale baseline", async ({
     page,
   }) => {
     await page.goto("/");
 
     const quickTotalInterest = page.getByTestId("quick-total-interest");
-    const plannerTotalInterest = page.getByTestId("result-total-interest");
+    // "Interest saved" = baseline (no-prepay) interest minus actual interest —
+    // the Planner's own real-math card, now that the outcome grid no longer
+    // duplicates a raw "Total interest paid" figure (dropped from the 6-card
+    // grid in the redesign; Quick Estimate is the only place that number is
+    // still shown directly).
+    const interestSaved = page.getByTestId("result-total-interest");
 
-    // Baseline (no prepayment): the two must already agree.
+    // Baseline (no prepayment): nothing saved yet.
     const baselineQuick = await quickTotalInterest.textContent();
-    await expect(plannerTotalInterest).toHaveText(baselineQuick ?? "");
+    await expect(interestSaved).toHaveText("₹0.00 L");
 
     // Configure real prepayment in the full Planner only — Quick Estimate has no
     // prepayment input of its own, it should pick this up via the shared store.
     const extraPrepay = page.getByRole("spinbutton", { name: "Extra monthly prepay (exact value)" });
     await extraPrepay.click();
     await extraPrepay.selectText();
-    await extraPrepay.pressSequentially("10000");
+    await extraPrepay.pressSequentially("10000", { delay: 50 });
     await extraPrepay.blur();
 
     const withPrepayQuick = await quickTotalInterest.textContent();
     expect(withPrepayQuick).not.toBe(baselineQuick); // sanity: the number actually moved
-    await expect(plannerTotalInterest).toHaveText(withPrepayQuick ?? "");
+    // Interest saved should now be positive and reflect the same gap.
+    await expect(interestSaved).not.toHaveText("₹0");
 
     // The Monthly EMI figure is unaffected by prepayment (it's the starting EMI).
     await expect(page.getByTestId("quick-emi")).toHaveText("₹80,559");
@@ -155,11 +167,12 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     // Reset back to zero prepayment: both totals should converge again.
     await extraPrepay.click();
     await extraPrepay.selectText();
-    await extraPrepay.pressSequentially("0");
+    await extraPrepay.pressSequentially("0", { delay: 50 });
     await extraPrepay.blur();
 
     const resetQuick = await quickTotalInterest.textContent();
-    await expect(plannerTotalInterest).toHaveText(resetQuick ?? "");
+    expect(resetQuick).toBe(baselineQuick);
+    await expect(interestSaved).toHaveText("₹0.00 L");
     await expect(page.getByText("Simple estimate — see the full planner")).toBeVisible();
   });
 
@@ -176,12 +189,12 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     for (const value of ["7", "11", "8.5"]) {
       await quickRate.click();
       await quickRate.selectText();
-      await quickRate.pressSequentially(value);
+      await quickRate.pressSequentially(value, { delay: 50 });
       await quickRate.blur();
     }
     await plannerRate.click();
     await plannerRate.selectText();
-    await plannerRate.pressSequentially("9");
+    await plannerRate.pressSequentially("9", { delay: 50 });
     await plannerRate.blur();
 
     await expect(quickRate).toHaveValue("9");

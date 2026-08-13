@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AffiliateBanner } from "@/components/AffiliateBanner";
 import { GUIDE_SLUGS, guideLoaders } from "@/lib/guides";
 
 export const metadata: Metadata = {
@@ -17,38 +18,39 @@ export default async function GuidesPage() {
   );
 
   return (
-    <div>
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="mb-3 text-label uppercase text-indigo">Guides</div>
-          <h1 className="mb-3 font-heading text-h1 font-semibold text-ink">
-            Home loans, explained by someone who{" "}
-            <span className="text-indigo">finds this stuff weirdly fun.</span>
-          </h1>
-          <p className="max-w-xl text-body text-ink-2">
-            No jargon-dumps, no &quot;consult a financial advisor&quot; cop-outs after two sentences. Just the
-            mechanics, with real numbers, so you understand what you&apos;re deciding.
-          </p>
-        </div>
+    <div className="mx-auto w-full max-w-6xl px-6 pb-16">
+      <section className="pt-9 pb-2">
+        <div className="mb-3 text-[12.5px] font-bold uppercase tracking-[.06em] text-accent-text">Guides</div>
+        <h1 className="mb-3 font-heading text-[38px] font-extrabold leading-[1.1] tracking-[-0.02em] text-ink">
+          Understand every number before you sign.
+        </h1>
+        <p className="max-w-[600px] text-body-lg leading-[1.6] text-ink-2">
+          Plain-English explainers on EMIs, prepayment, tax deductions, and how to think about splitting your
+          capital.
+        </p>
       </section>
 
-      <div className="mx-auto max-w-6xl px-6 py-11">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <section className="py-8">
+        <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
           {guides.map((guide) => (
-            <Link
-              key={guide.slug}
-              href={`/guides/${guide.slug}`}
-              className="block rounded-lg border border-line bg-surface p-6 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow"
-            >
-              <span className="mb-2.5 block font-mono text-mono-sm uppercase tracking-wide text-indigo">
+            <Link key={guide.slug} href={`/guides/${guide.slug}`} className="glass-panel block p-[22px]">
+              <span className="mb-3.5 inline-block rounded-full bg-chip px-2.5 py-[5px] text-[11px] font-bold text-accent-text">
                 {guide.tag}
               </span>
-              <h2 className="mb-2 font-heading text-h3 text-ink">{guide.title}</h2>
-              <p className="text-body-sm leading-relaxed text-ink-2">{guide.teaser}</p>
+              <div className="mb-2 font-heading text-[17px] font-bold leading-[1.3] text-ink">{guide.title}</div>
+              <p className="mb-3.5 text-[13.5px] leading-[1.5] text-ink-2">{guide.teaser}</p>
+              <div className="text-[12px] font-semibold text-ink-4">{guide.readTime}</div>
             </Link>
           ))}
         </div>
-      </div>
+      </section>
+
+      <section className="py-2">
+        <AffiliateBanner
+          title="Ready to check where you stand?"
+          description="See your free CIBIL score & eligibility before you apply — no impact on your score."
+        />
+      </section>
     </div>
   );
 }

@@ -47,80 +47,68 @@ function toMonthlyRows(schedule: AmortizationRow[]): AggregatedRow[] {
   }));
 }
 
-/**
- * Collapsed by default (native <details>, controlled so the table body
- * only renders once actually opened — up to 360 monthly rows is cheap to
- * hold in the DOM, but there's no reason to pay for it before anyone
- * looks).
- */
+/** Row height (py-3 + text line height) — used to cap the scroll viewport to exactly 5 rows. */
+const ROW_HEIGHT_PX = 45;
+const VISIBLE_ROW_COUNT = 5;
+
+/** Always shown open, matching the mock — only the Yearly/Monthly granularity is a toggle. Every row is present; only 5 are visible at once, the rest reachable by scrolling. */
 export function AmortizationTable({ schedule }: AmortizationTableProps) {
-  const [open, setOpen] = useState(false);
   const [granularity, setGranularity] = useState<Granularity>("yearly");
 
   const rows = useMemo(
-    () => (open ? (granularity === "yearly" ? toYearlyRows(schedule) : toMonthlyRows(schedule)) : []),
-    [open, granularity, schedule],
+    () => (granularity === "yearly" ? toYearlyRows(schedule) : toMonthlyRows(schedule)),
+    [granularity, schedule],
   );
 
   return (
-    <GlassCard>
-      <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)} className="group">
-        <summary className="flex cursor-pointer list-none items-center gap-2.5 px-5 py-4 text-body-sm font-semibold text-ink transition-colors hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
-          View full amortization schedule
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            className="ml-auto size-4 flex-none text-ink-3 transition-transform group-open:rotate-180"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </summary>
+    <GlassCard className="p-5">
+      <div className="mb-4 flex items-center justify-between gap-2.5">
+        <span className="text-body-sm font-semibold text-ink">Amortization schedule</span>
+        <div className="inline-flex gap-1.5 rounded-[9px] bg-surface-2 p-1">
+          {(["yearly", "monthly"] as const).map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setGranularity(g)}
+              aria-pressed={granularity === g}
+              className={`rounded-[7px] px-4 py-2 text-body-sm font-semibold capitalize transition-colors ${
+                granularity === g ? "bg-surface text-ink" : "text-ink-3 hover:text-ink"
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
 
-        <div className="border-t border-line px-5 pb-5 pt-4">
-          <div className="mb-4 inline-flex gap-1.5 rounded bg-surface-2 p-1">
-            {(["yearly", "monthly"] as const).map((g) => (
-              <button
-                key={g}
-                type="button"
-                onClick={() => setGranularity(g)}
-                aria-pressed={granularity === g}
-                className={`rounded-sm px-3 py-1.5 text-body-sm font-medium capitalize transition-colors ${
-                  granularity === g ? "bg-surface text-indigo shadow-sm" : "text-ink-2 hover:text-ink"
-                }`}
-              >
-                {g}
-              </button>
+      <div tabIndex={0} role="region" aria-label="Amortization schedule table" className="overflow-x-auto">
+        <div className="min-w-[560px]">
+          <div className="grid grid-cols-5 gap-2 border-b-2 border-line pb-[9px] text-label font-bold uppercase tracking-[.04em] text-ink-3">
+            <span>{granularity === "yearly" ? "Year" : "Month"}</span>
+            <span>EMI paid</span>
+            <span>Principal</span>
+            <span>Interest</span>
+            <span>Balance</span>
+          </div>
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Amortization schedule rows"
+            style={{ maxHeight: ROW_HEIGHT_PX * VISIBLE_ROW_COUNT }}
+            className="overflow-y-auto"
+          >
+            {rows.map((row) => (
+              <div key={row.key} className="grid grid-cols-5 gap-2 border-b border-line py-3 font-mono text-mono-sm text-ink-2">
+                <span className="font-sans text-body-sm">{row.label}</span>
+                <span>{formatINR(row.emiPaid)}</span>
+                <span className="text-indigo">{formatINR(row.principal)}</span>
+                <span className="text-amber">{formatINR(row.interest)}</span>
+                <span>{formatINR(row.balance)}</span>
+              </div>
             ))}
           </div>
-
-          <div className="max-h-[420px] overflow-auto rounded border border-line">
-            <table className="w-full min-w-[520px] border-collapse text-body-sm">
-              <thead className="sticky top-0 bg-surface-2 text-label uppercase text-ink-3">
-                <tr>
-                  <th className="px-3 py-2.5 text-left font-semibold">{granularity === "yearly" ? "Year" : "Month"}</th>
-                  <th className="px-3 py-2.5 text-right font-semibold">EMI paid</th>
-                  <th className="px-3 py-2.5 text-right font-semibold">Principal</th>
-                  <th className="px-3 py-2.5 text-right font-semibold">Interest</th>
-                  <th className="px-3 py-2.5 text-right font-semibold">Balance</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono text-mono-sm text-ink">
-                {rows.map((row) => (
-                  <tr key={row.key} className="border-t border-line odd:bg-surface-2/40">
-                    <td className="px-3 py-2 text-left font-sans text-body-sm text-ink-2">{row.label}</td>
-                    <td className="px-3 py-2 text-right">{formatINR(row.emiPaid)}</td>
-                    <td className="px-3 py-2 text-right text-indigo">{formatINR(row.principal)}</td>
-                    <td className="px-3 py-2 text-right text-amber">{formatINR(row.interest)}</td>
-                    <td className="px-3 py-2 text-right">{formatINR(row.balance)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
-      </details>
+      </div>
     </GlassCard>
   );
 }

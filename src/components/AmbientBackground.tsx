@@ -6,7 +6,7 @@ import { useAmbientMoodStore } from "@/lib/ambientMoodStore";
 import type { StrategyId } from "@/lib/calculations/strategies";
 
 interface Orb {
-  token: "--indigo" | "--jade" | "--amber";
+  token: "--blob-1" | "--blob-2" | "--blob-3";
   top: string;
   left: string;
   size: number;
@@ -17,57 +17,56 @@ interface Orb {
   dy: [number, number];
 }
 
-// Spread across the viewport (not tucked into corners) and sized bigger
-// than the viewport itself, so whatever content is on screen — Capital
-// Stack, the control panel, the result-card grid — actually has vivid
-// color behind it for the glass panels to blur. Percent-based top/left
-// (centered via translate) means this scales sensibly across viewport
-// sizes instead of anchoring to a fixed pixel corner.
+// 3 large blurred circles per the design system's blob recipe (480-560px,
+// blur 95-115px), roughly top-left / top-right / bottom-center-left so
+// whatever glass content is on screen has vivid color behind it to blur.
+// Percent-based top/left (centered via translate) scales sensibly across
+// viewport sizes instead of anchoring to a fixed pixel corner.
 const orbs: Orb[] = [
   {
-    token: "--indigo",
-    top: "12%",
-    left: "18%",
-    size: 1100,
+    token: "--blob-1",
+    top: "-6%",
+    left: "4%",
+    size: 900,
     opacityLight: 0.38,
-    opacityDark: 0.55,
-    duration: 75,
-    dx: [0, 70],
+    opacityDark: 0.32,
+    duration: 70,
+    dx: [0, 45],
+    dy: [0, -50],
+  },
+  {
+    token: "--blob-2",
+    top: "16%",
+    left: "94%",
+    size: 850,
+    opacityLight: 0.32,
+    opacityDark: 0.26,
+    duration: 85,
+    dx: [0, -55],
     dy: [0, 40],
   },
   {
-    token: "--jade",
-    top: "58%",
-    left: "82%",
-    size: 1200,
-    opacityLight: 0.35,
-    opacityDark: 0.52,
-    duration: 90,
-    dx: [0, -60],
-    dy: [0, 50],
-  },
-  {
-    token: "--amber",
-    top: "88%",
-    left: "35%",
-    size: 850,
-    opacityLight: 0.2,
-    opacityDark: 0.32,
-    duration: 100,
+    token: "--blob-3",
+    top: "78%",
+    left: "24%",
+    size: 950,
+    opacityLight: 0.34,
+    opacityDark: 0.24,
+    duration: 95,
     dx: [0, 40],
     dy: [0, -45],
   },
 ];
 
 // Per-strategy lean applied to each orb's opacity on hover/focus — subtle
-// (0.45x-1.85x, well inside the existing 0.2-0.55 opacity range this system
-// already spans) so the shift reads as mood, not a jarring recolor, and
-// never threatens the glass panels' text contrast. Balanced is intentionally
-// omitted: it keeps the current neutral indigo/jade default untouched.
+// (0.45x-1.85x, well inside the 0.24-0.38 base opacity range above) so the
+// shift reads as mood, not a jarring recolor, and never threatens the glass
+// panels' text contrast. Balanced is intentionally omitted: it keeps the
+// neutral default (blob-1 indigo, blob-2 violet, blob-3 teal) untouched.
 const MOOD_BOOSTS: Partial<Record<StrategyId, Partial<Record<Orb["token"], number>>>> = {
-  safety: { "--jade": 1.45, "--amber": 0.45, "--indigo": 0.85 },
-  aggressive: { "--amber": 1.7, "--jade": 0.55, "--indigo": 0.85 },
-  bonus: { "--amber": 1.85, "--jade": 0.5, "--indigo": 0.7 },
+  safety: { "--blob-3": 1.45, "--blob-2": 0.45, "--blob-1": 0.85 },
+  aggressive: { "--blob-2": 1.7, "--blob-3": 0.55, "--blob-1": 0.85 },
+  bonus: { "--blob-2": 1.85, "--blob-3": 0.5, "--blob-1": 0.7 },
 };
 
 function moodBoostFor(token: Orb["token"], hoveredStrategyId: StrategyId | null): number {
@@ -95,7 +94,7 @@ export function AmbientBackground() {
       {orbs.map((orb) => (
         <motion.div
           key={orb.token}
-          className="ambient-orb absolute rounded-full blur-[140px] dark:blur-[150px]"
+          className="ambient-orb absolute rounded-full blur-[105px] dark:blur-[110px]"
           style={
             {
               top: orb.top,
