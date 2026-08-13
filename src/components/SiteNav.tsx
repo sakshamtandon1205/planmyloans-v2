@@ -85,13 +85,6 @@ export function SiteNav() {
                 </svg>
               </button>
             )}
-
-            <Link
-              href="/#planner"
-              className="cta-tap hover-cta-primary whitespace-nowrap rounded-[10px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-3 py-2 font-heading text-[12.5px] font-bold text-white sm:px-[18px] sm:py-2.5 sm:text-[13.5px]"
-            >
-              Start Planning
-            </Link>
           </div>
         </div>
 
