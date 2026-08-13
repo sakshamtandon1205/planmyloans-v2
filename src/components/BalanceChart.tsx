@@ -52,7 +52,7 @@ export function BalanceChart({ series, corpusLabel, horizonMonths }: BalanceChar
           initial={{ pathLength: 0 }}
           whileInView={{ pathLength: 1 }}
           viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
+          transition={{ duration: 0.55, ease: "easeOut" }}
         />
         <motion.polyline
           points={corpusPoints}
@@ -62,7 +62,7 @@ export function BalanceChart({ series, corpusLabel, horizonMonths }: BalanceChar
           initial={{ pathLength: 0 }}
           whileInView={{ pathLength: 1 }}
           viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 }}
+          transition={{ duration: 0.55, ease: "easeOut", delay: 0.06 }}
         />
         <motion.polyline
           points={loanPoints}
@@ -73,7 +73,7 @@ export function BalanceChart({ series, corpusLabel, horizonMonths }: BalanceChar
           initial={{ pathLength: 0 }}
           whileInView={{ pathLength: 1 }}
           viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }}
+          transition={{ duration: 0.55, ease: "easeOut", delay: 0.12 }}
         />
       </svg>
       <div className="mt-2 flex flex-wrap gap-4">
@@ -114,14 +114,14 @@ export function AmortizationChart({ series }: { series: ChartPoint[] }) {
               initial={{ height: "0%" }}
               whileInView={{ height: `${bar.principalPct}%` }}
               viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.04 }}
+              transition={{ duration: 0.32, ease: "easeOut", delay: i * 0.025 }}
               className="bg-[var(--indigo)]"
             />
             <motion.div
               initial={{ height: "0%" }}
               whileInView={{ height: `${bar.interestPct}%` }}
               viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.04 }}
+              transition={{ duration: 0.32, ease: "easeOut", delay: i * 0.025 }}
               className="bg-surface-2"
             />
           </div>

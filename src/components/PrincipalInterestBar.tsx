@@ -18,22 +18,21 @@ interface PrincipalInterestBarProps {
 export function PrincipalInterestBar({ principal, interest }: PrincipalInterestBarProps) {
   const total = principal + interest;
   const principalPct = total > 0 ? (principal / total) * 100 : 0;
-  const interestPct = 100 - principalPct;
 
   return (
     <div>
-      <div className="flex h-[13px] overflow-hidden rounded-[7px]">
+      {/* Interest is just the static full-width track showing through — since
+          the two segments always sum to 100%, only the principal segment
+          needs to move, and animating `scaleX` (a transform) instead of
+          `width` keeps this off the layout/paint path entirely. That matters
+          here specifically because this bar re-animates on every keystroke,
+          not just once on mount. */}
+      <div className="relative h-[13px] overflow-hidden rounded-[7px] bg-surface-2">
         <motion.div
-          initial={{ width: "0%" }}
-          animate={{ width: `${principalPct}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="bg-[linear-gradient(90deg,var(--indigo),var(--jade))]"
-        />
-        <motion.div
-          initial={{ width: "100%" }}
-          animate={{ width: `${interestPct}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="bg-surface-2"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: principalPct / 100 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="absolute inset-y-0 left-0 w-full origin-left bg-[linear-gradient(90deg,var(--indigo),var(--jade))]"
         />
       </div>
 

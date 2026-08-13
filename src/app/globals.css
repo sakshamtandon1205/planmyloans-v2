@@ -351,23 +351,14 @@ body {
 .ambient-orb {
   opacity: calc(var(--orb-alpha-light) * var(--orb-mood-boost, 1));
   transition: opacity 900ms ease-in-out;
+  /* Huge blurred elements are expensive to rasterize; promoting to their own
+     GPU layer up front (rather than on first animation frame) keeps the
+     slow drift from ever forcing a full-page repaint mid-animation, which
+     is what read as stutter/lag on glass panels layered on top. */
+  will-change: transform;
 }
 [data-theme="dark"] .ambient-orb {
   opacity: calc(var(--orb-alpha-dark) * var(--orb-mood-boost, 1));
-}
-@keyframes floatBlob {
-  0% {
-    translate: 0 0;
-    scale: 1;
-  }
-  50% {
-    translate: 24px -30px;
-    scale: 1.06;
-  }
-  100% {
-    translate: 0 0;
-    scale: 1;
-  }
 }
 
 /* ---------------------------------------------------------------------- */

@@ -94,7 +94,7 @@ export function AmbientBackground() {
       {orbs.map((orb) => (
         <motion.div
           key={orb.token}
-          className="ambient-orb absolute rounded-full blur-[105px] dark:blur-[110px]"
+          className="ambient-orb absolute rounded-full blur-[78px] dark:blur-[82px]"
           style={
             {
               top: orb.top,

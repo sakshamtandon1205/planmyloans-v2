@@ -36,9 +36,9 @@ export function Hero() {
     >
       <motion.div
         style={{ opacity, y, scale }}
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={inView ? { opacity: 1, y: 0 } : undefined}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.32, ease: "easeOut" }}
       >
         <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-chip px-3.5 py-[7px] text-[12.5px] font-semibold text-accent-text ring-1 ring-line-2">
           <span className="size-1.5 rounded-full bg-jade" />

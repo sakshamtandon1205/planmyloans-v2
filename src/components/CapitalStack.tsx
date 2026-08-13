@@ -45,7 +45,7 @@ export function CapitalStack({ price, downPayment, mfLumpsum, corpus, loan, corp
               key={s.key}
               initial={{ width: "0%" }}
               animate={{ width: `${pct}%` }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.1 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: i * 0.05 }}
               className={s.className}
             />
           );
