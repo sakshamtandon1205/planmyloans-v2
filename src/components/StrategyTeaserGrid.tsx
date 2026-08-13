@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { applyStrategyResult } from "@/lib/applyStrategy";
 import { computeStrategies, type StrategyId } from "@/lib/calculations/strategies";
 import { formatLakh } from "@/lib/format";
@@ -30,6 +30,12 @@ export function StrategyTeaserGrid() {
   const [propertyPrice, setPropertyPrice] = useState(DEFAULT_PROPERTY_PRICE);
   const [ownFunds, setOwnFunds] = useState(DEFAULT_OWN_FUNDS);
   const [submitted, setSubmitted] = useState({ propertyPrice: DEFAULT_PROPERTY_PRICE, ownFunds: DEFAULT_OWN_FUNDS });
+  // Bumped on every "Show me strategies" click — remounts the 4 icon dots
+  // (via their `key`) so they replay a glow pulse, and scrolls the grid
+  // into view. Without either, recomputing silently reads as "nothing
+  // happened" since the grid sits below the fold on mobile.
+  const [submitCount, setSubmitCount] = useState(0);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(
     () =>
@@ -47,6 +53,14 @@ export function StrategyTeaserGrid() {
   const handleApply = (id: StrategyId) => {
     const result = results.find((r) => r.id === id);
     if (result) applyStrategyResult(result);
+  };
+
+  const handleSubmit = () => {
+    setSubmitted({ propertyPrice, ownFunds });
+    setSubmitCount((c) => c + 1);
+    requestAnimationFrame(() => {
+      gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   return (
@@ -84,49 +98,55 @@ export function StrategyTeaserGrid() {
         </div>
         <button
           type="button"
-          onClick={() => setSubmitted({ propertyPrice, ownFunds })}
+          onClick={handleSubmit}
           className="cta-tap mt-4 rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-5 py-2.5 font-heading text-[14px] font-bold text-white"
         >
           Show me strategies
         </button>
       </div>
 
-      <div className="mb-[22px] flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-heading text-h2 font-extrabold tracking-[-0.01em] text-ink">
-          Not sure how to split your funds?
-        </h2>
-        <span className="text-[13.5px] font-medium text-ink-3">4 tailored strategies</span>
-      </div>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {CARD_ORDER.map((id) => {
-          const result = results.find((r) => r.id === id);
-          if (!result) return null;
-          const token = CARD_TOKENS[id];
-          const { downPayment, mfLumpsum, corpus } = result.capitalStack;
-          const ownFundsUsed = downPayment + mfLumpsum + corpus;
-          const pct = (n: number) => (ownFundsUsed > 0 ? Math.round((n / ownFundsUsed) * 100) : 0);
-          const splitLabel = `${pct(downPayment)}% DP · ${pct(mfLumpsum)}% MF · ${pct(corpus)}% ${result.fundingMode === "swp" ? "SWP" : "Bank"}`;
+      <div ref={gridRef} className="scroll-mt-24">
+        <div className="mb-[22px] flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-heading text-h2 font-extrabold tracking-[-0.01em] text-ink">
+            Not sure how to split your funds?
+          </h2>
+          <span className="text-[13.5px] font-medium text-ink-3">4 tailored strategies</span>
+        </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {CARD_ORDER.map((id) => {
+            const result = results.find((r) => r.id === id);
+            if (!result) return null;
+            const token = CARD_TOKENS[id];
+            const { downPayment, mfLumpsum, corpus } = result.capitalStack;
+            const ownFundsUsed = downPayment + mfLumpsum + corpus;
+            const pct = (n: number) => (ownFundsUsed > 0 ? Math.round((n / ownFundsUsed) * 100) : 0);
+            const splitLabel = `${pct(downPayment)}% DP · ${pct(mfLumpsum)}% MF · ${pct(corpus)}% ${result.fundingMode === "swp" ? "SWP" : "Bank"}`;
 
-          return (
-            <button
-              type="button"
-              key={id}
-              onClick={() => handleApply(id)}
-              data-testid={`strategy-teaser-${id}`}
-              className="cta-tap glass-panel block p-5 text-left hover:-translate-y-0.5"
-            >
-              <div
-                className="mb-3 flex size-[34px] items-center justify-center rounded-[9px]"
-                style={{ background: `var(--teaser-${token}-bg)` }}
+            return (
+              <button
+                type="button"
+                key={id}
+                onClick={() => handleApply(id)}
+                data-testid={`strategy-teaser-${id}`}
+                className="cta-tap glass-panel flex h-full flex-col p-5 text-left hover:-translate-y-0.5"
               >
-                <span className="size-3 rounded-xs" style={{ background: `var(--teaser-${token}-dot)` }} />
-              </div>
-              <div className="mb-1.5 font-heading text-[15.5px] font-bold text-ink">{result.name}</div>
-              <p className="mb-3 text-[13px] leading-[1.5] text-ink-2">{result.subtitle}</p>
-              <div className="font-mono text-[12px] font-semibold text-accent-text">{splitLabel}</div>
-            </button>
-          );
-        })}
+                <motion.div
+                  key={submitCount}
+                  initial={{ boxShadow: "0 0 0 8px rgba(255,255,255,0.55)", scale: 1.18 }}
+                  animate={{ boxShadow: "0 0 0 0px rgba(255,255,255,0)", scale: 1 }}
+                  transition={{ duration: 0.7, ease: "easeOut" }}
+                  className="mb-3 flex size-[34px] items-center justify-center rounded-[9px]"
+                  style={{ background: `var(--teaser-${token}-bg)` }}
+                >
+                  <span className="size-3 rounded-xs" style={{ background: `var(--teaser-${token}-dot)` }} />
+                </motion.div>
+                <div className="mb-1.5 min-h-[40px] font-heading text-[15.5px] font-bold text-ink">{result.name}</div>
+                <p className="mb-3 text-[13px] leading-[1.5] text-ink-2">{result.subtitle}</p>
+                <div className="mt-auto font-mono text-[12px] font-semibold text-accent-text">{splitLabel}</div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </motion.section>
   );
