@@ -67,9 +67,9 @@ function EstimateRow({
             // eslint-disable-next-line react-hooks/refs
             defaultValue={numberInput.defaultValue}
             step={inputStep}
-            onFocus={(e) => numberInput.onFocus(e)}
+            onFocus={() => numberInput.onFocus()}
             onChange={(e) => numberInput.onChange(e.target.value)}
-            onBlur={(e) => numberInput.onBlur(e)}
+            onBlur={() => numberInput.onBlur()}
             className="w-[62px] rounded-xs border border-line-2 bg-surface-2 px-1.5 py-1 text-right font-mono text-[13px] font-semibold text-ink focus:border-indigo focus:outline-none"
           />
           <span className="text-[12px] font-semibold text-ink-3">{suffix}</span>

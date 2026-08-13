@@ -74,9 +74,9 @@ export function SliderField({ label, value, min, max, step, onChange, formatValu
           // eslint-disable-next-line react-hooks/refs
           defaultValue={numberInput.defaultValue}
           step={step}
-          onFocus={(e) => numberInput.onFocus(e)}
+          onFocus={() => numberInput.onFocus()}
           onChange={(e) => numberInput.onChange(e.target.value)}
-          onBlur={(e) => numberInput.onBlur(e)}
+          onBlur={() => numberInput.onBlur()}
           className="w-[92px] flex-none rounded-sm border border-line-2 bg-surface px-2 py-1.5 font-mono text-mono-sm font-semibold text-ink focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo-soft"
         />
       </div>
