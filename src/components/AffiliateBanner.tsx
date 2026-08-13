@@ -19,7 +19,7 @@ export function AffiliateBanner({ title, description }: AffiliateBannerProps) {
       </div>
       <button
         type="button"
-        className="cta-tap whitespace-nowrap rounded-[10px] bg-ink px-5 py-3 font-heading text-[14px] font-bold text-paper"
+        className="cta-tap hover-cta-primary whitespace-nowrap rounded-[10px] bg-ink px-5 py-3 font-heading text-[14px] font-bold text-paper"
       >
         Check eligibility →
       </button>

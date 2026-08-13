@@ -114,7 +114,7 @@ export function ContactForm() {
         <button
           type="submit"
           disabled={status === "submitting"}
-          className="cta-tap mt-1 self-start rounded-[10px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-[22px] py-3 font-heading text-[14px] font-bold text-white disabled:opacity-60"
+          className="cta-tap hover-cta-primary mt-1 self-start rounded-[10px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-[22px] py-3 font-heading text-[14px] font-bold text-white disabled:opacity-60"
         >
           {status === "submitting" ? "Sending…" : "Send message"}
         </button>

@@ -25,7 +25,7 @@ export default function ContactPage() {
         <div className="flex flex-col gap-3.5">
           <div className="glass-panel p-5">
             <div className="mb-1.5 font-heading text-[13.5px] font-bold text-ink">Email</div>
-            <a href="mailto:sakshamtandon1205@gmail.com" className="text-[14px] font-semibold text-accent-text">
+            <a href="mailto:sakshamtandon1205@gmail.com" className="hover-row text-[14px] font-semibold text-accent-text">
               sakshamtandon1205@gmail.com
             </a>
           </div>

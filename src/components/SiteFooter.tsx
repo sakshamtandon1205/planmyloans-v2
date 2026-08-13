@@ -6,7 +6,7 @@ export function SiteFooter() {
           PlanMyLoans is an independent, free tool. Illustrative only — not financial, tax, or legal advice. © 2026
           PlanMyLoans.
         </p>
-        <a href="mailto:sakshamtandon1205@gmail.com" className="text-body-sm font-semibold text-accent-text">
+        <a href="mailto:sakshamtandon1205@gmail.com" className="hover-row text-body-sm font-semibold text-accent-text">
           sakshamtandon1205@gmail.com
         </a>
       </div>

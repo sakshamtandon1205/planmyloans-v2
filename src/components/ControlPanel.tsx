@@ -175,7 +175,7 @@ export function ControlPanelFields({
               type="button"
               onClick={() => onInputChange("annualLumpSumCount", Math.max(0, inputs.annualLumpSumCount - 1))}
               aria-label="Decrease extra EMIs per year"
-              className="flex size-7 items-center justify-center rounded-sm border border-line bg-surface-2 text-ink-2 transition-colors hover:border-indigo hover:bg-indigo-soft hover:text-indigo"
+              className="hover-icon-btn flex size-7 items-center justify-center rounded-sm border border-line bg-surface-2 text-ink-2 transition-colors hover:bg-indigo-soft hover:text-indigo"
             >
               −
             </button>
@@ -186,7 +186,7 @@ export function ControlPanelFields({
               type="button"
               onClick={() => onInputChange("annualLumpSumCount", Math.min(6, inputs.annualLumpSumCount + 1))}
               aria-label="Increase extra EMIs per year"
-              className="flex size-7 items-center justify-center rounded-sm border border-line bg-surface-2 text-ink-2 transition-colors hover:border-indigo hover:bg-indigo-soft hover:text-indigo"
+              className="hover-icon-btn flex size-7 items-center justify-center rounded-sm border border-line bg-surface-2 text-ink-2 transition-colors hover:bg-indigo-soft hover:text-indigo"
             >
               +
             </button>
@@ -248,7 +248,7 @@ export function ControlPanel({ onReset, ...fields }: ControlPanelProps) {
         <button
           type="button"
           onClick={onReset}
-          className="rounded-sm border border-line bg-surface-2 px-3 py-1.5 text-body-sm font-medium text-ink-2 transition-colors hover:border-indigo hover:bg-indigo-soft hover:text-indigo"
+          className="hover-cta-secondary rounded-sm border border-line bg-surface-2 px-3 py-1.5 text-body-sm font-medium text-ink-2 transition-colors hover:bg-indigo-soft hover:text-indigo"
         >
           Reset
         </button>

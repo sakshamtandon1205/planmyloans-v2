@@ -33,7 +33,7 @@ export default async function GuidesPage() {
       <section className="py-8">
         <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
           {guides.map((guide) => (
-            <Link key={guide.slug} href={`/guides/${guide.slug}`} className="glass-panel block p-[22px]">
+            <Link key={guide.slug} href={`/guides/${guide.slug}`} className="hover-card-link glass-panel block p-[22px]">
               <span className="mb-3.5 inline-block rounded-full bg-chip px-2.5 py-[5px] text-[11px] font-bold text-accent-text">
                 {guide.tag}
               </span>

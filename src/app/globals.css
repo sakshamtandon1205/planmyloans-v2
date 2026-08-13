@@ -329,6 +329,76 @@ body {
   transform: scale(0.96);
 }
 
+/* ---------------------------------------------------------------------- */
+/* Hover system ("Lift + Glow") — one small set of hover recipes reused    */
+/* across every interactive element site-wide, so hover feedback reads    */
+/* consistently regardless of which component it's on. Pair with          */
+/* .cta-tap for press feedback; the two transition different properties   */
+/* so they compose without fighting each other.                           */
+/* ---------------------------------------------------------------------- */
+
+/* Primary CTAs — gradient/solid-filled buttons (Build my plan, Start
+   Planning, Check eligibility, Send message, Get in touch, ...). */
+.hover-cta-primary {
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+.hover-cta-primary:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+/* Secondary/outline CTAs — glass background + visible border (See 4
+   strategies, ...). */
+.hover-cta-secondary {
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+.hover-cta-secondary:hover {
+  transform: translateY(-2px);
+  border-color: var(--indigo);
+}
+
+/* Icon/utility buttons — theme toggle, mobile menu toggle, small stepper
+   buttons. */
+.hover-icon-btn {
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+.hover-icon-btn:hover {
+  transform: scale(1.08);
+  border-color: var(--indigo);
+}
+
+/* Segmented toggle buttons — Yearly/Monthly, SWP/Bank account. Only the
+   inactive option dims on hover; aria-pressed="true" marks the active one. */
+.hover-segment:hover:not([aria-pressed="true"]) {
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+/* Cards that act as links — guide cards, strategy teaser cards. */
+.hover-card-link {
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+.hover-card-link:hover {
+  transform: translateY(-3px);
+  border-color: var(--indigo);
+}
+
+/* Drag handles / small clickable rows — mobile input sheet handle. */
+.hover-row {
+  transition: opacity 0.15s ease;
+}
+.hover-row:hover {
+  opacity: 0.8;
+}
+
 /* Strategy card icon glow, played once per "Show me strategies" submit
    (the element is remounted via a `key` change, which restarts a CSS
    animation same as it would a fresh page load). Colored via --glow-color,

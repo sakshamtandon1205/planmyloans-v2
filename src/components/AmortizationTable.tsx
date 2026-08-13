@@ -71,7 +71,7 @@ export function AmortizationTable({ schedule }: AmortizationTableProps) {
               type="button"
               onClick={() => setGranularity(g)}
               aria-pressed={granularity === g}
-              className={`rounded-[7px] px-4 py-2 text-body-sm font-semibold capitalize transition-colors ${
+              className={`hover-segment rounded-[7px] px-4 py-2 text-body-sm font-semibold capitalize transition-colors ${
                 granularity === g ? "bg-surface text-ink" : "text-ink-3 hover:text-ink"
               }`}
             >

@@ -33,7 +33,7 @@ export function MobileInputSheet({ onReset, ...fields }: MobileInputSheetProps) 
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex flex-col items-center gap-2.5 pb-1.5 pt-3"
+          className="hover-row flex flex-col items-center gap-2.5 pb-1.5 pt-3"
         >
           <span className="h-1 w-[38px] rounded-full bg-line-2" />
           <span className="font-heading text-[14px] font-bold text-ink">Edit inputs {open ? "▼" : "▲"}</span>
@@ -43,7 +43,7 @@ export function MobileInputSheet({ onReset, ...fields }: MobileInputSheetProps) 
             <button
               type="button"
               onClick={onReset}
-              className="rounded-sm border border-line bg-surface-2 px-3 py-1.5 text-body-sm font-medium text-ink-2 transition-colors hover:border-indigo hover:bg-indigo-soft hover:text-indigo"
+              className="hover-cta-secondary rounded-sm border border-line bg-surface-2 px-3 py-1.5 text-body-sm font-medium text-ink-2 transition-colors hover:bg-indigo-soft hover:text-indigo"
             >
               Reset
             </button>

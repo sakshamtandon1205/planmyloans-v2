@@ -142,7 +142,7 @@ export default function AboutPage() {
           </div>
           <Link
             href="/contact"
-            className="cta-tap whitespace-nowrap rounded-[10px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-5 py-3 font-heading text-[14px] font-bold text-white"
+            className="cta-tap hover-cta-primary whitespace-nowrap rounded-[10px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-5 py-3 font-heading text-[14px] font-bold text-white"
           >
             Get in touch →
           </Link>

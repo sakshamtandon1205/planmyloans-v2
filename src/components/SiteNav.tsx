@@ -78,7 +78,7 @@ export function SiteNav() {
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-expanded={menuOpen}
                 aria-label={menuOpen ? "Close menu" : "Open menu"}
-                className="cta-tap flex size-9 flex-none items-center justify-center rounded-[9px] border border-line-2 bg-chip text-ink"
+                className="cta-tap hover-icon-btn flex size-9 flex-none items-center justify-center rounded-[9px] border border-line-2 bg-chip text-ink"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className="size-4.5">
                   {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
@@ -88,7 +88,7 @@ export function SiteNav() {
 
             <Link
               href="/#planner"
-              className="cta-tap whitespace-nowrap rounded-[10px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-3 py-2 font-heading text-[12.5px] font-bold text-white sm:px-[18px] sm:py-2.5 sm:text-[13.5px]"
+              className="cta-tap hover-cta-primary whitespace-nowrap rounded-[10px] bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-3 py-2 font-heading text-[12.5px] font-bold text-white sm:px-[18px] sm:py-2.5 sm:text-[13.5px]"
             >
               Start Planning
             </Link>
@@ -104,7 +104,7 @@ export function SiteNav() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
-                  className={`cta-tap rounded-[9px] px-3 py-2.5 text-[14.5px] font-semibold ${
+                  className={`cta-tap hover-row rounded-[9px] px-3 py-2.5 text-[14.5px] font-semibold ${
                     isActive ? "bg-chip text-ink" : "text-ink-3 hover:text-ink"
                   }`}
                 >

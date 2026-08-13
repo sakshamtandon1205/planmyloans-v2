@@ -100,7 +100,7 @@ export function StrategyTeaserGrid() {
         <button
           type="button"
           onClick={handleSubmit}
-          className="cta-tap mt-4 rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-5 py-2.5 font-heading text-[14px] font-bold text-white"
+          className="cta-tap hover-cta-primary mt-4 rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-5 py-2.5 font-heading text-[14px] font-bold text-white"
         >
           Show me strategies
         </button>
@@ -129,7 +129,7 @@ export function StrategyTeaserGrid() {
                 key={id}
                 onClick={() => handleApply(id)}
                 data-testid={`strategy-teaser-${id}`}
-                className="cta-tap glass-panel flex h-full flex-col p-5 text-left hover:-translate-y-0.5"
+                className="cta-tap hover-card-link glass-panel flex h-full flex-col p-5 text-left"
               >
                 <div
                   key={submitCount}
