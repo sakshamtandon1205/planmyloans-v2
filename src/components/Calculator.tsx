@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { calculatePayoffMonths, generateAmortizationSchedule } from "@/lib/calculations/emi";
 import { calculateMfFutureValue } from "@/lib/calculations/mf";
@@ -9,15 +10,32 @@ import { simulateBankCorpus, simulateSwpCorpus } from "@/lib/calculations/swp";
 import { useSharedInputsStore } from "@/lib/sharedInputsStore";
 import { calculateLoanTaxBenefitFromSchedule } from "@/lib/calculations/tax";
 import type { AmortizationResult, CorpusSimulationResult } from "@/lib/calculations/types";
-import { AmortizationChart, BalanceChart } from "./BalanceChart";
+import { AmortizationChartSkeleton, BalanceChartSkeleton, CapitalStackSkeleton } from "./ChartSkeletons";
 import { AmortizationTable } from "./AmortizationTable";
-import { CapitalStack } from "./CapitalStack";
 import { ControlPanel } from "./ControlPanel";
 import { MobileInputSheet } from "./MobileInputSheet";
 import { ResultCards } from "./ResultCards";
 import { SustainabilityGauge } from "./SustainabilityGauge";
 import { TaxImpactCard } from "./TaxImpactCard";
 import { DEFAULT_INPUTS, type CalculatorInputs, type CalculatorResults, type ChartPoint } from "./calculatorTypes";
+
+// Deferred to a client-only chunk that hydrates after first paint instead of
+// blocking it — these three (Capital stack, Balances over time, EMI
+// breakup) were the main contributors to the homepage's Total Blocking
+// Time. The `loading` skeletons reserve the same footprint as the real
+// components so swapping in doesn't shift layout (the CLS half of the fix).
+const CapitalStack = dynamic(() => import("./CapitalStack").then((m) => m.CapitalStack), {
+  ssr: false,
+  loading: CapitalStackSkeleton,
+});
+const BalanceChart = dynamic(() => import("./BalanceChart").then((m) => m.BalanceChart), {
+  ssr: false,
+  loading: BalanceChartSkeleton,
+});
+const AmortizationChart = dynamic(() => import("./BalanceChart").then((m) => m.AmortizationChart), {
+  ssr: false,
+  loading: AmortizationChartSkeleton,
+});
 
 /** Keeps down payment + MF lumpsum from exceeding own funds, mirroring the original dashboard's clamp. */
 function resolveOwnFundsSplit(inputs: CalculatorInputs): { dp: number; mf: number } {
