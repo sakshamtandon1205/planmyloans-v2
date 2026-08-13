@@ -17,7 +17,7 @@ export default function Home() {
       <div className="mx-auto w-full max-w-6xl px-6 py-2">
         <AffiliateBanner
           title="Not sure you'll qualify for this EMI?"
-          description="Check your free CIBIL score & loan eligibility in 2 minutes — no impact on your score."
+          description="Check your free CIBIL score & loan eligibility in 2 minutes, no impact on your score."
         />
       </div>
       <StrategyTeaserGrid />

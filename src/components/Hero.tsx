@@ -27,14 +27,33 @@ export function Hero() {
   const y = useTransform(scrollYProgress, [0, 1], [0, -24]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.98]);
 
+  const strategyButtons = (
+    <div className="flex flex-wrap gap-3.5">
+      <button
+        type="button"
+        onClick={handleSeeStrategies}
+        className="cta-tap hover-cta-primary rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-6 py-3.5 font-heading text-[15.5px] font-bold text-white shadow-[0_8px_22px_-8px_var(--indigo)]"
+      >
+        See 4 strategies
+      </button>
+      <a
+        href="#planner"
+        className="cta-tap hover-cta-secondary rounded-xl border border-line-2 bg-chip px-6 py-3.5 font-heading text-[15.5px] font-bold text-ink"
+      >
+        Build my plan
+      </a>
+    </div>
+  );
+
   return (
     <section
       ref={ref}
-      className={`mx-auto grid w-full max-w-6xl items-center gap-11 px-6 pt-9 pb-8 ${
-        isMobile ? "grid-cols-1" : "grid-cols-[1.05fr_0.95fr]"
+      className={`mx-auto grid w-full max-w-6xl items-center px-6 pt-9 pb-8 ${
+        isMobile ? "grid-cols-1 gap-6" : "grid-cols-[1.05fr_0.95fr] gap-11"
       }`}
     >
       <motion.div
+        className="min-w-0"
         style={{ opacity, y, scale }}
         initial={{ opacity: 0, y: 8 }}
         animate={inView ? { opacity: 1, y: 0 } : undefined}
@@ -44,34 +63,23 @@ export function Hero() {
           <span className="size-1.5 rounded-full bg-jade" />
           Free · No signup · Recalculates live
         </div>
-        <h1 className="mb-[18px] font-heading text-display font-extrabold tracking-[-0.02em] text-ink">
-          Plan your home loan{" "}
+        <h1
+          className="mb-[18px] whitespace-nowrap font-heading font-extrabold tracking-[-0.02em] text-ink"
+          style={{ fontSize: "clamp(1.3rem, 2.7vw, 2.2rem)", lineHeight: 1.15 }}
+        >
+          Plan smarter.{" "}
           <span className="bg-[linear-gradient(135deg,var(--indigo),var(--jade))] bg-clip-text text-transparent">
-            against your own capital.
+            Borrow better.
           </span>
         </h1>
-        <p className="mb-7 max-w-[500px] text-body-lg leading-[1.6] text-ink-2">
-          Split funds across a mutual fund lumpsum, an EMI-funding SWP, and a down payment — see prepayment savings
-          and tax impact, live.
+        <p className="mb-7 max-w-[500px] text-[15px] sm:text-body-lg leading-[1.6] text-ink-2">
+          Not all capital should go into the down payment. See what happens when it doesn&apos;t.
         </p>
-        <div className="flex flex-wrap gap-3.5">
-          <button
-            type="button"
-            onClick={handleSeeStrategies}
-            className="cta-tap hover-cta-primary rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-6 py-3.5 font-heading text-[15.5px] font-bold text-white shadow-[0_8px_22px_-8px_var(--indigo)]"
-          >
-            See 4 strategies
-          </button>
-          <a
-            href="#planner"
-            className="cta-tap hover-cta-secondary rounded-xl border border-line-2 bg-chip px-6 py-3.5 font-heading text-[15.5px] font-bold text-ink"
-          >
-            Build my plan
-          </a>
-        </div>
+        {!isMobile && strategyButtons}
       </motion.div>
 
       <QuickEstimate />
+      {isMobile && strategyButtons}
     </section>
   );
 }
