@@ -74,8 +74,8 @@ export function StrategyTeaserGrid() {
     >
       <div className="glass-panel mb-6 rounded-[18px] p-5">
         <p className="mb-4 text-body-sm text-ink-2">
-          We&apos;ll reuse the interest rate and tenure from Quick Estimate above — just tell us the property price
-          and what you have available, and we&apos;ll compute 4 distinct ways to split it.
+          Enter the property price and how much you have available, and we&apos;ll show you 4 distinct ways to split
+          it — reusing the interest rate and tenure from Quick Estimate above.
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SliderField
@@ -107,8 +107,8 @@ export function StrategyTeaserGrid() {
       </div>
 
       <div ref={gridRef} className="scroll-mt-24">
-        <div className="mb-[22px] flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-heading text-h2 font-extrabold tracking-[-0.01em] text-ink">
+        <div className="mb-[14px] flex flex-col gap-1.5 sm:mb-[22px] sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-2">
+          <h2 className="whitespace-nowrap font-heading text-[19px] font-extrabold tracking-[-0.01em] text-ink sm:text-h2">
             Not sure how to split your funds?
           </h2>
           <span className="text-[13.5px] font-medium text-ink-3">4 tailored strategies</span>
