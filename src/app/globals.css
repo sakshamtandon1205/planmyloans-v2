@@ -408,16 +408,16 @@ body {
    resolve a custom property. */
 @keyframes teaser-glow-pulse {
   0% {
-    box-shadow: 0 0 0 8px var(--glow-color, transparent);
-    scale: 1.18;
+    box-shadow: 0 0 10px 2px var(--glow-color, transparent);
+    scale: 1.06;
   }
   100% {
-    box-shadow: 0 0 0 0px transparent;
+    box-shadow: 0 0 0px 0px transparent;
     scale: 1;
   }
 }
 .teaser-glow {
-  animation: teaser-glow-pulse 0.7s ease-out;
+  animation: teaser-glow-pulse 0.6s ease-out;
 }
 
 /* Ad slots are the one deliberate non-glass surface: a solid, flat module
