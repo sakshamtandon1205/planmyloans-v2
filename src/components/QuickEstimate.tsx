@@ -12,11 +12,11 @@ import { PrincipalInterestBar } from "./PrincipalInterestBar";
 const LOAN_MIN = 1000000; // 10L
 const LOAN_MAX = 50000000; // 5Cr
 const LOAN_STEP = 100000;
-const CR_THRESHOLD = 10000000; // 1Cr — display switches from Lakh to Cr at/above this
 
 /** label + right-aligned editable number + unit suffix, with a gradient-fill range below. */
 function EstimateRow({
   label,
+  hint,
   value,
   min,
   max,
@@ -28,6 +28,8 @@ function EstimateRow({
   onInputChange,
 }: {
   label: string;
+  /** Small formatted readout next to the label (e.g. "1.40 Cr") for a field whose exact-value box takes raw units. */
+  hint?: string;
   value: number;
   min: number;
   max: number;
@@ -52,7 +54,10 @@ function EstimateRow({
   return (
     <div className="mb-[15px]">
       <div className="mb-[7px] flex items-center justify-between">
-        <span className="text-[13.5px] font-semibold text-ink-2">{label}</span>
+        <span className="text-[13.5px] font-semibold text-ink-2">
+          {label}
+          {hint && <span className="ml-1.5 font-mono text-[11.5px] font-medium text-ink-3">{hint}</span>}
+        </span>
         <div className="flex items-center gap-[5px]">
           {/* useDraftNumberInput hands back plain functions that close over a ref
               internally (see its doc comment) — only ever called from these event
@@ -70,7 +75,7 @@ function EstimateRow({
             onFocus={() => numberInput.onFocus()}
             onChange={(e) => numberInput.onChange(e.target.value)}
             onBlur={() => numberInput.onBlur()}
-            className="w-[62px] rounded-xs border border-line-2 bg-surface-2 px-1.5 py-1 text-right font-mono text-[13px] font-semibold text-ink focus:border-indigo focus:outline-none"
+            className="w-[92px] rounded-xs border border-line-2 bg-surface-2 px-1.5 py-1 text-right font-mono text-[13px] font-semibold text-ink focus:border-indigo focus:outline-none"
           />
           <span className="text-[12px] font-semibold text-ink-3">{suffix}</span>
         </div>
@@ -124,31 +129,22 @@ export function QuickEstimate() {
 
   const displayEmi = useCountUp(emi);
 
-  // Loan amount displays/edits in Lakhs below 1Cr, auto-switching to Cr
-  // (finer step) at/above the threshold — same rule applies whether the
-  // value changed via drag or typed input.
-  const inLakh = loanAmount < CR_THRESHOLD;
-  const loanInputValue = inLakh ? Math.round(loanAmount / 100000) : +(loanAmount / 10000000).toFixed(2);
-  const loanInputStep = inLakh ? 1 : 0.01;
-
   return (
     <div className="glass-panel p-6">
       <div className="mb-4 text-[12px] font-bold uppercase tracking-[.06em] text-ink-3">Quick estimate</div>
 
       <EstimateRow
         label="Loan amount"
+        hint={formatLakh(loanAmount)}
         value={loanAmount}
         min={LOAN_MIN}
         max={LOAN_MAX}
         step={LOAN_STEP}
         onChange={setLoanAmount}
-        inputValue={loanInputValue}
-        inputStep={loanInputStep}
-        suffix={inLakh ? "L" : "Cr"}
-        onInputChange={(raw) => {
-          const rupees = inLakh ? raw * 100000 : raw * 10000000;
-          setLoanAmount(Math.max(0, rupees));
-        }}
+        inputValue={loanAmount}
+        inputStep={LOAN_STEP}
+        suffix=""
+        onInputChange={(raw) => setLoanAmount(Math.max(0, raw))}
       />
       <EstimateRow
         label="Interest rate"

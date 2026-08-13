@@ -67,12 +67,11 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const plannerDp = page.getByRole("spinbutton", { name: "Down payment (exact value)" });
     const dpBefore = await plannerDp.inputValue();
 
-    // Loan amount displays/edits in Cr once >= 1Cr (the default starting
-    // loan is exactly 1Cr) — type the Cr-unit value, not raw rupees.
+    // Loan amount takes raw rupees directly, same as the Planner's own fields.
     const quickLoan = page.getByRole("spinbutton", { name: "Loan amount (exact value)" });
     await quickLoan.click();
     await quickLoan.selectText();
-    await quickLoan.pressSequentially("1.2", { delay: 50 });
+    await quickLoan.pressSequentially("12000000", { delay: 50 });
     await quickLoan.blur();
 
     const plannerPrice = page.getByRole("spinbutton", { name: "Property price (exact value)" });
@@ -90,11 +89,11 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const plannerPrice = page.getByRole("spinbutton", { name: "Property price (exact value)" });
     const priceBefore = await plannerPrice.inputValue();
 
-    // 3.18 Cr = ₹3,18,00,000 — typed in Cr, the field's active unit above 1Cr.
+    // Raw rupees, typed directly — no Cr/L conversion.
     const quickLoan = page.getByRole("spinbutton", { name: "Loan amount (exact value)" });
     await quickLoan.click();
     await quickLoan.selectText();
-    await quickLoan.pressSequentially("3.18", { delay: 50 });
+    await quickLoan.pressSequentially("31800000", { delay: 50 });
     await quickLoan.blur();
 
     // The actual input value, not a derived display string — this is what
@@ -121,11 +120,9 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     await plannerPrice.pressSequentially("20000000", { delay: 50 });
     await plannerPrice.blur();
 
-    // Resulting loan (16L short of 2Cr, i.e. 1.6Cr) is >= 1Cr, so the field
-    // displays/edits in Cr — the raw DOM value is the Cr-unit figure, not rupees.
     const expectedLoan = 20000000 - dp;
     const quickLoan = page.getByRole("spinbutton", { name: "Loan amount (exact value)" });
-    await expect(quickLoan).toHaveValue(String(+(expectedLoan / 10000000).toFixed(2)));
+    await expect(quickLoan).toHaveValue(String(expectedLoan));
   });
 
   test("prepayment: Quick Estimate's Total interest reacts to a Planner prepayment plan, matching the Planner's own actual-interest math (Interest saved card) rather than a stale baseline", async ({
