@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -13,22 +13,9 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-/** True once the page has scrolled past a small threshold — used to close the nav's top gap so no page content is ever visible above it. */
-function useScrolled(thresholdPx: number) {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > thresholdPx);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [thresholdPx]);
-  return scrolled;
-}
-
 export function SiteNav() {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const scrolled = useScrolled(8);
   // Nav links live inside a mobile menu instead of just vanishing — a
   // hidden-with-no-alternative nav was the actual bug (there was previously
   // no way to reach Guides/About/Contact on a phone at all). Closed
@@ -37,7 +24,7 @@ export function SiteNav() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className={`sticky z-50 mx-auto w-full max-w-6xl px-6 ${scrolled ? "top-0" : "top-4"}`}>
+    <div className="mx-auto mt-4 w-full max-w-6xl px-6">
       <nav className="glass-panel rounded-[16px] px-3.5 py-3 sm:gap-4 sm:px-5 sm:py-3.5">
         <div className="flex items-center justify-between gap-2">
           <Link
