@@ -55,19 +55,19 @@ export function Hero() {
           and tax impact, live.
         </p>
         <div className="flex flex-wrap gap-3.5">
-          <a
-            href="#planner"
-            className="cta-tap rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-6 py-3.5 font-heading text-[15.5px] font-bold text-white shadow-[0_8px_22px_-8px_var(--indigo)]"
-          >
-            Build my plan
-          </a>
           <button
             type="button"
             onClick={handleSeeStrategies}
-            className="cta-tap rounded-xl border border-line-2 bg-chip px-6 py-3.5 font-heading text-[15.5px] font-bold text-ink"
+            className="cta-tap rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] px-6 py-3.5 font-heading text-[15.5px] font-bold text-white shadow-[0_8px_22px_-8px_var(--indigo)]"
           >
             See 4 strategies
           </button>
+          <a
+            href="#planner"
+            className="cta-tap rounded-xl border border-line-2 bg-chip px-6 py-3.5 font-heading text-[15.5px] font-bold text-ink"
+          >
+            Build my plan
+          </a>
         </div>
       </motion.div>
 

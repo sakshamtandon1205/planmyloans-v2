@@ -71,7 +71,7 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const quickLoan = page.getByRole("spinbutton", { name: "Loan amount (exact value)" });
     await quickLoan.click();
     await quickLoan.selectText();
-    await quickLoan.pressSequentially("12000000", { delay: 50 });
+    await quickLoan.pressSequentially("12000000", { delay: 80 });
     await quickLoan.blur();
 
     const plannerPrice = page.getByRole("spinbutton", { name: "Property price (exact value)" });
@@ -93,7 +93,7 @@ test.describe("Quick Estimate <-> Planner sync", () => {
     const quickLoan = page.getByRole("spinbutton", { name: "Loan amount (exact value)" });
     await quickLoan.click();
     await quickLoan.selectText();
-    await quickLoan.pressSequentially("31800000", { delay: 50 });
+    await quickLoan.pressSequentially("31800000", { delay: 80 });
     await quickLoan.blur();
 
     // The actual input value, not a derived display string — this is what
