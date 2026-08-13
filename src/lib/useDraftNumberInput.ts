@@ -30,7 +30,11 @@ export function useDraftNumberInput(value: number, onCommit: (value: number) => 
       // non-negative (loan amount, rate, tenure, prepay %, etc.).
       const cleaned = raw.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
       if (ref.current && ref.current.value !== cleaned) ref.current.value = cleaned;
-      if (cleaned !== "" && cleaned !== "." && !Number.isNaN(+cleaned)) onCommit(+cleaned);
+      // Commit live as the user types — including down to 0 the moment the
+      // field is cleared — rather than waiting for blur, which depends on
+      // exactly what the user clicks next to trigger it.
+      if (cleaned === "" || cleaned === ".") onCommit(0);
+      else if (!Number.isNaN(+cleaned)) onCommit(+cleaned);
     },
     onBlur: () => {
       focused.current = false;
