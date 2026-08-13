@@ -329,6 +329,27 @@ body {
   transform: scale(0.96);
 }
 
+/* Strategy card icon glow, played once per "Show me strategies" submit
+   (the element is remounted via a `key` change, which restarts a CSS
+   animation same as it would a fresh page load). Colored via --glow-color,
+   set inline per card to that card's own dot color — a plain CSS
+   `@keyframes` reads `var()` natively, unlike framer-motion's box-shadow
+   tweening, which needs a literal color it can interpolate and can't
+   resolve a custom property. */
+@keyframes teaser-glow-pulse {
+  0% {
+    box-shadow: 0 0 0 8px var(--glow-color, transparent);
+    scale: 1.18;
+  }
+  100% {
+    box-shadow: 0 0 0 0px transparent;
+    scale: 1;
+  }
+}
+.teaser-glow {
+  animation: teaser-glow-pulse 0.7s ease-out;
+}
+
 /* Ad slots are the one deliberate non-glass surface: a solid, flat module
    so a future ad unit reads as an intentional whitespace break, not a
    broken glass panel with nothing behind it. */

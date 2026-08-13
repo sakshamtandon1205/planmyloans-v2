@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { CSSProperties } from "react";
 import { useMemo, useRef, useState } from "react";
 import { applyStrategyResult } from "@/lib/applyStrategy";
 import { computeStrategies, type StrategyId } from "@/lib/calculations/strategies";
@@ -130,16 +131,18 @@ export function StrategyTeaserGrid() {
                 data-testid={`strategy-teaser-${id}`}
                 className="cta-tap glass-panel flex h-full flex-col p-5 text-left hover:-translate-y-0.5"
               >
-                <motion.div
+                <div
                   key={submitCount}
-                  initial={{ boxShadow: "0 0 0 8px rgba(255,255,255,0.55)", scale: 1.18 }}
-                  animate={{ boxShadow: "0 0 0 0px rgba(255,255,255,0)", scale: 1 }}
-                  transition={{ duration: 0.7, ease: "easeOut" }}
-                  className="mb-3 flex size-[34px] items-center justify-center rounded-[9px]"
-                  style={{ background: `var(--teaser-${token}-bg)` }}
+                  className="teaser-glow mb-3 flex size-[34px] items-center justify-center rounded-[9px]"
+                  style={
+                    {
+                      background: `var(--teaser-${token}-bg)`,
+                      "--glow-color": `var(--teaser-${token}-dot)`,
+                    } as CSSProperties
+                  }
                 >
                   <span className="size-3 rounded-xs" style={{ background: `var(--teaser-${token}-dot)` }} />
-                </motion.div>
+                </div>
                 <div className="mb-1.5 min-h-[40px] font-heading text-[15.5px] font-bold text-ink">{result.name}</div>
                 <p className="mb-3 text-[13px] leading-[1.5] text-ink-2">{result.subtitle}</p>
                 <div className="mt-auto font-mono text-[12px] font-semibold text-accent-text">{splitLabel}</div>
