@@ -14,10 +14,10 @@ export function AffiliateBanner({ title, description }: AffiliateBannerProps) {
         ✓
       </div>
       <div className="min-w-[200px] flex-1">
-        <div className="mb-0.5 whitespace-nowrap font-heading text-[13px] font-bold text-ink sm:text-[15.5px]">
+        <div className="mb-0.5 whitespace-nowrap font-heading text-[15px] font-bold text-ink sm:text-[15.5px]">
           {title}
         </div>
-        <div className="text-[12px] text-ink-3 sm:text-[13.5px]">{description}</div>
+        <div className="text-[14px] text-ink-3">{description}</div>
       </div>
       <button
         type="button"
