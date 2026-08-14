@@ -21,10 +21,20 @@ const sourceSans3 = Source_Sans_3({
   subsets: ["latin"],
 });
 
+// display: "optional" (not the default "swap") — every rupee/percentage/
+// slider figure on the site uses this font, and Next's auto-generated
+// fallback (a size-adjusted Arial) can only match IBM Plex Mono's
+// vertical metrics, not its monospace digit widths: measured ~12px of
+// width delta on a single figure like "₹80,559" at 25px bold. "optional"
+// means the browser commits to one font for the page's lifetime (real
+// font if it's already cached within ~100ms, fallback otherwise) instead
+// of swapping mid-session, which is what was reflowing QuickEstimate and
+// showing up as CLS in Lighthouse.
 const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-ibm-plex-mono",
   weight: ["500", "600"],
   subsets: ["latin"],
+  display: "optional",
 });
 
 export const metadata: Metadata = {
