@@ -48,8 +48,8 @@ export function Hero() {
   return (
     <section
       ref={ref}
-      className={`mx-auto grid w-full max-w-6xl items-center px-6 pt-9 pb-8 ${
-        isMobile ? "grid-cols-1 gap-6" : "grid-cols-[1.05fr_0.95fr] gap-11"
+      className={`mx-auto grid w-full max-w-6xl items-center px-6 pt-9 ${
+        isMobile ? "grid-cols-1 gap-4 pb-4" : "grid-cols-[1.05fr_0.95fr] gap-11 pb-8"
       }`}
     >
       <motion.div
@@ -72,7 +72,7 @@ export function Hero() {
             Borrow better.
           </span>
         </h1>
-        <p className="mb-7 max-w-[500px] text-[15px] sm:text-body-lg leading-[1.6] text-ink-2">
+        <p className="mb-4 max-w-[500px] text-[15px] leading-[1.6] text-ink-2 sm:mb-7 sm:text-body-lg">
           Not all capital should go into the down payment. See what happens when it doesn&apos;t.
         </p>
         {!isMobile && strategyButtons}
