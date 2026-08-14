@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "PlanMyLoans · Home Loan, EMI & SWP Planner",
   description:
     "Free interactive planner to model a home loan against your own capital. Split funds across a mutual fund lumpsum, an SWP or bank corpus to fund the EMI, and a down payment. See EMI, payoff time, interest, prepayment savings, and tax impact live.",
+  alternates: { canonical: "/" },
 };
 
 const webApplicationJsonLd = {

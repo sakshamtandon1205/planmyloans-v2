@@ -2,11 +2,30 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AffiliateBanner } from "@/components/AffiliateBanner";
 import { GUIDE_SLUGS, guideLoaders } from "@/lib/guides";
+import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
+
+const TITLE = "Guides · PlanMyLoans";
+const DESCRIPTION =
+  "Plain-English guides on home loans, EMIs, SWPs, prepayment strategy, and tax benefits in India, written to explain, not just define.";
 
 export const metadata: Metadata = {
-  title: "Guides · PlanMyLoans",
-  description:
-    "Plain-English guides on home loans, EMIs, SWPs, prepayment strategy, and tax benefits in India, written to explain, not just define.",
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/guides" },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "/guides",
+    siteName: SITE_NAME,
+    type: "website",
+    images: [{ ...OG_IMAGE, alt: TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [OG_IMAGE.url],
+  },
 };
 
 export default async function GuidesPage() {

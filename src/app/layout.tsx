@@ -38,10 +38,29 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "optional",
 });
 
+const DEFAULT_TITLE = "PlanMyLoans · Home Loan, EMI & SWP Planner";
+const DEFAULT_DESCRIPTION =
+  "Free interactive planner to model a home loan against your own capital. Split funds across a mutual fund lumpsum, an SWP or bank corpus to fund the EMI, and a down payment. See EMI, payoff time, interest, prepayment savings, and tax impact live.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://planmyloans.in"),
   title: "PlanMyLoans",
   description: "Plan your home loan against your own capital.",
   other: { "google-adsense-account": "ca-pub-6785721439785755" },
+  openGraph: {
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    siteName: "PlanMyLoans",
+    url: "/",
+    type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: DEFAULT_TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: ["/og-image.png"],
+  },
 };
 
 const organizationJsonLd = {

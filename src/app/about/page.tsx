@@ -1,10 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
+
+const TITLE = "About · PlanMyLoans";
+const DESCRIPTION =
+  "Why a backend engineer who spends his day job inside a bank's systems decided to build a free home loan planner for everyone else.";
 
 export const metadata: Metadata = {
-  title: "About · PlanMyLoans",
-  description:
-    "Why a backend engineer who spends his day job inside a bank's systems decided to build a free home loan planner for everyone else.",
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "/about",
+    siteName: SITE_NAME,
+    type: "website",
+    images: [{ ...OG_IMAGE, alt: TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [OG_IMAGE.url],
+  },
 };
 
 const FIND_HERE = [

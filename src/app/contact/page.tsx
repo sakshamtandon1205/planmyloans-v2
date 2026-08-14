@@ -1,9 +1,28 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/ContactForm";
+import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
+
+const TITLE = "Contact · PlanMyLoans";
+const DESCRIPTION = "Questions, feedback, or a bug to report? Reach out directly — real replies, no support tickets.";
 
 export const metadata: Metadata = {
-  title: "Contact · PlanMyLoans",
-  description: "Questions, feedback, or a bug to report? Reach out directly — real replies, no support tickets.",
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/contact" },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "/contact",
+    siteName: SITE_NAME,
+    type: "website",
+    images: [{ ...OG_IMAGE, alt: TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [OG_IMAGE.url],
+  },
 };
 
 export default function ContactPage() {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GUIDE_SLUGS, guideLoaders, isGuideSlug, type GuideFrontmatter } from "@/lib/guides";
+import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
 
 const SITE_URL = "https://planmyloans.in";
 
@@ -18,9 +19,30 @@ export async function generateMetadata({
   if (!isGuideSlug(slug)) return {};
 
   const { frontmatter } = await guideLoaders[slug]();
+  const title = `${frontmatter.title} · PlanMyLoans`;
+  const url = `/guides/${slug}`;
+
   return {
-    title: `${frontmatter.title} · PlanMyLoans`,
+    title,
     description: frontmatter.description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description: frontmatter.description,
+      url,
+      siteName: SITE_NAME,
+      type: "article",
+      publishedTime: frontmatter.datePublished,
+      modifiedTime: frontmatter.updatedAt,
+      authors: [frontmatter.author],
+      images: [{ ...OG_IMAGE, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: frontmatter.description,
+      images: [OG_IMAGE.url],
+    },
   };
 }
 
