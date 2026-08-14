@@ -9,27 +9,28 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 
+// display: "optional" on all three (not the default "swap") — Lighthouse's
+// layout-shifts audit named IBM Plex Mono (the numeric-figure font) AND
+// Source Sans 3 (QuickEstimate's label font) as co-occurring causes of the
+// same reflow: fixing only IBM Plex Mono left Source Sans 3 free to still
+// swap-and-reflow the same card. "optional" removes the swap for all three
+// — the browser commits to one font for the page's lifetime (real font if
+// already cached within ~100ms, fallback otherwise) instead of swapping
+// mid-session after first paint.
 const manrope = Manrope({
   variable: "--font-manrope",
   weight: ["600", "700", "800"],
   subsets: ["latin"],
+  display: "optional",
 });
 
 const sourceSans3 = Source_Sans_3({
   variable: "--font-source-sans-3",
   weight: ["400", "500", "600"],
   subsets: ["latin"],
+  display: "optional",
 });
 
-// display: "optional" (not the default "swap") — every rupee/percentage/
-// slider figure on the site uses this font, and Next's auto-generated
-// fallback (a size-adjusted Arial) can only match IBM Plex Mono's
-// vertical metrics, not its monospace digit widths: measured ~12px of
-// width delta on a single figure like "₹80,559" at 25px bold. "optional"
-// means the browser commits to one font for the page's lifetime (real
-// font if it's already cached within ~100ms, fallback otherwise) instead
-// of swapping mid-session, which is what was reflowing QuickEstimate and
-// showing up as CLS in Lighthouse.
 const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-ibm-plex-mono",
   weight: ["500", "600"],
