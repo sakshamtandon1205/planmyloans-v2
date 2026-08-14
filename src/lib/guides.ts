@@ -11,6 +11,11 @@ export interface GuideFrontmatter {
   readTime: string;
   /** Short teaser shown on the /guides hub card. */
   teaser: string;
+  author: string;
+  /** ISO date (YYYY-MM-DD) this guide was first published. */
+  datePublished: string;
+  /** ISO date (YYYY-MM-DD) this guide was last substantively updated. */
+  updatedAt: string;
 }
 
 export interface GuideModule {

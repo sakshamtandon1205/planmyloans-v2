@@ -10,9 +10,28 @@ export const metadata: Metadata = {
     "Free interactive planner to model a home loan against your own capital. Split funds across a mutual fund lumpsum, an SWP or bank corpus to fund the EMI, and a down payment. See EMI, payoff time, interest, prepayment savings, and tax impact live.",
 };
 
+const webApplicationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "PlanMyLoans",
+  url: "https://planmyloans.in",
+  description: metadata.description,
+  applicationCategory: "FinanceApplication",
+  operatingSystem: "Any",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "INR",
+  },
+};
+
 export default function Home() {
   return (
     <div className="flex min-w-0 flex-1 flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webApplicationJsonLd).replace(/</g, "\\u003c") }}
+      />
       <Hero />
       <div className="mx-auto w-full max-w-6xl px-6 py-2">
         <AffiliateBanner
