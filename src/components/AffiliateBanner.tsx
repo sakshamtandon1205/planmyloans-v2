@@ -3,10 +3,6 @@ interface AffiliateBannerProps {
   description: string;
 }
 
-/**
- * Not wired to BankBazaar (or any redirect) yet — kept as an inert button
- * until that affiliate link is ready to go live.
- */
 export function AffiliateBanner({ title, description }: AffiliateBannerProps) {
   return (
     <div className="glass-panel flex flex-wrap items-center gap-5 rounded-[18px] px-6 py-5">
@@ -19,12 +15,14 @@ export function AffiliateBanner({ title, description }: AffiliateBannerProps) {
         </div>
         <div className="text-[14px] text-ink-3">{description}</div>
       </div>
-      <button
-        type="button"
+      <a
+        href="https://www.bankbazaar.com/credit-score.html"
+        target="_blank"
+        rel="noopener noreferrer"
         className="cta-tap hover-cta-primary whitespace-nowrap rounded-[10px] bg-ink px-5 py-3 font-heading text-[14px] font-bold text-paper"
       >
         Check eligibility →
-      </button>
+      </a>
     </div>
   );
 }
