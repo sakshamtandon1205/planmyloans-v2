@@ -7,14 +7,19 @@ import type { FundingMode } from "@/lib/calculations/types";
  * plan" and pulled one-way into the Planner. Rate/tenure/price are included
  * even though a strategy's headline numbers are "down payment/MF/corpus/
  * funding mode" — without them the Planner would show that allocation
- * against a stale rate/tenure and no longer match the card. `ownFunds` is
- * derived as downPayment + mfLumpsum + corpus (the strategy engine's buffer
- * has no field in the real Planner, so it's absorbed rather than carried
- * over — the concrete dp/mf/corpus numbers are preserved exactly).
+ * against a stale rate/tenure and no longer match the card.
+ *
+ * Deliberately excludes "own funds available": that's the user's own raw
+ * input, not a strategy output, and some models (Aggressive Payoff) don't
+ * even allocate 100% of it into downPayment+mfLumpsum+corpus — a chunk goes
+ * to extraMonthlyPrepayment instead, so reconstructing "own funds" from the
+ * capital stack would silently corrupt the field with a wrong number. The
+ * Planner's own-funds value is left untouched by applying a strategy;
+ * `resolveOwnFundsSplit` in Calculator.tsx still clamps dp/mf against
+ * whatever the user has actually entered there.
  */
 export interface AppliedStrategy {
   price: number;
-  ownFunds: number;
   downPayment: number;
   mfLumpsum: number;
   fundingMode: FundingMode;

@@ -130,7 +130,6 @@ export function Calculator() {
       const next: CalculatorInputs = {
         ...prev,
         price: appliedStrategy.price,
-        own: appliedStrategy.ownFunds,
         dp: appliedStrategy.downPayment,
         mf: appliedStrategy.mfLumpsum,
         mode: appliedStrategy.fundingMode,

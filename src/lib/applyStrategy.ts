@@ -8,10 +8,9 @@ import { useSharedInputsStore } from "./sharedInputsStore";
  * this plan" button and the home page's plain 4-card strategy teaser.
  */
 export function applyStrategyResult(result: StrategyResult, annualLumpSumCount?: number) {
-  const { downPayment, mfLumpsum, corpus, loanAmount } = result.capitalStack;
+  const { downPayment, mfLumpsum, loanAmount } = result.capitalStack;
   useSharedInputsStore.getState().applyStrategy({
     price: loanAmount + downPayment,
-    ownFunds: downPayment + mfLumpsum + corpus,
     downPayment,
     mfLumpsum,
     fundingMode: result.fundingMode,

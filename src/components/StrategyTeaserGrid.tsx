@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { CSSProperties } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { applyStrategyResult } from "@/lib/applyStrategy";
 import { computeStrategies, type StrategyId } from "@/lib/calculations/strategies";
 import { formatLakh } from "@/lib/format";
@@ -24,17 +24,18 @@ const DEFAULT_PROPERTY_PRICE = 14000000;
 const DEFAULT_OWN_FUNDS = 10000000;
 
 export function StrategyTeaserGrid() {
-  const visible = useStrategiesVisibleStore((s) => s.visible);
+  const revealToken = useStrategiesVisibleStore((s) => s.revealToken);
   const rate = useSharedInputsStore((s) => s.rate);
   const tenure = useSharedInputsStore((s) => s.tenure);
 
   const [propertyPrice, setPropertyPrice] = useState(DEFAULT_PROPERTY_PRICE);
   const [ownFunds, setOwnFunds] = useState(DEFAULT_OWN_FUNDS);
   const [submitted, setSubmitted] = useState({ propertyPrice: DEFAULT_PROPERTY_PRICE, ownFunds: DEFAULT_OWN_FUNDS });
-  // Bumped on every "Show me strategies" click — remounts the 4 icon dots
-  // (via their `key`) so they replay a glow pulse, and scrolls the grid
-  // into view. Without either, recomputing silently reads as "nothing
-  // happened" since the grid sits below the fold on mobile.
+  // Bumped on every "Show me strategies" click (and on every hero "See 4
+  // strategies" click, via the revealToken effect below) — remounts the 4
+  // icon dots (via their `key`) so they replay a glow pulse. Without it,
+  // recomputing silently reads as "nothing happened" since the grid sits
+  // below the fold on mobile.
   const [submitCount, setSubmitCount] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -49,7 +50,18 @@ export function StrategyTeaserGrid() {
     [submitted, rate, tenure],
   );
 
-  if (!visible) return null;
+  // The section is always on the page now — the hero's "See 4 strategies"
+  // only scrolls to it (see Hero.tsx), it no longer makes the section
+  // appear. This effect is what makes that entry point still feel like the
+  // user "submitted" the form: same recompute, same glow pulse. Skipped on
+  // mount (token starts at 0) so the dots don't glow before any click.
+  useEffect(() => {
+    if (revealToken === 0) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot pull from an external "reveal" signal, token-gated so it fires exactly once per hero CTA click, same pattern as Calculator.tsx's applyStrategyToken effect.
+    setSubmitted({ propertyPrice, ownFunds });
+    setSubmitCount((c) => c + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires only off the token, reading current propertyPrice/ownFunds at that moment (like a submit), not on every keystroke of either slider.
+  }, [revealToken]);
 
   const handleApply = (id: StrategyId) => {
     const result = results.find((r) => r.id === id);
