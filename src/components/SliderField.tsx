@@ -1,4 +1,5 @@
 import { useDraftNumberInput } from "@/lib/useDraftNumberInput";
+import { useThrottledRangeInput } from "@/lib/useThrottledRangeInput";
 
 interface InfoTipProps {
   text: string;
@@ -35,10 +36,11 @@ interface SliderFieldProps {
  * since a typed value can fall on either side of the configured range.
  */
 export function SliderField({ label, value, min, max, step, onChange, formatValue, hint, tip }: SliderFieldProps) {
-  const effectiveMin = Math.min(min, value);
-  const effectiveMax = Math.max(max, value);
-  const pct = effectiveMax > effectiveMin ? ((value - effectiveMin) / (effectiveMax - effectiveMin)) * 100 : 0;
-  const numberInput = useDraftNumberInput(value, onChange);
+  const { displayValue, handleChange } = useThrottledRangeInput(value, onChange);
+  const effectiveMin = Math.min(min, displayValue);
+  const effectiveMax = Math.max(max, displayValue);
+  const pct = effectiveMax > effectiveMin ? ((displayValue - effectiveMin) / (effectiveMax - effectiveMin)) * 100 : 0;
+  const numberInput = useDraftNumberInput(displayValue, onChange);
 
   return (
     <div>
@@ -47,7 +49,7 @@ export function SliderField({ label, value, min, max, step, onChange, formatValu
           {label}
           {tip && <InfoTip text={tip} />}
         </span>
-        <b className="font-mono text-mono-sm font-bold text-ink">{formatValue(value)}</b>
+        <b className="font-mono text-mono-sm font-bold text-ink">{formatValue(displayValue)}</b>
       </label>
       <div className="flex flex-wrap items-center gap-2.5">
         <input
@@ -56,8 +58,8 @@ export function SliderField({ label, value, min, max, step, onChange, formatValu
           min={effectiveMin}
           max={effectiveMax}
           step={step}
-          value={value}
-          onChange={(e) => onChange(+e.target.value)}
+          value={displayValue}
+          onChange={(e) => handleChange(+e.target.value)}
           style={{ background: `linear-gradient(90deg, var(--indigo) ${pct}%, var(--surface-2) ${pct}%)` }}
           className="h-1.5 min-w-[80px] flex-1 basis-[140px]"
         />

@@ -7,6 +7,7 @@ import { formatINR, formatLakh } from "@/lib/format";
 import { useCountUp } from "@/lib/useCountUp";
 import { useDraftNumberInput } from "@/lib/useDraftNumberInput";
 import { useSharedInputsStore } from "@/lib/sharedInputsStore";
+import { useThrottledRangeInput } from "@/lib/useThrottledRangeInput";
 import { PrincipalInterestBar } from "./PrincipalInterestBar";
 
 const LOAN_MIN = 1000000; // 10L
@@ -46,9 +47,10 @@ function EstimateRow({
   // "30" — the first "1" would clamp to the min, then "2" appended to the
   // clamped display). The range's own visible bounds grow to keep the
   // thumb valid instead.
-  const effectiveMin = Math.min(min, value);
-  const effectiveMax = Math.max(max, value);
-  const pct = effectiveMax > effectiveMin ? ((value - effectiveMin) / (effectiveMax - effectiveMin)) * 100 : 0;
+  const { displayValue, handleChange } = useThrottledRangeInput(value, onChange);
+  const effectiveMin = Math.min(min, displayValue);
+  const effectiveMax = Math.max(max, displayValue);
+  const pct = effectiveMax > effectiveMin ? ((displayValue - effectiveMin) / (effectiveMax - effectiveMin)) * 100 : 0;
   const numberInput = useDraftNumberInput(inputValue, onInputChange);
 
   return (
@@ -86,8 +88,8 @@ function EstimateRow({
         min={effectiveMin}
         max={effectiveMax}
         step={step}
-        value={value}
-        onChange={(e) => onChange(+e.target.value)}
+        value={displayValue}
+        onChange={(e) => handleChange(+e.target.value)}
         style={{ background: `linear-gradient(90deg, var(--indigo) ${pct}%, var(--surface-2) ${pct}%)` }}
         className="h-1.5 w-full"
       />
