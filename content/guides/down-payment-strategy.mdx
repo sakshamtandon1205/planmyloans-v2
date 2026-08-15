@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Callout } from "@/components/Callout";
 
 export const frontmatter = {
@@ -62,5 +63,5 @@ Down payment rarely exists in isolation. It's usually one piece of a broader cap
 <div className="my-10 rounded-lg border border-line bg-surface p-7 text-center shadow-sm">
   <h3 className="mb-2 font-heading text-h3 text-ink">See how down payment interacts with your full plan</h3>
   <p className="mb-4 text-body text-ink-2">The PlanMyLoans calculator's capital stack view shows exactly how a bigger down payment changes your loan amount, EMI, and total interest, alongside your MF lumpsum and EMI-funding corpus, all in one view.</p>
-  <a href="/" className="inline-flex items-center gap-2 rounded-sm bg-indigo-solid px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5">Open the calculator →</a>
+  <Link href="/" className="inline-flex items-center gap-2 rounded-sm bg-indigo-solid px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5">Model this with your own numbers →</Link>
 </div>

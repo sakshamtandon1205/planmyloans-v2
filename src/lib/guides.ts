@@ -54,3 +54,18 @@ export const guideLoaders: Record<GuideSlug, () => Promise<GuideModule>> = {
 export function isGuideSlug(slug: string): slug is GuideSlug {
   return (GUIDE_SLUGS as readonly string[]).includes(slug);
 }
+
+/**
+ * Each guide's 2 most topically-related siblings, hand-picked from actual
+ * content overlap (not just tag matching) — used to render the "Related
+ * guides" module on each guide page. One-way per entry, not necessarily
+ * symmetric: e.g. prepay-vs-invest is relevant to 3 other guides, but only
+ * links out to the 2 most relevant to *it*.
+ */
+export const RELATED_GUIDES: Record<GuideSlug, readonly [GuideSlug, GuideSlug]> = {
+  "emi-calculation-explained": ["prepay-vs-invest", "home-loan-tax-benefits"],
+  "down-payment-strategy": ["prepay-vs-invest", "emi-calculation-explained"],
+  "home-loan-tax-benefits": ["emi-calculation-explained", "prepay-vs-invest"],
+  "prepay-vs-invest": ["swp-vs-bank-account-emi", "emi-calculation-explained"],
+  "swp-vs-bank-account-emi": ["prepay-vs-invest", "down-payment-strategy"],
+};

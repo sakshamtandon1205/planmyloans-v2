@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Callout } from "@/components/Callout";
 import { FigureTable } from "@/components/FigureTable";
 
@@ -73,5 +74,5 @@ Three levers, and only three, determine your EMI: the loan amount, the interest 
 <div className="my-10 rounded-lg border border-line bg-surface p-7 text-center shadow-sm">
   <h3 className="mb-2 font-heading text-h3 text-ink">See this play out with your own numbers</h3>
   <p className="mb-4 text-body text-ink-2">The PlanMyLoans calculator runs this exact formula live, plus shows you the actual month-by-month split between interest and principal as prepayments and step-ups are added.</p>
-  <a href="/" className="inline-flex items-center gap-2 rounded-sm bg-indigo-solid px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5">Open the calculator →</a>
+  <Link href="/" className="inline-flex items-center gap-2 rounded-sm bg-indigo-solid px-5 py-2.5 text-body-sm font-semibold text-white transition-transform hover:-translate-y-0.5">Model this with your own numbers →</Link>
 </div>

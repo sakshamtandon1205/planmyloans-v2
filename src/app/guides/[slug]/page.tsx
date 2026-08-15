@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { GUIDE_SLUGS, guideLoaders, isGuideSlug, type GuideFrontmatter } from "@/lib/guides";
+import { GuideBreadcrumb } from "@/components/GuideBreadcrumb";
+import { RelatedGuides } from "@/components/RelatedGuides";
+import { GUIDE_SLUGS, RELATED_GUIDES, guideLoaders, isGuideSlug, type GuideFrontmatter } from "@/lib/guides";
 import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
 
 const SITE_URL = "https://planmyloans.in";
@@ -93,6 +95,9 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
 
   const { default: Content, frontmatter } = await guideLoaders[slug]();
   const jsonLdBlocks = buildJsonLd(slug, frontmatter);
+  const relatedFrontmatters = await Promise.all(
+    RELATED_GUIDES[slug].map(async (relatedSlug) => (await guideLoaders[relatedSlug]()).frontmatter),
+  );
 
   return (
     <article>
@@ -103,6 +108,8 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           dangerouslySetInnerHTML={{ __html: JSON.stringify(block).replace(/</g, "\\u003c") }}
         />
       ))}
+
+      <GuideBreadcrumb title={frontmatter.title} />
 
       <section className="border-b border-line">
         <div className="mx-auto max-w-3xl px-6 py-12">
@@ -122,6 +129,8 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
       <div className="mx-auto max-w-3xl px-6 py-11">
         <Content />
       </div>
+
+      <RelatedGuides guides={relatedFrontmatters} />
 
       <div className="mx-auto max-w-3xl px-6 pb-8">
         <Link href="/guides" className="text-body-sm font-medium text-indigo hover:underline">
