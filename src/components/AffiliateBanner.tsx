@@ -15,11 +15,15 @@ export function AffiliateBanner({ title, description }: AffiliateBannerProps) {
         </div>
         {/* Slight negative tracking (imperceptible at this size) buys back
             just enough width for the mobile card's narrower text column to
-            wrap at 2 lines instead of 3 — see AGENTS.md-adjacent history:
-            font-size here has an established 14px legibility floor, so this
-            and the smaller icon/gap/padding above (mobile only, sm: restores
-            the original sizing) are the fix instead of shrinking text. */}
-        <div className="text-[14px] tracking-[-0.4px] text-ink-3">{description}</div>
+            wrap at 2 lines instead of 3 — font-size here has an established
+            14px legibility floor, so this and the smaller icon/gap/padding
+            above (mobile only, sm: restores the original sizing) are the fix
+            instead of shrinking text. Inline style, not a `tracking-[]`
+            class: verified against the actual rendered width that Tailwind's
+            arbitrary letter-spacing utility silently failed to apply here. */}
+        <div className="text-[14px] text-ink-3" style={{ letterSpacing: "-0.5px" }}>
+          {description}
+        </div>
       </div>
       <a
         href="https://www.bankbazaar.com/credit-score.html"
