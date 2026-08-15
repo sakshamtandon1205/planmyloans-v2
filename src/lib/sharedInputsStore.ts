@@ -39,6 +39,15 @@ export interface AppliedStrategy {
  * Gating every mirror write on "is this actually a change" is what keeps
  * the two-way sync from looping.
  *
+ * price/ownFunds follow the exact same pattern, for StrategyTeaserGrid <->
+ * Planner: StrategyTeaserGrid reads/writes them directly (no local draft
+ * state of its own), Calculator.tsx mirrors them into inputs.price/inputs.own
+ * via the same equality-gated push/pull effects as rate/tenure. Before this,
+ * StrategyTeaserGrid held its own independent propertyPrice/ownFunds
+ * useState — live within itself, but never connected to the Planner below,
+ * so the Planner kept showing stale defaults no matter what was entered in
+ * the teaser card.
+ *
  * extraPrepayment/prepayStepUpPercent/emiStepUpPercent are one-way: the
  * Planner is their only editor (QuickEstimate has no prepayment inputs of
  * its own), so Calculator.tsx just pushes its current values in on change.
@@ -53,12 +62,16 @@ interface SharedInputsState {
   tenure: number;
   /** Derived elsewhere as Property price − Down payment; stored directly so QuickEstimate has a single field to bind to. */
   loanAmount: number;
+  price: number;
+  ownFunds: number;
   extraPrepayment: number;
   prepayStepUpPercent: number;
   emiStepUpPercent: number;
   setRate: (rate: number) => void;
   setTenure: (tenure: number) => void;
   setLoanAmount: (loanAmount: number) => void;
+  setPrice: (price: number) => void;
+  setOwnFunds: (ownFunds: number) => void;
   setExtraPrepayment: (extraPrepayment: number) => void;
   setPrepayStepUpPercent: (prepayStepUpPercent: number) => void;
   setEmiStepUpPercent: (emiStepUpPercent: number) => void;
@@ -73,12 +86,16 @@ export const useSharedInputsStore = create<SharedInputsState>((set) => ({
   rate: DEFAULT_INPUTS.lr,
   tenure: DEFAULT_INPUTS.tenure,
   loanAmount: DEFAULT_INPUTS.price - DEFAULT_INPUTS.dp,
+  price: DEFAULT_INPUTS.price,
+  ownFunds: DEFAULT_INPUTS.own,
   extraPrepayment: DEFAULT_INPUTS.extra,
   prepayStepUpPercent: DEFAULT_INPUTS.stepup,
   emiStepUpPercent: DEFAULT_INPUTS.stepupemi,
   setRate: (rate) => set({ rate }),
   setTenure: (tenure) => set({ tenure }),
   setLoanAmount: (loanAmount) => set({ loanAmount }),
+  setPrice: (price) => set({ price }),
+  setOwnFunds: (ownFunds) => set({ ownFunds }),
   setExtraPrepayment: (extraPrepayment) => set({ extraPrepayment }),
   setPrepayStepUpPercent: (prepayStepUpPercent) => set({ prepayStepUpPercent }),
   setEmiStepUpPercent: (emiStepUpPercent) => set({ emiStepUpPercent }),

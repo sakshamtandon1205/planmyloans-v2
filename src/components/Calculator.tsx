@@ -85,6 +85,8 @@ export function Calculator() {
   const storeRate = useSharedInputsStore((s) => s.rate);
   const storeTenure = useSharedInputsStore((s) => s.tenure);
   const storeLoanAmount = useSharedInputsStore((s) => s.loanAmount);
+  const storePrice = useSharedInputsStore((s) => s.price);
+  const storeOwnFunds = useSharedInputsStore((s) => s.ownFunds);
 
   useEffect(() => {
     const { rate, setRate } = useSharedInputsStore.getState();
@@ -99,6 +101,17 @@ export function Calculator() {
     const derivedLoan = inputs.price - inputs.dp;
     if (derivedLoan !== loanAmount) setLoanAmount(derivedLoan);
   }, [inputs.price, inputs.dp]);
+  // Property price and own funds: same push/pull pattern, this time with
+  // StrategyTeaserGrid (which has no local draft of its own — see its own
+  // comment) as the other live editor, instead of QuickEstimate.
+  useEffect(() => {
+    const { price, setPrice } = useSharedInputsStore.getState();
+    if (inputs.price !== price) setPrice(inputs.price);
+  }, [inputs.price]);
+  useEffect(() => {
+    const { ownFunds, setOwnFunds } = useSharedInputsStore.getState();
+    if (inputs.own !== ownFunds) setOwnFunds(inputs.own);
+  }, [inputs.own]);
 
   // One-way: QuickEstimate has no prepayment inputs of its own, it only
   // reads these to compute its actual (not baseline) totals — see the
@@ -173,6 +186,24 @@ export function Calculator() {
       return { ...next, dp, mf };
     });
   }, [storeLoanAmount]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- same external-store pull as above.
+    setInputs((prev) => {
+      if (prev.price === storePrice) return prev;
+      const next = { ...prev, price: storePrice };
+      const { dp, mf } = resolveOwnFundsSplit(next);
+      return { ...next, dp, mf };
+    });
+  }, [storePrice]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- same external-store pull as above.
+    setInputs((prev) => {
+      if (prev.own === storeOwnFunds) return prev;
+      const next = { ...prev, own: storeOwnFunds };
+      const { dp, mf } = resolveOwnFundsSplit(next);
+      return { ...next, dp, mf };
+    });
+  }, [storeOwnFunds]);
 
   const handleHorizonChange = (value: number) => {
     setHorizonAuto(false);

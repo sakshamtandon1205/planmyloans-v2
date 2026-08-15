@@ -5,15 +5,21 @@ interface AffiliateBannerProps {
 
 export function AffiliateBanner({ title, description }: AffiliateBannerProps) {
   return (
-    <div className="glass-panel flex flex-wrap items-center gap-5 rounded-[18px] px-6 py-5">
-      <div className="flex size-[46px] flex-none items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] font-heading text-lg font-extrabold text-white">
+    <div className="glass-panel flex flex-wrap items-center gap-3 rounded-[18px] px-4 py-5 sm:gap-5 sm:px-6">
+      <div className="flex size-9 flex-none items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--indigo),var(--jade))] font-heading text-lg font-extrabold text-white sm:size-[46px]">
         ✓
       </div>
       <div className="min-w-[200px] flex-1">
         <div className="mb-0.5 whitespace-nowrap font-heading text-[15px] font-bold text-ink sm:text-[15.5px]">
           {title}
         </div>
-        <div className="text-[14px] text-ink-3">{description}</div>
+        {/* Slight negative tracking (imperceptible at this size) buys back
+            just enough width for the mobile card's narrower text column to
+            wrap at 2 lines instead of 3 — see AGENTS.md-adjacent history:
+            font-size here has an established 14px legibility floor, so this
+            and the smaller icon/gap/padding above (mobile only, sm: restores
+            the original sizing) are the fix instead of shrinking text. */}
+        <div className="text-[14px] tracking-[-0.4px] text-ink-3">{description}</div>
       </div>
       <a
         href="https://www.bankbazaar.com/credit-score.html"

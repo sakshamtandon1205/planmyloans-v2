@@ -20,20 +20,20 @@ const CARD_TOKENS: Record<StrategyId, 1 | 2 | 3 | 4> = {
 
 const CARD_ORDER: StrategyId[] = ["aggressive", "balanced", "safety", "bonus"];
 
-const DEFAULT_PROPERTY_PRICE = 14000000;
-const DEFAULT_OWN_FUNDS = 10000000;
-
 export function StrategyTeaserGrid() {
   const revealToken = useStrategiesVisibleStore((s) => s.revealToken);
   const rate = useSharedInputsStore((s) => s.rate);
   const tenure = useSharedInputsStore((s) => s.tenure);
 
-  // Property price and own funds are the single source of truth for the
-  // strategy grid — no separate "committed" copy. Every change (typed
-  // digit, dragged slider) recomputes `results` immediately, same as every
-  // other live field in the app.
-  const [propertyPrice, setPropertyPrice] = useState(DEFAULT_PROPERTY_PRICE);
-  const [ownFunds, setOwnFunds] = useState(DEFAULT_OWN_FUNDS);
+  // Property price and own funds live in the shared store — the same
+  // single source of truth the Planner below reads via Calculator.tsx's
+  // push/pull effects (see sharedInputsStore.ts). No local draft copy here:
+  // reading and writing the store field directly is what keeps this card
+  // and the Planner's results always showing the exact same number.
+  const propertyPrice = useSharedInputsStore((s) => s.price);
+  const ownFunds = useSharedInputsStore((s) => s.ownFunds);
+  const setPropertyPrice = useSharedInputsStore((s) => s.setPrice);
+  const setOwnFunds = useSharedInputsStore((s) => s.setOwnFunds);
   // Bumped on every "Show me strategies" click (and on every hero "See 4
   // strategies" click, via the revealToken effect below) — remounts the 4
   // icon dots (via their `key`) so they replay a glow pulse as a "you're
