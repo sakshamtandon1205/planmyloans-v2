@@ -28,39 +28,40 @@ export function StrategyTeaserGrid() {
   const rate = useSharedInputsStore((s) => s.rate);
   const tenure = useSharedInputsStore((s) => s.tenure);
 
+  // Property price and own funds are the single source of truth for the
+  // strategy grid — no separate "committed" copy. Every change (typed
+  // digit, dragged slider) recomputes `results` immediately, same as every
+  // other live field in the app.
   const [propertyPrice, setPropertyPrice] = useState(DEFAULT_PROPERTY_PRICE);
   const [ownFunds, setOwnFunds] = useState(DEFAULT_OWN_FUNDS);
-  const [submitted, setSubmitted] = useState({ propertyPrice: DEFAULT_PROPERTY_PRICE, ownFunds: DEFAULT_OWN_FUNDS });
   // Bumped on every "Show me strategies" click (and on every hero "See 4
   // strategies" click, via the revealToken effect below) — remounts the 4
-  // icon dots (via their `key`) so they replay a glow pulse. Without it,
-  // recomputing silently reads as "nothing happened" since the grid sits
-  // below the fold on mobile.
+  // icon dots (via their `key`) so they replay a glow pulse as a "you're
+  // now looking at this" cue. Purely cosmetic: it does NOT gate whether
+  // `results` reflects the current inputs, since that's already live.
   const [submitCount, setSubmitCount] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(
     () =>
       computeStrategies({
-        propertyPrice: submitted.propertyPrice,
-        ownFunds: submitted.ownFunds,
+        propertyPrice,
+        ownFunds,
         loanRatePercent: rate || DEFAULT_INPUTS.lr,
         tenureYears: tenure || DEFAULT_INPUTS.tenure,
       }),
-    [submitted, rate, tenure],
+    [propertyPrice, ownFunds, rate, tenure],
   );
 
   // The section is always on the page now — the hero's "See 4 strategies"
-  // only scrolls to it (see Hero.tsx), it no longer makes the section
-  // appear. This effect is what makes that entry point still feel like the
-  // user "submitted" the form: same recompute, same glow pulse. Skipped on
-  // mount (token starts at 0) so the dots don't glow before any click.
+  // only scrolls to it (see Hero.tsx) and replays the glow pulse below, as
+  // a pure UI "you asked to see this" cue. It never touches propertyPrice/
+  // ownFunds — those are already live. Skipped on mount (token starts at
+  // 0) so the dots don't glow before any click.
   useEffect(() => {
     if (revealToken === 0) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot pull from an external "reveal" signal, token-gated so it fires exactly once per hero CTA click, same pattern as Calculator.tsx's applyStrategyToken effect.
-    setSubmitted({ propertyPrice, ownFunds });
     setSubmitCount((c) => c + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires only off the token, reading current propertyPrice/ownFunds at that moment (like a submit), not on every keystroke of either slider.
   }, [revealToken]);
 
   const handleApply = (id: StrategyId) => {
@@ -69,7 +70,6 @@ export function StrategyTeaserGrid() {
   };
 
   const handleSubmit = () => {
-    setSubmitted({ propertyPrice, ownFunds });
     setSubmitCount((c) => c + 1);
     requestAnimationFrame(() => {
       gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
