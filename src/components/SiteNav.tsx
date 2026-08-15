@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useIsMobile } from "@/lib/useIsMobile";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
@@ -15,7 +14,6 @@ const NAV_LINKS = [
 
 export function SiteNav() {
   const pathname = usePathname();
-  const isMobile = useIsMobile();
   // Nav links live inside a mobile menu instead of just vanishing — a
   // hidden-with-no-alternative nav was the actual bug (there was previously
   // no way to reach Guides/About/Contact on a phone at all). Closed
@@ -38,45 +36,44 @@ export function SiteNav() {
           </Link>
 
           <div className="flex flex-none items-center gap-2.5 sm:gap-5">
-            {!isMobile && (
-              <div className="flex items-center gap-7">
-                {NAV_LINKS.map((link) => {
-                  const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={`text-[14.5px] font-semibold transition-colors ${
-                        isActive ? "text-ink" : "text-ink-3 hover:text-ink"
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+            {/* Both variants always render; only CSS visibility toggles at
+                the min-[860px] breakpoint, so SSR and CSR paint identical
+                DOM — see ChartSkeletons.tsx for the same convention. */}
+            <div className="hidden items-center gap-7 min-[860px]:flex">
+              {NAV_LINKS.map((link) => {
+                const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`text-[14.5px] font-semibold transition-colors ${
+                      isActive ? "text-ink" : "text-ink-3 hover:text-ink"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
 
             <ThemeToggle />
 
-            {isMobile && (
-              <button
-                type="button"
-                onClick={() => setMenuOpen((v) => !v)}
-                aria-expanded={menuOpen}
-                aria-label={menuOpen ? "Close menu" : "Open menu"}
-                className="cta-tap hover-icon-btn flex size-9 flex-none items-center justify-center rounded-[9px] border border-line-2 bg-chip text-ink"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className="size-4.5">
-                  {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
-                </svg>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-expanded={menuOpen}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              className="cta-tap hover-icon-btn flex size-9 flex-none items-center justify-center rounded-[9px] border border-line-2 bg-chip text-ink min-[860px]:hidden"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className="size-4.5">
+                {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
+              </svg>
+            </button>
           </div>
         </div>
 
-        {isMobile && menuOpen && (
-          <div className="mt-3 flex flex-col gap-1 border-t border-line-2 pt-3">
+        {menuOpen && (
+          <div className="mt-3 flex flex-col gap-1 border-t border-line-2 pt-3 min-[860px]:hidden">
             {NAV_LINKS.map((link) => {
               const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
               return (

@@ -203,9 +203,7 @@ export function Calculator() {
       initial="hidden"
       animate="show"
       variants={stagger}
-      className={`mx-auto flex w-full min-w-0 max-w-6xl scroll-mt-6 flex-col gap-6 px-6 ${
-        isMobile ? "pt-4 pb-[76px]" : "py-10"
-      }`}
+      className="mx-auto flex w-full min-w-0 max-w-6xl scroll-mt-6 flex-col gap-6 px-6 pt-4 pb-[76px] min-[860px]:py-10"
     >
       <motion.div variants={fadeUp} className="min-w-0">
         <CapitalStack
