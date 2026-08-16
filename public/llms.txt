@@ -1,0 +1,15 @@
+# PlanMyLoans
+
+> A free, no-signup Indian home loan, EMI, and SWP planning tool. It models a property purchase against a user's own capital: down payment, mutual fund lumpsum, and an EMI-funding corpus (mutual fund SWP or bank account) together in one view, with live prepayment savings and Section 24(b)/80C tax impact calculations. Runs entirely in the browser; no accounts, no stored inputs.
+
+## Calculator
+
+- [Home loan planner](https://planmyloans.in/): Interactive calculator modeling EMI, down payment, mutual fund lumpsum, SWP/bank-funded EMI corpus, prepayment (extra monthly, step-up, annual lump sums), and Section 24(b)/80C tax impact, live as inputs change.
+
+## Guides
+
+- [How Your EMI Is Calculated](https://planmyloans.in/guides/emi-calculation-explained): The amortisation formula behind every home loan EMI, why the interest-to-principal split shifts over the loan's life, and how to sanity-check a lender's numbers.
+- [How Much Down Payment Makes Sense?](https://planmyloans.in/guides/down-payment-strategy): Why a larger down payment behaves like a guaranteed, risk-free return equal to the loan's interest rate, and the liquidity/LTV constraints that limit how far to push it.
+- [Section 24(b) and 80C: The Home Loan Deductions](https://planmyloans.in/guides/home-loan-tax-benefits): What is deductible on home loan interest and principal under Sections 24(b) and 80C, the annual caps on each, and how they affect a loan's effective interest rate.
+- [Should You Prepay Your Home Loan or Invest the Money Instead?](https://planmyloans.in/guides/prepay-vs-invest): The loan-rate-vs-expected-return comparison that determines whether prepaying or investing spare money is the better choice, including the tax and risk factors most comparisons omit.
+- [SWP vs. Bank Account: Which One Should Fund Your EMI?](https://planmyloans.in/guides/swp-vs-bank-account-emi): The tax and risk trade-off between funding a home loan EMI from a mutual fund systematic withdrawal plan versus a high-interest bank account.

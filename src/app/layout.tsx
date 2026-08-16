@@ -53,13 +53,13 @@ export const metadata: Metadata = {
     siteName: "PlanMyLoans",
     url: "/",
     type: "website",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: DEFAULT_TITLE }],
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: DEFAULT_TITLE }],
   },
   twitter: {
     card: "summary_large_image",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
   },
 };
 
