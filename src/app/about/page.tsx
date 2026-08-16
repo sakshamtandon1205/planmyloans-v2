@@ -82,12 +82,20 @@ export default function AboutPage() {
           tools for personal finance felt half as rigorous as the internal ones. PlanMyLoans is what happens when
           that itch doesn&apos;t go away.
         </p>
-        <p className="text-body leading-[1.75] text-ink-2">
-          I&apos;m not a financial advisor, a CA, or a wealth manager with a nice suit and a nicer office. I&apos;m
-          an engineer who likes numbers to add up, and who got mildly obsessed with modelling exactly how a home
-          loan interacts with a mutual fund, a bank account, prepayments, and the Indian tax code, all at the same
-          time, live, without needing to open Excel.
+        <p className="mb-3 text-body leading-[1.75] text-ink-2">
+          I&apos;m Saksham Tandon, and I&apos;m not a financial advisor, a CA, or a wealth manager with a nice suit
+          and a nicer office. I&apos;m an engineer who likes numbers to add up, and who got mildly obsessed with
+          modelling exactly how a home loan interacts with a mutual fund, a bank account, prepayments, and the
+          Indian tax code, all at the same time, live, without needing to open Excel.
         </p>
+        <Link
+          href="https://www.linkedin.com/in/sakshamtandon1205/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-body-sm font-medium text-indigo hover:underline"
+        >
+          Saksham Tandon on LinkedIn →
+        </Link>
       </section>
 
       <section className="py-2">

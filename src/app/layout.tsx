@@ -69,6 +69,11 @@ const organizationJsonLd = {
   name: "PlanMyLoans",
   url: "https://planmyloans.in",
   logo: "https://planmyloans.in/icon.svg",
+  founder: {
+    "@type": "Person",
+    name: "Saksham Tandon",
+    url: "https://www.linkedin.com/in/sakshamtandon1205/",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
